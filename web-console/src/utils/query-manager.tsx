@@ -25,19 +25,23 @@ export interface QueryStateInt<R> {
 }
 
 export interface QueryManagerOptions<Q, R> {
-  processQuery: (query: Q) => Promise<R>;
+  processQuery: (query: Q, setIntermediateQuery: (intermediateQuery: any) => void) => Promise<R>;
   onStateChange?: (queryResolve: QueryStateInt<R>) => void;
   debounceIdle?: number;
   debounceLoading?: number;
 }
 
 export class QueryManager<Q, R> {
-  private processQuery: (query: Q) => Promise<R>;
+  private processQuery: (
+    query: Q,
+    setIntermediateQuery: (intermediateQuery: any) => void,
+  ) => Promise<R>;
   private onStateChange?: (queryResolve: QueryStateInt<R>) => void;
 
   private terminated = false;
-  private nextQuery: Q;
-  private lastQuery: Q;
+  private nextQuery: Q | undefined;
+  private lastQuery: Q | undefined;
+  private lastIntermediateQuery: any;
   private actuallyLoading = false;
   private state: QueryStateInt<R> = {
     result: null,
@@ -73,11 +77,14 @@ export class QueryManager<Q, R> {
 
   private run() {
     this.lastQuery = this.nextQuery;
+    if (typeof this.lastQuery === 'undefined') return;
     this.currentQueryId++;
     const myQueryId = this.currentQueryId;
 
     this.actuallyLoading = true;
-    this.processQuery(this.lastQuery).then(
+    this.processQuery(this.lastQuery, (intermediateQuery: any) => {
+      this.lastIntermediateQuery = intermediateQuery;
+    }).then(
       result => {
         if (this.currentQueryId !== myQueryId) return;
         this.actuallyLoading = false;
@@ -116,26 +123,27 @@ export class QueryManager<Q, R> {
   }
 
   public runQuery(query: Q): void {
+    if (this.terminated) return;
     this.nextQuery = query;
     this.trigger();
   }
 
-  public rerunLastQuery(): void {
+  public rerunLastQuery(runInBackground = false): void {
+    if (this.terminated) return;
     this.nextQuery = this.lastQuery;
-    this.trigger();
-  }
-
-  public rerunLastQueryInBackground(auto: boolean): void {
-    this.nextQuery = this.lastQuery;
-    if (auto) {
+    if (runInBackground) {
       this.runWhenIdle();
     } else {
       this.trigger();
     }
   }
 
-  public getLastQuery(): Q {
+  public getLastQuery(): Q | undefined {
     return this.lastQuery;
+  }
+
+  public getLastIntermediateQuery(): any {
+    return this.lastIntermediateQuery;
   }
 
   public getState(): QueryStateInt<R> {

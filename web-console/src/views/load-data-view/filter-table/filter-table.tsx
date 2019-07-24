@@ -22,12 +22,12 @@ import ReactTable from 'react-table';
 
 import { TableCell } from '../../../components';
 import { caseInsensitiveContains, filterMap } from '../../../utils';
-import { DruidFilter, Transform } from '../../../utils/ingestion-spec';
-import { HeaderAndRows } from '../../../utils/sampler';
+import { DruidFilter } from '../../../utils/ingestion-spec';
+import { HeaderAndRows, SampleEntry } from '../../../utils/sampler';
 
 import './filter-table.scss';
 
-export interface FilterTableProps extends React.Props<any> {
+export interface FilterTableProps {
   sampleData: HeaderAndRows;
   columnFilter: string;
   dimensionFilters: DruidFilter[];
@@ -52,7 +52,7 @@ export class FilterTable extends React.PureComponent<FilterTableProps> {
         className="filter-table -striped -highlight"
         data={sampleData.rows}
         columns={filterMap(sampleData.header, (columnName, i) => {
-          if (!caseInsensitiveContains(columnName, columnFilter)) return null;
+          if (!caseInsensitiveContains(columnName, columnFilter)) return;
           const timestamp = columnName === '__time';
           const filterIndex = dimensionFilters.findIndex(f => f.dimension === columnName);
           const filter = dimensionFilters[filterIndex];
@@ -82,7 +82,7 @@ export class FilterTable extends React.PureComponent<FilterTableProps> {
             headerClassName: columnClassName,
             className: columnClassName,
             id: String(i),
-            accessor: row => (row.parsed ? row.parsed[columnName] : null),
+            accessor: (row: SampleEntry) => (row.parsed ? row.parsed[columnName] : null),
             Cell: row => <TableCell value={row.value} timestamp={timestamp} />,
           };
         })}

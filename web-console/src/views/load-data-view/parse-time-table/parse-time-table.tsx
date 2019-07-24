@@ -32,7 +32,7 @@ import { HeaderAndRows, SampleEntry } from '../../../utils/sampler';
 
 import './parse-time-table.scss';
 
-export interface ParseTimeTableProps extends React.Props<any> {
+export interface ParseTimeTableProps {
   sampleBundle: {
     headerAndRows: HeaderAndRows;
     timestampSpec: TimestampSpec;
@@ -62,14 +62,14 @@ export class ParseTimeTable extends React.PureComponent<ParseTimeTableProps> {
           headerAndRows.header.length ? headerAndRows.header : ['__error__'],
           (columnName, i) => {
             const timestamp = columnName === '__time';
-            if (!timestamp && !caseInsensitiveContains(columnName, columnFilter)) return null;
+            if (!timestamp && !caseInsensitiveContains(columnName, columnFilter)) return;
             const selected = timestampSpec.column === columnName;
             const possibleFormat = timestamp
               ? null
               : possibleDruidFormatForValues(
                   filterMap(headerAndRows.rows, d => (d.parsed ? d.parsed[columnName] : null)),
                 );
-            if (possibleTimestampColumnsOnly && !timestamp && !possibleFormat) return null;
+            if (possibleTimestampColumnsOnly && !timestamp && !possibleFormat) return;
 
             const columnClassName = classNames({
               timestamp,
