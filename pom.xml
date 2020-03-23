@@ -178,6 +178,7 @@
         <module>extensions-contrib/tdigestsketch</module>
         <module>extensions-contrib/influxdb-emitter</module>
         <module>extensions-contrib/opencensus-extensions</module>
+        <module>extensions-contrib/confluent-extensions</module>
         <!-- distribution packaging -->
         <module>distribution</module>
     </modules>
