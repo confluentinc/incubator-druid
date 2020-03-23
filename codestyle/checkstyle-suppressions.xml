@@ -71,6 +71,6 @@
   <suppress checks="EmptyLineSeparator" files="[\\/]target[\\/]generated-test-sources[\\/]" />
 
   <!-- Confluent Extensions -->
-  <suppress checks="Header" files="[\\/]confluent[\\/]" />
-  <suppress checks="PackageName" files="[\\/]confluent[\\/]" />
+  <suppress checks="Header" files="[\\/]io[\\/]confluent[\\/]" />
+  <suppress checks="PackageName" files="[\\/]io[\\/]confluent[\\/]" />
 </suppressions>
