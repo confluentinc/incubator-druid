@@ -54,21 +54,21 @@ public class ExtractTransformTest
   @Test
   public void testExtraction()
   {
-      final TransformSpec transformSpec = new TransformSpec(
-          null,
-          ImmutableList.of(
-              new ExtractTenantTransform("tenant", "topic"),
-              new ExtractTenantTopicTransform("tenant_topic", "topic")
-          )
-      );
+    final TransformSpec transformSpec = new TransformSpec(
+        null,
+        ImmutableList.of(
+            new ExtractTenantTransform("tenant", "topic"),
+            new ExtractTenantTopicTransform("tenant_topic", "topic")
+        )
+    );
 
-      final InputRowParser<Map<String, Object>> parser = transformSpec.decorate(PARSER);
-      final InputRow row = parser.parseBatch(ROW1).get(0);
+    final InputRowParser<Map<String, Object>> parser = transformSpec.decorate(PARSER);
+    final InputRow row = parser.parseBatch(ROW1).get(0);
 
-      Assert.assertNotNull(row);
-      Assert.assertEquals(ImmutableList.of("topic", "tenant"), row.getDimensions());
-      Assert.assertEquals(ImmutableList.of("lkc-abc123"), row.getDimension("tenant"));
-      Assert.assertEquals(ImmutableList.of("mytopic"), row.getDimension("tenant_topic"));
+    Assert.assertNotNull(row);
+    Assert.assertEquals(ImmutableList.of("topic", "tenant"), row.getDimensions());
+    Assert.assertEquals(ImmutableList.of("lkc-abc123"), row.getDimension("tenant"));
+    Assert.assertEquals(ImmutableList.of("mytopic"), row.getDimension("tenant_topic"));
   }
 
   @Test
