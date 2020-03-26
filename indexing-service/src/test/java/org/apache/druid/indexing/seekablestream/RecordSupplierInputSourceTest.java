@@ -34,6 +34,7 @@ import org.apache.druid.indexing.seekablestream.common.StreamPartition;
 import org.apache.druid.java.util.common.DateTimes;
 import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
+import org.apache.druid.testing.InitializedNullHandlingTest;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +55,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class RecordSupplierInputSourceTest
+public class RecordSupplierInputSourceTest extends InitializedNullHandlingTest
 {
   private static final int NUM_COLS = 16;
   private static final int NUM_ROWS = 128;
