@@ -19,8 +19,9 @@
 
 package org.apache.druid.data.input.opencensus.protobuf;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
@@ -48,19 +49,21 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   private static final Logger LOG = new Logger(OpenCensusProtobufInputRowParser.class);
 
   private static final String SEPARATOR = "-";
-  public static final String NAME = "name";
-  public static final String VALUE = "value";
-  public static final String TIMESTAMP_COLUMN = "timestamp";
+  private static final String NAME = "name";
+  private static final String VALUE = "value";
+  private static final String TIMESTAMP_COLUMN = "timestamp";
   private final ParseSpec parseSpec;
   private final List<String> dimensions;
+  private OpenCensusProtobufConfig config;
 
-  @JsonCreator
   public OpenCensusProtobufInputRowParser(
-      @JsonProperty("parseSpec") ParseSpec parseSpec
+      @JsonProperty("parseSpec") ParseSpec parseSpec,
+      @JacksonInject OpenCensusProtobufConfig config
   )
   {
     this.parseSpec = parseSpec;
     this.dimensions = parseSpec.getDimensionsSpec().getDimensionNames();
+    this.config = config;
     LOG.info("Creating Open Census Protobuf parser with spec:" + parseSpec);
   }
 
@@ -73,7 +76,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   @Override
   public OpenCensusProtobufInputRowParser withParseSpec(ParseSpec parseSpec)
   {
-    return new OpenCensusProtobufInputRowParser(parseSpec);
+    return new OpenCensusProtobufInputRowParser(parseSpec, config);
   }
 
   @Override
@@ -98,7 +101,9 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
           .collect(Collectors.toSet());
 
       // Add resource map key set to record dimensions.
-      recordDimensions.addAll(metric.getResource().getLabelsMap().keySet());
+      recordDimensions.addAll(metric.getResource().getLabelsMap().keySet().stream()
+            .map(key -> resourceLabelsKeyMapper(key))
+            .collect(Collectors.toList()));
 
       // NAME, VALUE dimensions will not be present in labelKeysList or Metric.Resource map as they
       // are derived dimensions, which get populated while parsing data for timeSeries hence add
@@ -116,7 +121,8 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     for (TimeSeries ts : metric.getTimeseriesList()) {
 
       // Add common resourceLabels.
-      Map<String, Object> labels = new HashMap<>(metric.getResource().getLabelsMap());
+      Map<String, Object> labels = new HashMap<>(metric.getResource().getLabelsMap().entrySet().stream()
+          .collect(Collectors.toMap(entry -> resourceLabelsKeyMapper(entry.getKey()), Map.Entry::getValue)));
 
       // Add labels to record.
       for (int i = 0; i < metric.getMetricDescriptor().getLabelKeysCount(); i++) {
@@ -189,6 +195,12 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         dimensions,
         derivedMetrics
     ));
+  }
+
+  private String resourceLabelsKeyMapper(String key)
+  {
+    return Strings.isNullOrEmpty(config.getResourceLabelsPrefix()) ? key :
+        config.getResourceLabelsPrefix() + "." + key;
   }
 
 }

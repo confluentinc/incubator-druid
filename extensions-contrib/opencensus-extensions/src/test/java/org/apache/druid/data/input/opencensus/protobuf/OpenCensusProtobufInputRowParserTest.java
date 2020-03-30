@@ -48,6 +48,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -60,6 +61,8 @@ public class OpenCensusProtobufInputRowParserTest
   public ExpectedException expectedException = ExpectedException.none();
 
   private ParseSpec parseSpec;
+
+  private OpenCensusProtobufConfig config;
 
   private ParseSpec parseSpecWithDimensions;
 
@@ -93,6 +96,8 @@ public class OpenCensusProtobufInputRowParserTest
             )
         ), null
     );
+
+    config = Mockito.mock(OpenCensusProtobufConfig.class);
   }
 
 
@@ -101,7 +106,7 @@ public class OpenCensusProtobufInputRowParserTest
   {
 
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -128,7 +133,7 @@ public class OpenCensusProtobufInputRowParserTest
   public void testSummaryParse() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -161,7 +166,8 @@ public class OpenCensusProtobufInputRowParserTest
   public void testDimensionsParseWithParseSpecDimensions() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpecWithDimensions);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpecWithDimensions, config);
+    Mockito.when(config.getResourceLabelsPrefix()).thenReturn("");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -192,7 +198,8 @@ public class OpenCensusProtobufInputRowParserTest
   public void testDimensionsParseWithoutParseSpecDimensions() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
+    Mockito.when(config.getResourceLabelsPrefix()).thenReturn("");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -219,6 +226,53 @@ public class OpenCensusProtobufInputRowParserTest
     assertDimensionEquals(row, "env_key", "env_val");
     assertDimensionEquals(row, "foo_key", "foo_value");
 
+  }
+
+  @Test
+  public void testDefaultResourceLabelsPrefix() throws Exception
+  {
+    //configure parser with desc file
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, new OpenCensusProtobufConfig());
+
+    Metric metric = summaryMetric(Timestamp.getDefaultInstance());
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    metric.writeTo(out);
+
+    List<InputRow> rows = parser.parseBatch(ByteBuffer.wrap(out.toByteArray()));
+
+    Assert.assertEquals(2, rows.size());
+
+    InputRow row = rows.get(0);
+    Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "resource.env_key", "env_val");
+
+    row = rows.get(1);
+    Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "resource.env_key", "env_val");
+  }
+
+  @Test
+  public void testCustomResourceLabelsPrefix() throws Exception
+  {
+    //configure parser with desc file
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
+    Mockito.when(config.getResourceLabelsPrefix()).thenReturn("custom");
+
+    Metric metric = summaryMetric(Timestamp.getDefaultInstance());
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    metric.writeTo(out);
+
+    List<InputRow> rows = parser.parseBatch(ByteBuffer.wrap(out.toByteArray()));
+
+    Assert.assertEquals(2, rows.size());
+
+    InputRow row = rows.get(0);
+    Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "custom.env_key", "env_val");
+
+    row = rows.get(1);
+    Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "custom.env_key", "env_val");
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)
