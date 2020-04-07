@@ -20,14 +20,24 @@
 package org.apache.druid.data.input.opencensus.protobuf;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
 
 public class OpenCensusProtobufConfig
 {
-  @JsonProperty
-  private String resourceLabelsPrefix = "resource";
 
-  public String getResourceLabelsPrefix()
+  @JsonProperty
+  private String resourceLabelPrefix = "resource.";
+
+  public String getResourceLabelPrefix()
   {
-    return resourceLabelsPrefix;
+    return resourceLabelPrefix;
+  }
+
+  @VisibleForTesting
+  static OpenCensusProtobufConfig getConfig(String resourceLabelPrefix)
+  {
+    OpenCensusProtobufConfig config = new OpenCensusProtobufConfig();
+    config.resourceLabelPrefix = resourceLabelPrefix;
+    return config;
   }
 }

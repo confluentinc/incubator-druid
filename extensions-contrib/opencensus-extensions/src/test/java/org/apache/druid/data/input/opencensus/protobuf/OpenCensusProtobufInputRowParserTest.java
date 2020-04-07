@@ -48,7 +48,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -97,7 +96,7 @@ public class OpenCensusProtobufInputRowParserTest
         ), null
     );
 
-    config = Mockito.mock(OpenCensusProtobufConfig.class);
+    config = OpenCensusProtobufConfig.getConfig("");
   }
 
 
@@ -167,7 +166,6 @@ public class OpenCensusProtobufInputRowParserTest
   {
     //configure parser with desc file
     OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpecWithDimensions, config);
-    Mockito.when(config.getResourceLabelsPrefix()).thenReturn("");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -199,7 +197,6 @@ public class OpenCensusProtobufInputRowParserTest
   {
     //configure parser with desc file
     OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
-    Mockito.when(config.getResourceLabelsPrefix()).thenReturn("");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -255,8 +252,8 @@ public class OpenCensusProtobufInputRowParserTest
   public void testCustomResourceLabelsPrefix() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
-    Mockito.when(config.getResourceLabelsPrefix()).thenReturn("custom");
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec,
+        OpenCensusProtobufConfig.getConfig("custom."));
 
     Metric metric = summaryMetric(Timestamp.getDefaultInstance());
     ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -46,6 +46,6 @@ public class OpenCensusProtobufExtensionsModule implements DruidModule
   @Override
   public void configure(Binder binder)
   {
-    JsonConfigProvider.bind(binder, "druid.opencensus.protobuf", OpenCensusProtobufConfig.class);
+    JsonConfigProvider.bind(binder, "druid.opencensus", OpenCensusProtobufConfig.class);
   }
 }

@@ -199,8 +199,8 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
 
   private String resourceLabelsKeyMapper(String key)
   {
-    return Strings.isNullOrEmpty(config.getResourceLabelsPrefix()) ? key :
-        config.getResourceLabelsPrefix() + "." + key;
+    return Strings.isNullOrEmpty(config.getResourceLabelPrefix()) ? key :
+        config.getResourceLabelPrefix() + key;
   }
 
 }
