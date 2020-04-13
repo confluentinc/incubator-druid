@@ -61,8 +61,6 @@ public class OpenCensusProtobufInputRowParserTest
 
   private ParseSpec parseSpec;
 
-  private OpenCensusProtobufConfig config;
-
   private ParseSpec parseSpecWithDimensions;
 
   @Before
@@ -95,8 +93,6 @@ public class OpenCensusProtobufInputRowParserTest
             )
         ), null
     );
-
-    config = OpenCensusProtobufConfig.getConfig("");
   }
 
 
@@ -105,7 +101,7 @@ public class OpenCensusProtobufInputRowParserTest
   {
 
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -132,7 +128,7 @@ public class OpenCensusProtobufInputRowParserTest
   public void testSummaryParse() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -165,7 +161,7 @@ public class OpenCensusProtobufInputRowParserTest
   public void testDimensionsParseWithParseSpecDimensions() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpecWithDimensions, config);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpecWithDimensions, null, null, "");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -196,7 +192,7 @@ public class OpenCensusProtobufInputRowParserTest
   public void testDimensionsParseWithoutParseSpecDimensions() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, config);
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
 
     DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
 
@@ -225,11 +221,10 @@ public class OpenCensusProtobufInputRowParserTest
 
   }
 
-  @Test
-  public void testDefaultResourceLabelsPrefix() throws Exception
+  public void testMetricNameOverride() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, new OpenCensusProtobufConfig());
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, "dimension_name", null, "");
 
     Metric metric = summaryMetric(Timestamp.getDefaultInstance());
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -241,19 +236,49 @@ public class OpenCensusProtobufInputRowParserTest
 
     InputRow row = rows.get(0);
     Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "name", "dimension_name-count");
+    assertDimensionEquals(row, "foo_key", "foo_value");
+    assertDimensionEquals(row, "env_key", "env_val");
+
+    row = rows.get(1);
+    Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "name", "dimension_name-sum");
+    assertDimensionEquals(row, "foo_key", "foo_value");
+    assertDimensionEquals(row, "env_key", "env_val");
+  }
+
+  @Test
+  public void testDefaultPrefix() throws Exception
+  {
+    //configure parser with desc file
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, null);
+
+    Metric metric = summaryMetric(Timestamp.getDefaultInstance());
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    metric.writeTo(out);
+
+    List<InputRow> rows = parser.parseBatch(ByteBuffer.wrap(out.toByteArray()));
+
+    Assert.assertEquals(2, rows.size());
+
+    InputRow row = rows.get(0);
+    Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "name", "metric_summary-count");
+    assertDimensionEquals(row, "foo_key", "foo_value");
     assertDimensionEquals(row, "resource.env_key", "env_val");
 
     row = rows.get(1);
     Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "name", "metric_summary-sum");
+    assertDimensionEquals(row, "foo_key", "foo_value");
     assertDimensionEquals(row, "resource.env_key", "env_val");
   }
 
   @Test
-  public void testCustomResourceLabelsPrefix() throws Exception
+  public void testCustomPrefix() throws Exception
   {
     //configure parser with desc file
-    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec,
-        OpenCensusProtobufConfig.getConfig("custom."));
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, "descriptor.", "custom.");
 
     Metric metric = summaryMetric(Timestamp.getDefaultInstance());
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -265,10 +290,14 @@ public class OpenCensusProtobufInputRowParserTest
 
     InputRow row = rows.get(0);
     Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "name", "metric_summary-count");
+    assertDimensionEquals(row, "descriptor.foo_key", "foo_value");
     assertDimensionEquals(row, "custom.env_key", "env_val");
 
     row = rows.get(1);
     Assert.assertEquals(4, row.getDimensions().size());
+    assertDimensionEquals(row, "name", "metric_summary-sum");
+    assertDimensionEquals(row, "descriptor.foo_key", "foo_value");
     assertDimensionEquals(row, "custom.env_key", "env_val");
   }
 
