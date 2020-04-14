@@ -57,21 +57,28 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   private final List<String> dimensions;
 
   private final String metricDimension;
-  private final String descriptorDimensionPrefix;
-  private final String resourceDimensionPrefix;
+  private final String metricLabelPrefix;
+  private final String resourceLabelPrefix;
+  private final boolean hasMetricDimension;
+  private final boolean hasMetricLabelPrefix;
+  private final boolean hasResourceLabelPrefix;
 
   public OpenCensusProtobufInputRowParser(
       @JsonProperty("parseSpec") ParseSpec parseSpec,
       @JsonProperty("metricDimension") String metricDimension,
-      @JsonProperty("descriptorDimensionPrefix") String descriptorPrefix,
+      @JsonProperty("descriptorDimensionPrefix") String metricPrefix,
       @JsonProperty("resourceDimensionPrefix") String resourcePrefix
   )
   {
     this.parseSpec = parseSpec;
     this.dimensions = parseSpec.getDimensionsSpec().getDimensionNames();
     this.metricDimension = metricDimension;
-    this.descriptorDimensionPrefix = descriptorPrefix;
-    this.resourceDimensionPrefix = resourcePrefix == null ? DEFAULT_RESOURCE_PREFIX : resourcePrefix;
+    this.metricLabelPrefix = metricPrefix;
+    this.resourceLabelPrefix = resourcePrefix == null ? DEFAULT_RESOURCE_PREFIX : resourcePrefix;
+
+    this.hasMetricDimension = !Strings.isNullOrEmpty(this.metricDimension);
+    this.hasMetricLabelPrefix = !Strings.isNullOrEmpty(this.metricLabelPrefix);
+    this.hasResourceLabelPrefix = !this.resourceLabelPrefix.isEmpty();
     LOG.info("Creating Open Census Protobuf parser with spec:" + parseSpec);
   }
 
@@ -87,8 +94,8 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     return new OpenCensusProtobufInputRowParser(
         parseSpec,
         metricDimension,
-        descriptorDimensionPrefix,
-        resourceDimensionPrefix);
+        metricLabelPrefix,
+        resourceLabelPrefix);
   }
 
   @Override
@@ -104,17 +111,16 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     }
 
     // Fetch metric name.
-    String metricName = !Strings.isNullOrEmpty(this.metricDimension) ? this.metricDimension :
-        metric.getMetricDescriptor().getName();
+    String metricName = this.hasMetricDimension ? this.metricDimension : metric.getMetricDescriptor().getName();
 
     // Process metric descriptor labels map keys.
     List<String> descriptorLabels = metric.getMetricDescriptor().getLabelKeysList().stream()
-        .map(s -> prefixKeyMapper(this.descriptorDimensionPrefix, s.getKey()))
+        .map(s -> (!this.hasMetricLabelPrefix ? s.getKey() : this.metricLabelPrefix + s.getKey()))
         .collect(Collectors.toList());
 
     // Process resource labels map.
     Map<String, Object> resourceLabelsMap = new HashMap<>(metric.getResource().getLabelsMap().entrySet().stream()
-        .collect(Collectors.toMap(entry -> prefixKeyMapper(this.resourceDimensionPrefix, entry.getKey()),
+        .collect(Collectors.toMap(entry -> (!this.hasResourceLabelPrefix ? entry.getKey() : this.resourceLabelPrefix + entry.getKey()),
             Map.Entry::getValue)));
 
     final List<String> dimensions;
@@ -216,11 +222,6 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         dimensions,
         derivedMetrics
     ));
-  }
-
-  private String prefixKeyMapper(String prefix, String key)
-  {
-    return Strings.isNullOrEmpty(prefix) ? key : prefix + key;
   }
 
 }
