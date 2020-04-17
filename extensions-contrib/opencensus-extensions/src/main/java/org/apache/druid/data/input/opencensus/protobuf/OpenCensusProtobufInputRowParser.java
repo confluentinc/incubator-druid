@@ -19,6 +19,7 @@
 
 package org.apache.druid.data.input.opencensus.protobuf;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -28,6 +29,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.opencensus.proto.metrics.v1.Metric;
 import io.opencensus.proto.metrics.v1.Point;
 import io.opencensus.proto.metrics.v1.TimeSeries;
+import org.apache.druid.common.config.NullHandling;
 import org.apache.druid.data.input.ByteBufferInputRowParser;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.MapBasedInputRow;
@@ -49,7 +51,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   private static final Logger LOG = new Logger(OpenCensusProtobufInputRowParser.class);
 
   private static final String SEPARATOR = "-";
-  private static final String NAME = "name";
+  private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String VALUE = "value";
   private static final String TIMESTAMP_COLUMN = "timestamp";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
@@ -59,26 +61,21 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   private final String metricDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
-  private final boolean hasMetricDimension;
-  private final boolean hasMetricLabelPrefix;
-  private final boolean hasResourceLabelPrefix;
 
+  @JsonCreator
   public OpenCensusProtobufInputRowParser(
       @JsonProperty("parseSpec") ParseSpec parseSpec,
       @JsonProperty("metricDimension") String metricDimension,
-      @JsonProperty("descriptorDimensionPrefix") String metricPrefix,
-      @JsonProperty("resourceDimensionPrefix") String resourcePrefix
+      @JsonProperty("metricLabelPrefix") String metricPrefix,
+      @JsonProperty("resourceLabelPrefix") String resourcePrefix
   )
   {
     this.parseSpec = parseSpec;
     this.dimensions = parseSpec.getDimensionsSpec().getDimensionNames();
-    this.metricDimension = metricDimension;
-    this.metricLabelPrefix = metricPrefix;
-    this.resourceLabelPrefix = resourcePrefix == null ? DEFAULT_RESOURCE_PREFIX : resourcePrefix;
+    this.metricDimension = !Strings.isNullOrEmpty(metricDimension) ? metricDimension : DEFAULT_METRIC_DIMENSION;
+    this.metricLabelPrefix = NullHandling.nullToEmptyIfNeeded(metricPrefix);
+    this.resourceLabelPrefix = resourcePrefix != null ? resourcePrefix : DEFAULT_RESOURCE_PREFIX;
 
-    this.hasMetricDimension = !Strings.isNullOrEmpty(this.metricDimension);
-    this.hasMetricLabelPrefix = !Strings.isNullOrEmpty(this.metricLabelPrefix);
-    this.hasResourceLabelPrefix = !this.resourceLabelPrefix.isEmpty();
     LOG.info("Creating Open Census Protobuf parser with spec:" + parseSpec);
   }
 
@@ -110,17 +107,14 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
       throw new ParseException(e, "Protobuf message could not be parsed");
     }
 
-    // Fetch metric name.
-    String metricName = this.hasMetricDimension ? this.metricDimension : metric.getMetricDescriptor().getName();
-
     // Process metric descriptor labels map keys.
     List<String> descriptorLabels = metric.getMetricDescriptor().getLabelKeysList().stream()
-        .map(s -> (!this.hasMetricLabelPrefix ? s.getKey() : this.metricLabelPrefix + s.getKey()))
+        .map(s -> this.metricLabelPrefix + s.getKey())
         .collect(Collectors.toList());
 
     // Process resource labels map.
     Map<String, Object> resourceLabelsMap = new HashMap<>(metric.getResource().getLabelsMap().entrySet().stream()
-        .collect(Collectors.toMap(entry -> (!this.hasResourceLabelPrefix ? entry.getKey() : this.resourceLabelPrefix + entry.getKey()),
+        .collect(Collectors.toMap(entry -> this.resourceLabelPrefix + entry.getKey(),
             Map.Entry::getValue)));
 
     final List<String> dimensions;
@@ -133,10 +127,10 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
       // Add resource map key set to record dimensions.
       recordDimensions.addAll(resourceLabelsMap.keySet());
 
-      // NAME, VALUE dimensions will not be present in labelKeysList or Metric.Resource map as they
-      // are derived dimensions, which get populated while parsing data for timeSeries hence add
-      // them to recordDimensions.
-      recordDimensions.add(NAME);
+      // MetricDimension, VALUE dimensions will not be present in labelKeysList or Metric.Resource
+      // map as they are derived dimensions, which get populated while parsing data for timeSeries
+      // hence add them to recordDimensions.
+      recordDimensions.add(this.metricDimension);
       recordDimensions.add(VALUE);
 
       dimensions = Lists.newArrayList(
@@ -165,7 +159,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
           case DOUBLE_VALUE:
             Map<String, Object> doubleGauge = new HashMap<>();
             doubleGauge.putAll(labels);
-            doubleGauge.put(NAME, metricName);
+            doubleGauge.put(this.metricDimension, metric.getMetricDescriptor().getName());
             doubleGauge.put(VALUE, point.getDoubleValue());
             addDerivedMetricsRow(doubleGauge, dimensions, rows);
             break;
@@ -173,21 +167,21 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
             HashMap<String, Object> intGauge = new HashMap<>();
             intGauge.putAll(labels);
             intGauge.put(VALUE, point.getInt64Value());
-            intGauge.put(NAME, metricName);
+            intGauge.put(this.metricDimension, metric.getMetricDescriptor().getName());
             addDerivedMetricsRow(intGauge, dimensions, rows);
             break;
           case SUMMARY_VALUE:
             // count
             Map<String, Object> summaryCount = new HashMap<>();
             summaryCount.putAll(labels);
-            summaryCount.put(NAME, metricName + SEPARATOR + "count");
+            summaryCount.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
             summaryCount.put(VALUE, point.getSummaryValue().getCount().getValue());
             addDerivedMetricsRow(summaryCount, dimensions, rows);
 
             // sum
             Map<String, Object> summarySum = new HashMap<>();
             summarySum.putAll(labels);
-            summarySum.put(NAME, metricName + SEPARATOR + "sum");
+            summarySum.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
             summarySum.put(VALUE, point.getSummaryValue().getSnapshot().getSum().getValue());
             addDerivedMetricsRow(summarySum, dimensions, rows);
 
@@ -196,13 +190,13 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
           case DISTRIBUTION_VALUE:
             // count
             Map<String, Object> distCount = new HashMap<>();
-            distCount.put(NAME, metricName + SEPARATOR + "count");
+            distCount.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
             distCount.put(VALUE, point.getDistributionValue().getCount());
             addDerivedMetricsRow(distCount, dimensions, rows);
 
             // sum
             Map<String, Object> distSum = new HashMap<>();
-            distSum.put(NAME, metricName + SEPARATOR + "sum");
+            distSum.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
             distSum.put(VALUE, point.getDistributionValue().getSum());
             addDerivedMetricsRow(distSum, dimensions, rows);
             // TODO: How to handle buckets ?

@@ -32,6 +32,7 @@ import io.opencensus.proto.metrics.v1.Point;
 import io.opencensus.proto.metrics.v1.SummaryValue;
 import io.opencensus.proto.metrics.v1.TimeSeries;
 import io.opencensus.proto.resource.v1.Resource;
+import org.apache.druid.common.config.NullHandling;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.JSONParseSpec;
@@ -56,6 +57,10 @@ import java.util.List;
 
 public class OpenCensusProtobufInputRowParserTest
 {
+  static {
+    NullHandling.initializeForTests();
+  }
+
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -221,6 +226,7 @@ public class OpenCensusProtobufInputRowParserTest
 
   }
 
+  @Test
   public void testMetricNameOverride() throws Exception
   {
     //configure parser with desc file
@@ -236,13 +242,13 @@ public class OpenCensusProtobufInputRowParserTest
 
     InputRow row = rows.get(0);
     Assert.assertEquals(4, row.getDimensions().size());
-    assertDimensionEquals(row, "name", "dimension_name-count");
+    assertDimensionEquals(row, "dimension_name", "metric_summary-count");
     assertDimensionEquals(row, "foo_key", "foo_value");
     assertDimensionEquals(row, "env_key", "env_val");
 
     row = rows.get(1);
     Assert.assertEquals(4, row.getDimensions().size());
-    assertDimensionEquals(row, "name", "dimension_name-sum");
+    assertDimensionEquals(row, "dimension_name", "metric_summary-sum");
     assertDimensionEquals(row, "foo_key", "foo_value");
     assertDimensionEquals(row, "env_key", "env_val");
   }
