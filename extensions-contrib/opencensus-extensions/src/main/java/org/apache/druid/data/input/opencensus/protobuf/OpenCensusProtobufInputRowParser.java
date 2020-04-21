@@ -72,7 +72,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   {
     this.parseSpec = parseSpec;
     this.dimensions = parseSpec.getDimensionsSpec().getDimensionNames();
-    this.metricDimension = !Strings.isNullOrEmpty(metricDimension) ? metricDimension : DEFAULT_METRIC_DIMENSION;
+    this.metricDimension = Strings.isNullOrEmpty(metricDimension) ? DEFAULT_METRIC_DIMENSION : metricDimension;
     this.metricLabelPrefix = NullHandling.nullToEmptyIfNeeded(metricPrefix);
     this.resourceLabelPrefix = resourcePrefix != null ? resourcePrefix : DEFAULT_RESOURCE_PREFIX;
 
