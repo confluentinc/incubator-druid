@@ -32,7 +32,6 @@ import io.opencensus.proto.metrics.v1.Point;
 import io.opencensus.proto.metrics.v1.SummaryValue;
 import io.opencensus.proto.metrics.v1.TimeSeries;
 import io.opencensus.proto.resource.v1.Resource;
-import org.apache.druid.common.config.NullHandling;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.JSONParseSpec;
@@ -57,10 +56,6 @@ import java.util.List;
 
 public class OpenCensusProtobufInputRowParserTest
 {
-  static {
-    NullHandling.initializeForTests();
-  }
-
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 

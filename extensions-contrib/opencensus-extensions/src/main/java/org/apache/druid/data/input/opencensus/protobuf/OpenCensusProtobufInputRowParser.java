@@ -29,11 +29,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.opencensus.proto.metrics.v1.Metric;
 import io.opencensus.proto.metrics.v1.Point;
 import io.opencensus.proto.metrics.v1.TimeSeries;
-import org.apache.druid.common.config.NullHandling;
 import org.apache.druid.data.input.ByteBufferInputRowParser;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ParseSpec;
+import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
@@ -73,7 +73,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     this.parseSpec = parseSpec;
     this.dimensions = parseSpec.getDimensionsSpec().getDimensionNames();
     this.metricDimension = Strings.isNullOrEmpty(metricDimension) ? DEFAULT_METRIC_DIMENSION : metricDimension;
-    this.metricLabelPrefix = NullHandling.nullToEmptyIfNeeded(metricPrefix);
+    this.metricLabelPrefix = StringUtils.nullToEmptyNonDruidDataString(metricPrefix);
     this.resourceLabelPrefix = resourcePrefix != null ? resourcePrefix : DEFAULT_RESOURCE_PREFIX;
 
     LOG.info("Creating Open Census Protobuf parser with spec:" + parseSpec);
