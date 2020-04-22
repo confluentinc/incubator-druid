@@ -113,9 +113,9 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         .collect(Collectors.toList());
 
     // Process resource labels map.
-    Map<String, Object> resourceLabelsMap = new HashMap<>(metric.getResource().getLabelsMap().entrySet().stream()
+    Map<String, Object> resourceLabelsMap = metric.getResource().getLabelsMap().entrySet().stream()
         .collect(Collectors.toMap(entry -> this.resourceLabelPrefix + entry.getKey(),
-            Map.Entry::getValue)));
+            Map.Entry::getValue));
 
     final List<String> dimensions;
 
