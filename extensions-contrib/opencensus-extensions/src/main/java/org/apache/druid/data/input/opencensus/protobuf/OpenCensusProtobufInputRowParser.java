@@ -130,7 +130,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
       // MetricDimension, VALUE dimensions will not be present in labelKeysList or Metric.Resource
       // map as they are derived dimensions, which get populated while parsing data for timeSeries
       // hence add them to recordDimensions.
-      recordDimensions.add(this.metricDimension);
+      recordDimensions.add(metricDimension);
       recordDimensions.add(VALUE);
 
       dimensions = Lists.newArrayList(
@@ -159,7 +159,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
           case DOUBLE_VALUE:
             Map<String, Object> doubleGauge = new HashMap<>();
             doubleGauge.putAll(labels);
-            doubleGauge.put(this.metricDimension, metric.getMetricDescriptor().getName());
+            doubleGauge.put(metricDimension, metric.getMetricDescriptor().getName());
             doubleGauge.put(VALUE, point.getDoubleValue());
             addDerivedMetricsRow(doubleGauge, dimensions, rows);
             break;
@@ -167,21 +167,21 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
             HashMap<String, Object> intGauge = new HashMap<>();
             intGauge.putAll(labels);
             intGauge.put(VALUE, point.getInt64Value());
-            intGauge.put(this.metricDimension, metric.getMetricDescriptor().getName());
+            intGauge.put(metricDimension, metric.getMetricDescriptor().getName());
             addDerivedMetricsRow(intGauge, dimensions, rows);
             break;
           case SUMMARY_VALUE:
             // count
             Map<String, Object> summaryCount = new HashMap<>();
             summaryCount.putAll(labels);
-            summaryCount.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
+            summaryCount.put(metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
             summaryCount.put(VALUE, point.getSummaryValue().getCount().getValue());
             addDerivedMetricsRow(summaryCount, dimensions, rows);
 
             // sum
             Map<String, Object> summarySum = new HashMap<>();
             summarySum.putAll(labels);
-            summarySum.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
+            summarySum.put(metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
             summarySum.put(VALUE, point.getSummaryValue().getSnapshot().getSum().getValue());
             addDerivedMetricsRow(summarySum, dimensions, rows);
 
@@ -190,13 +190,13 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
           case DISTRIBUTION_VALUE:
             // count
             Map<String, Object> distCount = new HashMap<>();
-            distCount.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
+            distCount.put(metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
             distCount.put(VALUE, point.getDistributionValue().getCount());
             addDerivedMetricsRow(distCount, dimensions, rows);
 
             // sum
             Map<String, Object> distSum = new HashMap<>();
-            distSum.put(this.metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
+            distSum.put(metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
             distSum.put(VALUE, point.getDistributionValue().getSum());
             addDerivedMetricsRow(distSum, dimensions, rows);
             // TODO: How to handle buckets ?
