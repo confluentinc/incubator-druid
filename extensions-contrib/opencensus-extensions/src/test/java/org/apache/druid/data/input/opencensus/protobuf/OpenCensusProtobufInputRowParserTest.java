@@ -24,10 +24,12 @@ import com.google.common.collect.Lists;
 import com.google.protobuf.DoubleValue;
 import com.google.protobuf.Int64Value;
 import com.google.protobuf.Timestamp;
+import io.opencensus.proto.metrics.v1.DistributionValue;
 import io.opencensus.proto.metrics.v1.LabelKey;
 import io.opencensus.proto.metrics.v1.LabelValue;
 import io.opencensus.proto.metrics.v1.Metric;
 import io.opencensus.proto.metrics.v1.MetricDescriptor;
+import io.opencensus.proto.metrics.v1.MetricDescriptor.Type;
 import io.opencensus.proto.metrics.v1.Point;
 import io.opencensus.proto.metrics.v1.SummaryValue;
 import io.opencensus.proto.metrics.v1.TimeSeries;
@@ -97,9 +99,8 @@ public class OpenCensusProtobufInputRowParserTest
 
 
   @Test
-  public void testGaugeParse() throws Exception
+  public void testDoubleGaugeParse() throws Exception
   {
-
     //configure parser with desc file
     OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
 
@@ -122,6 +123,32 @@ public class OpenCensusProtobufInputRowParserTest
 
 
     Assert.assertEquals(2000, row.getMetric("value").doubleValue(), 0.0);
+  }
+
+  @Test
+  public void testIntGaugeParse() throws Exception
+  {
+    //configure parser with desc file
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
+
+    DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
+
+    Timestamp timestamp = Timestamp.newBuilder().setSeconds(dateTime.getMillis() / 1000)
+        .setNanos((int) ((dateTime.getMillis() % 1000) * 1000000)).build();
+
+    System.out.println(timestamp.getSeconds() * 1000);
+
+    Metric metric = intGaugeMetric(timestamp);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    metric.writeTo(out);
+
+    InputRow row = parser.parseBatch(ByteBuffer.wrap(out.toByteArray())).get(0);
+    Assert.assertEquals(dateTime.getMillis(), row.getTimestampFromEpoch());
+
+    assertDimensionEquals(row, "name", "metric_gauge_int64");
+    assertDimensionEquals(row, "foo_key", "foo_value");
+
+    Assert.assertEquals(1000, row.getMetric("value").intValue(), 0.0);
   }
 
   @Test
@@ -154,7 +181,38 @@ public class OpenCensusProtobufInputRowParserTest
     assertDimensionEquals(row, "name", "metric_summary-sum");
     assertDimensionEquals(row, "foo_key", "foo_value");
     Assert.assertEquals(10, row.getMetric("value").doubleValue(), 0.0);
+  }
 
+  @Test
+  public void testDistributionParse() throws Exception
+  {
+    //configure parser with desc file
+    OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
+
+    DateTime dateTime = new DateTime(2019, 07, 12, 9, 30, ISOChronology.getInstanceUTC());
+
+    Timestamp timestamp = Timestamp.newBuilder().setSeconds(dateTime.getMillis() / 1000)
+        .setNanos((int) ((dateTime.getMillis() % 1000) * 1000000)).build();
+
+    Metric metric = distributionMetric(timestamp);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    metric.writeTo(out);
+
+    List<InputRow> rows = parser.parseBatch(ByteBuffer.wrap(out.toByteArray()));
+
+    Assert.assertEquals(2, rows.size());
+
+    InputRow row = rows.get(0);
+    Assert.assertEquals(dateTime.getMillis(), row.getTimestampFromEpoch());
+    assertDimensionEquals(row, "name", "metric_distribution-count");
+    assertDimensionEquals(row, "foo_key", "foo_value");
+    Assert.assertEquals(100, row.getMetric("value").intValue(), 0.0);
+
+    row = rows.get(1);
+    Assert.assertEquals(dateTime.getMillis(), row.getTimestampFromEpoch());
+    assertDimensionEquals(row, "name", "metric_distribution-sum");
+    assertDimensionEquals(row, "foo_key", "foo_value");
+    Assert.assertEquals(500, row.getMetric("value").doubleValue(), 0.0);
   }
 
   @Test
@@ -312,43 +370,29 @@ public class OpenCensusProtobufInputRowParserTest
 
   private Metric doubleGaugeMetric(Timestamp timestamp)
   {
-    Metric dist = Metric.newBuilder()
-        .setMetricDescriptor(
-            MetricDescriptor.newBuilder()
-                .setName("metric_gauge_double")
-                .setDescription("metric_gauge_double_description")
-                .setUnit("ms")
-                .setType(
-                    MetricDescriptor.Type.GAUGE_DOUBLE)
-                .addLabelKeys(
-                    LabelKey.newBuilder()
-                        .setKey("foo_key")
-                        .build())
-                .build())
-        .setResource(
-            Resource.newBuilder()
-                .setType("env")
-                .putAllLabels(Collections.singletonMap("env_key", "env_val"))
-                .build())
-        .addTimeseries(
-            TimeSeries.newBuilder()
-                .setStartTimestamp(timestamp)
-                .addLabelValues(
-                    LabelValue.newBuilder()
-                        .setHasValue(true)
-                        .setValue("foo_value")
-                        .build())
-                .addPoints(
-                    Point.newBuilder()
-                        .setTimestamp(timestamp)
-                        .setDoubleValue(2000)
-                        .build())
-                .build())
-        .build();
-
-    return dist;
+    return getMetric(
+        "metric_gauge_double",
+        "metric_gauge_double_description",
+        Type.GAUGE_DOUBLE,
+        Point.newBuilder()
+            .setTimestamp(timestamp)
+            .setDoubleValue(2000)
+            .build(),
+        timestamp);
   }
 
+  private Metric intGaugeMetric(Timestamp timestamp)
+  {
+    return getMetric(
+        "metric_gauge_int64",
+        "metric_gauge_int64_description",
+        MetricDescriptor.Type.GAUGE_INT64,
+        Point.newBuilder()
+            .setTimestamp(timestamp)
+            .setInt64Value(1000)
+            .build(),
+        timestamp);
+  }
 
   private Metric summaryMetric(Timestamp timestamp)
   {
@@ -387,15 +431,44 @@ public class OpenCensusProtobufInputRowParserTest
         .setSnapshot(snapshot)
         .build();
 
+    return getMetric(
+        "metric_summary",
+        "metric_summary_description",
+        MetricDescriptor.Type.SUMMARY,
+        Point.newBuilder()
+            .setTimestamp(timestamp)
+            .setSummaryValue(summaryValue)
+            .build(),
+        timestamp);
+  }
 
+  private Metric distributionMetric(Timestamp timestamp)
+  {
+    DistributionValue distributionValue = DistributionValue.newBuilder()
+        .setCount(100)
+        .setSum(500)
+        .build();
+
+    return getMetric(
+        "metric_distribution",
+        "metric_distribution_description",
+        MetricDescriptor.Type.GAUGE_DISTRIBUTION,
+        Point.newBuilder()
+            .setTimestamp(timestamp)
+            .setDistributionValue(distributionValue)
+            .build(),
+        timestamp);
+  }
+
+  private Metric getMetric(String name, String description, MetricDescriptor.Type type, Point point, Timestamp timestamp)
+  {
     Metric dist = Metric.newBuilder()
         .setMetricDescriptor(
             MetricDescriptor.newBuilder()
-                .setName("metric_summary")
-                .setDescription("metric_summary_description")
+                .setName(name)
+                .setDescription(description)
                 .setUnit("ms")
-                .setType(
-                    MetricDescriptor.Type.SUMMARY)
+                .setType(type)
                 .addLabelKeys(
                     LabelKey.newBuilder()
                         .setKey("foo_key")
@@ -414,16 +487,11 @@ public class OpenCensusProtobufInputRowParserTest
                         .setHasValue(true)
                         .setValue("foo_value")
                         .build())
-                .addPoints(
-                    Point.newBuilder()
-                        .setTimestamp(timestamp)
-                        .setSummaryValue(summaryValue)
-                        .build())
+                .addPoints(point)
                 .build())
         .build();
 
     return dist;
   }
-
 
 }

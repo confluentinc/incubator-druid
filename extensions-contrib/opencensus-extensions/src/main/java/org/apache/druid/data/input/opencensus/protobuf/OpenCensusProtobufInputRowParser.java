@@ -85,6 +85,24 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     return parseSpec;
   }
 
+  @JsonProperty
+  public String getMetricDimension()
+  {
+    return metricDimension;
+  }
+
+  @JsonProperty
+  public String getMetricLabelPrefix()
+  {
+    return metricLabelPrefix;
+  }
+
+  @JsonProperty
+  public String getResourceLabelPrefix()
+  {
+    return resourceLabelPrefix;
+  }
+
   @Override
   public OpenCensusProtobufInputRowParser withParseSpec(ParseSpec parseSpec)
   {
@@ -190,12 +208,14 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
           case DISTRIBUTION_VALUE:
             // count
             Map<String, Object> distCount = new HashMap<>();
+            distCount.putAll(labels);
             distCount.put(metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "count");
             distCount.put(VALUE, point.getDistributionValue().getCount());
             addDerivedMetricsRow(distCount, dimensions, rows);
 
             // sum
             Map<String, Object> distSum = new HashMap<>();
+            distSum.putAll(labels);
             distSum.put(metricDimension, metric.getMetricDescriptor().getName() + SEPARATOR + "sum");
             distSum.put(VALUE, point.getDistributionValue().getSum());
             addDerivedMetricsRow(distSum, dimensions, rows);
