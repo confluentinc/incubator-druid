@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -85,7 +86,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     return parseSpec;
   }
 
-  @JsonProperty
+  @JsonProperty()
   public String getMetricDimension()
   {
     return metricDimension;
@@ -131,7 +132,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         .collect(Collectors.toList());
 
     // Process resource labels map.
-    Map<String, Object> resourceLabelsMap = metric.getResource().getLabelsMap().entrySet().stream()
+    Map<String, String> resourceLabelsMap = metric.getResource().getLabelsMap().entrySet().stream()
         .collect(Collectors.toMap(entry -> this.resourceLabelPrefix + entry.getKey(),
             Map.Entry::getValue));
 
@@ -236,6 +237,28 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         dimensions,
         derivedMetrics
     ));
+  }
+
+  @Override
+  public boolean equals(final Object o)
+  {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof OpenCensusProtobufInputRowParser)) {
+      return false;
+    }
+    final OpenCensusProtobufInputRowParser that = (OpenCensusProtobufInputRowParser) o;
+    return Objects.equals(parseSpec, that.parseSpec) &&
+        Objects.equals(metricDimension, that.metricDimension) &&
+        Objects.equals(metricLabelPrefix, that.metricLabelPrefix) &&
+        Objects.equals(resourceLabelPrefix, that.resourceLabelPrefix);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash(parseSpec, metricDimension, metricLabelPrefix, resourceLabelPrefix);
   }
 
 }
