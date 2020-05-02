@@ -86,7 +86,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
     return parseSpec;
   }
 
-  @JsonProperty()
+  @JsonProperty
   public String getMetricDimension()
   {
     return metricDimension;
