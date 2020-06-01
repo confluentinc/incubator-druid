@@ -428,9 +428,9 @@ public abstract class BaseAppenderatorDriver implements Closeable
   }
 
   /**
-   * Returns a stream of {@link SegmentWithState} for the given sequenceNames.
+   * Returns a stream of {@link SegmentIdWithShardSpec} for the given sequenceNames.
    */
-  Stream<SegmentWithState> getSegmentWithStates(Collection<String> sequenceNames)
+  List<SegmentIdWithShardSpec> getSegmentIdsWithShardSpecs(Collection<String> sequenceNames)
   {
     synchronized (segments) {
       return sequenceNames
@@ -438,11 +438,13 @@ public abstract class BaseAppenderatorDriver implements Closeable
           .map(segments::get)
           .filter(Objects::nonNull)
           .flatMap(segmentsForSequence -> segmentsForSequence.intervalToSegmentStates.values().stream())
-          .flatMap(segmentsOfInterval -> segmentsOfInterval.getAllSegments().stream());
+          .flatMap(segmentsOfInterval -> segmentsOfInterval.getAllSegments().stream())
+          .map(SegmentWithState::getSegmentIdentifier)
+          .collect(Collectors.toList());
     }
   }
 
-  Stream<SegmentWithState> getAppendingSegments(Collection<String> sequenceNames)
+  Set<SegmentIdWithShardSpec> getAppendingSegments(Collection<String> sequenceNames)
   {
     synchronized (segments) {
       return sequenceNames
@@ -451,7 +453,9 @@ public abstract class BaseAppenderatorDriver implements Closeable
           .filter(Objects::nonNull)
           .flatMap(segmentsForSequence -> segmentsForSequence.intervalToSegmentStates.values().stream())
           .map(segmentsOfInterval -> segmentsOfInterval.appendingSegment)
-          .filter(Objects::nonNull);
+          .filter(Objects::nonNull)
+          .map(SegmentWithState::getSegmentIdentifier)
+          .collect(Collectors.toSet());
     }
   }
 
