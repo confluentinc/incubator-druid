@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.druid.collections.CloseableStupidPool;
+import org.apache.druid.common.config.NullHandlingTest;
 import org.apache.druid.java.util.common.DateTimes;
 import org.apache.druid.java.util.common.io.Closer;
 import org.apache.druid.query.QueryPlus;
@@ -46,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(Parameterized.class)
-public class TopNUnionQueryTest
+public class TopNUnionQueryTest extends NullHandlingTest
 {
   private static final Closer RESOURCE_CLOSER = Closer.create();
 
