@@ -19,6 +19,7 @@
 
 package org.apache.druid.storage.s3;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
@@ -72,6 +73,8 @@ public class S3Utils
         return true;
       } else if (e instanceof AmazonServiceException) {
         return isServiceExceptionRecoverable((AmazonServiceException) e);
+      } else if (e instanceof AmazonClientException) {
+        return (((AmazonClientException) e).isRetryable());
       } else {
         return apply(e.getCause());
       }
@@ -214,7 +217,7 @@ public class S3Utils
       String bucket,
       String key,
       File file
-  )
+  ) throws java.lang.InterruptedException
   {
     final PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, key, file);
 
@@ -222,6 +225,6 @@ public class S3Utils
       putObjectRequest.setAccessControlList(S3Utils.grantFullControlToBucketOwner(service, bucket));
     }
     log.info("Pushing [%s] to bucket[%s] and key[%s].", file, bucket, key);
-    service.putObject(putObjectRequest);
+    service.upload(putObjectRequest);
   }
 }
