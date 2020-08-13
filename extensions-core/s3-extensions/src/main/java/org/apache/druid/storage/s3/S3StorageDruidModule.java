@@ -159,6 +159,7 @@ public class S3StorageDruidModule implements DruidModule
     JsonConfigProvider.bind(binder, "druid.storage", S3DataSegmentPusherConfig.class);
     JsonConfigProvider.bind(binder, "druid.storage", S3DataSegmentArchiverConfig.class);
     JsonConfigProvider.bind(binder, "druid.storage", S3StorageConfig.class);
+    JsonConfigProvider.bind(binder, "druid.storage.transfer", S3TransferConfig.class);    
     JsonConfigProvider.bind(binder, "druid.storage.sse.kms", S3SSEKmsConfig.class);
     JsonConfigProvider.bind(binder, "druid.storage.sse.custom", S3SSECustomConfig.class);
 
