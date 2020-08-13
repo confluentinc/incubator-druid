@@ -52,13 +52,19 @@ public class ServerSideEncryptingAmazonS3
 {
   private final AmazonS3 amazonS3;
   private final ServerSideEncryption serverSideEncryption;
-  private final TransferManager transferManager;
+  private TransferManager transferManager = null;
 
-  public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption)
+  public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption, S3TransferConfig transferConfig)
   {
     this.amazonS3 = amazonS3;
     this.serverSideEncryption = serverSideEncryption;
-    this.transferManager = TransferManagerBuilder.standard().withS3Client(amazonS3).build();
+    if (transferConfig != null && transferConfig.getUseTransferManager()) {
+      this.transferManager = TransferManagerBuilder.standard()
+          .withS3Client(amazonS3)
+          .withMinimumUploadPartSize(transferConfig.getMinimumUploadPartSize())
+          .withMultipartUploadThreshold(transferConfig.getMultipartUploadThreshold())
+          .build();
+    }
   }
 
   public boolean doesObjectExist(String bucket, String objectName)
@@ -125,11 +131,14 @@ public class ServerSideEncryptingAmazonS3
     amazonS3.deleteObject(bucket, key);
   }
 
-  public Upload upload(PutObjectRequest request) throws java.lang.InterruptedException
+  public void upload(PutObjectRequest request) throws java.lang.InterruptedException
   {
-    Upload transfer = transferManager.upload(serverSideEncryption.decorate(request));
-    transfer.waitForCompletion();
-    return transfer;
+    if (transferManager == null) {
+      putObject(request);
+    } else {
+      Upload transfer = transferManager.upload(serverSideEncryption.decorate(request));
+      transfer.waitForCompletion();
+    }
   }
 
 }

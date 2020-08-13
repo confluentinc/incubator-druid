@@ -44,7 +44,8 @@ public class StaticS3FirehoseFactoryTest
   private static final AmazonS3Client S3_CLIENT = EasyMock.createNiceMock(AmazonS3Client.class);
   private static final ServerSideEncryptingAmazonS3 SERVICE = new ServerSideEncryptingAmazonS3(
       S3_CLIENT,
-      new NoopServerSideEncryption()
+      new NoopServerSideEncryption(),
+      null
   );
 
   @Test
