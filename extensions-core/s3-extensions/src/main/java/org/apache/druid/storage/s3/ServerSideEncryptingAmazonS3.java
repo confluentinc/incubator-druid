@@ -31,6 +31,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
 import org.apache.druid.java.util.common.StringUtils;
 
 import java.io.ByteArrayInputStream;
@@ -49,11 +52,19 @@ public class ServerSideEncryptingAmazonS3
 {
   private final AmazonS3 amazonS3;
   private final ServerSideEncryption serverSideEncryption;
+  private TransferManager transferManager = null;
 
-  public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption)
+  public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption, S3TransferConfig transferConfig)
   {
     this.amazonS3 = amazonS3;
     this.serverSideEncryption = serverSideEncryption;
+    if (transferConfig != null && transferConfig.isUseTransferManager()) {
+      this.transferManager = TransferManagerBuilder.standard()
+          .withS3Client(amazonS3)
+          .withMinimumUploadPartSize(transferConfig.getMinimumUploadPartSize())
+          .withMultipartUploadThreshold(transferConfig.getMultipartUploadThreshold())
+          .build();
+    }
   }
 
   public boolean doesObjectExist(String bucket, String objectName)
@@ -119,4 +130,16 @@ public class ServerSideEncryptingAmazonS3
   {
     amazonS3.deleteObject(bucket, key);
   }
+
+  public boolean upload(PutObjectRequest request) throws java.lang.InterruptedException
+  {
+    if (transferManager == null) {
+      putObject(request);
+    } else {
+      Upload transfer = transferManager.upload(serverSideEncryption.decorate(request));
+      transfer.waitForCompletion();
+    }
+    return true;
+  }
+
 }

@@ -158,6 +158,7 @@ public class S3StorageDruidModule implements DruidModule
     JsonConfigProvider.bind(binder, "druid.storage", S3DataSegmentPusherConfig.class);
     JsonConfigProvider.bind(binder, "druid.storage", S3DataSegmentArchiverConfig.class);
     JsonConfigProvider.bind(binder, "druid.storage", S3StorageConfig.class);
+    JsonConfigProvider.bind(binder, "druid.storage.transfer", S3TransferConfig.class);    
     JsonConfigProvider.bind(binder, "druid.storage.sse.kms", S3SSEKmsConfig.class);
     JsonConfigProvider.bind(binder, "druid.storage.sse.custom", S3SSECustomConfig.class);
 
@@ -192,6 +193,11 @@ public class S3StorageDruidModule implements DruidModule
       );
     }
 
-    return new ServerSideEncryptingAmazonS3(builder.build(), storageConfig.getServerSideEncryption());
+    if (storageConfig.getS3TransferConfig() != null) {
+      S3TransferConfig config = storageConfig.getS3TransferConfig();
+      log.debug("s3 transfer config useTransferManager=[%b], minimumUploadPartSize=[%d], multipartUploadThreshold=[%d]",
+                config.isUseTransferManager(), config.getMinimumUploadPartSize(), config.getMultipartUploadThreshold());
+    }
+    return new ServerSideEncryptingAmazonS3(builder.build(), storageConfig.getServerSideEncryption(), storageConfig.getS3TransferConfig());
   }
 }

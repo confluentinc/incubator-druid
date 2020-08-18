@@ -183,7 +183,7 @@ public class ObjectSummaryIteratorTest
       final List<S3ObjectSummary> objects
   )
   {
-    return new ServerSideEncryptingAmazonS3(null, null)
+    return new ServerSideEncryptingAmazonS3(null, null, null)
     {
       @Override
       public ListObjectsV2Result listObjectsV2(final ListObjectsV2Request request)
