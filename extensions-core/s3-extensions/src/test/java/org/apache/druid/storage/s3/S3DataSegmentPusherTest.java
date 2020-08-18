@@ -83,9 +83,8 @@ public class S3DataSegmentPusherTest
     acl.grantAllPermissions(new Grant(new CanonicalGrantee(acl.getOwner().getId()), Permission.FullControl));
     EasyMock.expect(s3Client.getBucketAcl(EasyMock.eq("bucket"))).andReturn(acl).once();
 
-    EasyMock.expect(s3Client.upload(EasyMock.anyObject(PutObjectRequest.class)))
-      .andReturn(true)
-      .once();
+    s3Client.upload(EasyMock.anyObject(PutObjectRequest.class));
+    EasyMock.expectLastCall().once();
 
     EasyMock.replay(s3Client);
 

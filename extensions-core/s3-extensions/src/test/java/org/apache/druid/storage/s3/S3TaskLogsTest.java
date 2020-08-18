@@ -70,10 +70,9 @@ public class S3TaskLogsTest
   {
     ServerSideEncryptingAmazonS3 s3Client = EasyMock.createMock(ServerSideEncryptingAmazonS3.class);
 
-    EasyMock.expect(s3Client.upload(EasyMock.anyObject(PutObjectRequest.class)))
-      .andReturn(true)
-      .once();
-
+    s3Client.upload(EasyMock.anyObject(PutObjectRequest.class));
+    EasyMock.expectLastCall().once();
+   
     AccessControlList aclExpected = new AccessControlList();
     aclExpected.setOwner(new Owner(ownerId, ownerDisplayName));
 
@@ -81,9 +80,8 @@ public class S3TaskLogsTest
       .andReturn(aclExpected)
       .once();
 
-    EasyMock.expect(s3Client.upload(EasyMock.anyObject(PutObjectRequest.class)))
-      .andReturn(true)
-      .once();
+    s3Client.upload(EasyMock.anyObject(PutObjectRequest.class));
+    EasyMock.expectLastCall().once();
 
     EasyMock.replay(s3Client);
 
