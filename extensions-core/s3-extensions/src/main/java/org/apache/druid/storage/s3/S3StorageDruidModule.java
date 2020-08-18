@@ -195,7 +195,7 @@ public class S3StorageDruidModule implements DruidModule
 
     if (storageConfig.getS3TransferConfig() != null) {
       S3TransferConfig config = storageConfig.getS3TransferConfig();
-      log.debug("s3 transfer config useTranferManager=[%d], minimumUploadPartSize=[%d], multipartUploadThreshold=[%d]",
+      log.debug("s3 transfer config useTransferManager=[%b], minimumUploadPartSize=[%d], multipartUploadThreshold=[%d]",
                 config.getUseTransferManager(), config.getMinimumUploadPartSize(), config.getMultipartUploadThreshold());
     }
     return new ServerSideEncryptingAmazonS3(builder.build(), storageConfig.getServerSideEncryption(), storageConfig.getS3TransferConfig());
