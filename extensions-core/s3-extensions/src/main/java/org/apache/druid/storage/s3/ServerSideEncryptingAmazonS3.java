@@ -145,7 +145,7 @@ public class ServerSideEncryptingAmazonS3
     amazonS3.deleteObjects(request);
   }
 
-  public void upload(PutObjectRequest request) throws java.lang.InterruptedException
+  public boolean upload(PutObjectRequest request) throws java.lang.InterruptedException
   {
     if (transferManager == null) {
       putObject(request);
@@ -153,6 +153,7 @@ public class ServerSideEncryptingAmazonS3
       Upload transfer = transferManager.upload(serverSideEncryption.decorate(request));
       transfer.waitForCompletion();
     }
+    return true;
   }
 
   public static class Builder
