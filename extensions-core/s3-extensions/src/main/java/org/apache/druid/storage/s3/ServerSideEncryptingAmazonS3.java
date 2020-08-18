@@ -67,7 +67,7 @@ public class ServerSideEncryptingAmazonS3
   {
     this.amazonS3 = amazonS3;
     this.serverSideEncryption = serverSideEncryption;
-    if (transferConfig != null && transferConfig.getUseTransferManager()) {
+    if (transferConfig != null && transferConfig.isUseTransferManager()) {
       this.transferManager = TransferManagerBuilder.standard()
           .withS3Client(amazonS3)
           .withMinimumUploadPartSize(transferConfig.getMinimumUploadPartSize())

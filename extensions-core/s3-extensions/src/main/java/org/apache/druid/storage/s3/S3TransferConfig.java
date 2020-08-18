@@ -53,7 +53,7 @@ public class S3TransferConfig
     this.multipartUploadThreshold = multipartUploadThreshold;
   }
 
-  public boolean getUseTransferManager()
+  public boolean isUseTransferManager()
   {
     return useTransferManager;
   }
