@@ -84,7 +84,8 @@ public class S3InputSourceTest extends InitializedNullHandlingTest
   private static final AmazonS3Client S3_CLIENT = EasyMock.createMock(AmazonS3Client.class);
   private static final ServerSideEncryptingAmazonS3 SERVICE = new ServerSideEncryptingAmazonS3(
       S3_CLIENT,
-      new NoopServerSideEncryption()
+      new NoopServerSideEncryption(),
+      null
   );
 
   private static final List<URI> EXPECTED_URIS = Arrays.asList(
