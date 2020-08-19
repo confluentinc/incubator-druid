@@ -75,6 +75,9 @@ public class S3Utils
         return false;
       } else if (e instanceof IOException) {
         return true;
+      } else if (e instanceof java.lang.InterruptedException) {
+        Thread.interrupted(); // Clear flag and retry
+        return true;
       } else if (e instanceof AmazonServiceException) {
         return isServiceExceptionRecoverable((AmazonServiceException) e);
       } else if (e instanceof AmazonClientException) {
