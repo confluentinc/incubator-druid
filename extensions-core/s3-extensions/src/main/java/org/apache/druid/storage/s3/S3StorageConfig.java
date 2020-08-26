@@ -41,6 +41,7 @@ public class S3StorageConfig
    *
    * @see S3StorageDruidModule#configure
    */
+  @JsonProperty("transfer")
   private final S3TransferConfig s3TransferConfig;
     
   @JsonCreator
