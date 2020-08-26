@@ -19,7 +19,6 @@
 
 package org.apache.druid.storage.s3;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
@@ -80,8 +79,6 @@ public class S3Utils
         return false;
       } else if (e instanceof AmazonServiceException) {
         return isServiceExceptionRecoverable((AmazonServiceException) e);
-      } else if (e instanceof AmazonClientException) {
-        return (((AmazonClientException) e).isRetryable());
       } else {
         return apply(e.getCause());
       }

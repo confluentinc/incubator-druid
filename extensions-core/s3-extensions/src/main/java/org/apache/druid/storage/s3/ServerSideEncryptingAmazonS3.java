@@ -158,7 +158,7 @@ public class ServerSideEncryptingAmazonS3
   public static class Builder
   {
     private AmazonS3ClientBuilder amazonS3ClientBuilder = AmazonS3Client.builder();
-    private S3StorageConfig s3StorageConfig = new S3StorageConfig(new NoopServerSideEncryption());
+    private S3StorageConfig s3StorageConfig = new S3StorageConfig(new NoopServerSideEncryption(), null);
 
     public Builder setAmazonS3ClientBuilder(AmazonS3ClientBuilder amazonS3ClientBuilder)
     {
@@ -191,7 +191,7 @@ public class ServerSideEncryptingAmazonS3
         throw new ISE("S3StorageConfig cannot be null!");
       }
 
-      return new ServerSideEncryptingAmazonS3(amazonS3ClientBuilder.build(), s3StorageConfig.getServerSideEncryption());
+      return new ServerSideEncryptingAmazonS3(amazonS3ClientBuilder.build(), s3StorageConfig.getServerSideEncryption(), s3StorageConfig.getS3TransferConfig());
     }
   }
 }
