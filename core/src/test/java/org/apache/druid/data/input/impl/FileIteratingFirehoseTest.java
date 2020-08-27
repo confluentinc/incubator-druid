@@ -23,6 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.io.LineIterator;
 import org.apache.druid.data.input.InputRow;
+import org.apache.druid.testing.InitializedNullHandlingTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @RunWith(Parameterized.class)
-public class FileIteratingFirehoseTest
+public class FileIteratingFirehoseTest extends InitializedNullHandlingTest
 {
   @Parameters(name = "{0}, {1}")
   public static Collection<Object[]> constructorFeeder()
