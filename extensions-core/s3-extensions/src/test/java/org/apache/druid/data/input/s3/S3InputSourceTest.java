@@ -92,7 +92,8 @@ public class S3InputSourceTest extends InitializedNullHandlingTest
   private static final AmazonS3ClientBuilder AMAZON_S3_CLIENT_BUILDER = AmazonS3Client.builder();
   private static final ServerSideEncryptingAmazonS3 SERVICE = new ServerSideEncryptingAmazonS3(
       S3_CLIENT,
-      new NoopServerSideEncryption()
+      new NoopServerSideEncryption(),
+      null
   );
   private static final S3InputDataConfig INPUT_DATA_CONFIG;
   private static final int MAX_LISTING_LENGTH = 10;
