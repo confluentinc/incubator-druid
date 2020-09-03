@@ -51,7 +51,7 @@ public class S3StorageConfig
   )
   {
     this.serverSideEncryption = serverSideEncryption == null ? new NoopServerSideEncryption() : serverSideEncryption;
-    this.s3TransferConfig = s3TransferConfig;
+    this.s3TransferConfig = s3TransferConfig == null ? new S3TransferConfig() : s3TransferConfig;
   }
 
   @JsonProperty("sse")
