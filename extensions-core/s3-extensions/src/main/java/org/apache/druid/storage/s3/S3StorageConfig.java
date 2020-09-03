@@ -36,12 +36,22 @@ public class S3StorageConfig
   @JsonProperty("sse")
   private final ServerSideEncryption serverSideEncryption;
 
+  /**
+   * S3 transfer config.
+   *
+   * @see S3StorageDruidModule#configure
+   */
+  @JsonProperty("transfer")
+  private final S3TransferConfig s3TransferConfig;
+    
   @JsonCreator
   public S3StorageConfig(
-      @JsonProperty("sse") ServerSideEncryption serverSideEncryption
+      @JsonProperty("sse") ServerSideEncryption serverSideEncryption,
+      @JsonProperty("transfer") S3TransferConfig s3TransferConfig
   )
   {
     this.serverSideEncryption = serverSideEncryption == null ? new NoopServerSideEncryption() : serverSideEncryption;
+    this.s3TransferConfig = s3TransferConfig == null ? new S3TransferConfig() : s3TransferConfig;
   }
 
   @JsonProperty("sse")
@@ -49,4 +59,11 @@ public class S3StorageConfig
   {
     return serverSideEncryption;
   }
+
+  @JsonProperty("transfer")
+  public S3TransferConfig getS3TransferConfig()
+  {
+    return s3TransferConfig;
+  }
+    
 }
