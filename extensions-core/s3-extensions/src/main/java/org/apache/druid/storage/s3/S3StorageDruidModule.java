@@ -195,12 +195,6 @@ public class S3StorageDruidModule implements DruidModule
       );
     }
 
-    if (storageConfig.getS3TransferConfig() != null) {
-      S3TransferConfig config = storageConfig.getS3TransferConfig();
-      log.debug("s3 transfer config useTransferManager=[%b], minimumUploadPartSize=[%d], multipartUploadThreshold=[%d]",
-                config.isUseTransferManager(), config.getMinimumUploadPartSize(), config.getMultipartUploadThreshold());
-    }
-
     return ServerSideEncryptingAmazonS3.builder()
                                        .setAmazonS3ClientBuilder(amazonS3ClientBuilder)
                                        .setS3StorageConfig(storageConfig);

@@ -61,7 +61,7 @@ public class ServerSideEncryptingAmazonS3
 
   private final AmazonS3 amazonS3;
   private final ServerSideEncryption serverSideEncryption;
-  private TransferManager transferManager = null;
+  private final TransferManager transferManager;
 
   public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption, S3TransferConfig transferConfig)
   {
@@ -73,6 +73,8 @@ public class ServerSideEncryptingAmazonS3
           .withMinimumUploadPartSize(transferConfig.getMinimumUploadPartSize())
           .withMultipartUploadThreshold(transferConfig.getMultipartUploadThreshold())
           .build();
+    } else {
+      this.transferManager = null;
     }
   }
 
