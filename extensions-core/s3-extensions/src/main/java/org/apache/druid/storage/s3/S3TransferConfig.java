@@ -29,7 +29,7 @@ public class S3TransferConfig
 {
   @JsonProperty
   private boolean useTransferManager = false;
-    
+
   @JsonProperty
   @Min(1)
   private long minimumUploadPartSize = 5 * 1024 * 1024L;
@@ -42,10 +42,10 @@ public class S3TransferConfig
   {
     this.useTransferManager = useTransferManager;
   }
-    
+
   public void setMinimumUploadPartSize(long minimumUploadPartSize)
   {
-    this.minimumUploadPartSize = minimumUploadPartSize;      
+    this.minimumUploadPartSize = minimumUploadPartSize;
   }
 
   public void setMultipartUploadThreshold(long multipartUploadThreshold)
@@ -57,7 +57,7 @@ public class S3TransferConfig
   {
     return useTransferManager;
   }
-    
+
   public long getMinimumUploadPartSize()
   {
     return minimumUploadPartSize;

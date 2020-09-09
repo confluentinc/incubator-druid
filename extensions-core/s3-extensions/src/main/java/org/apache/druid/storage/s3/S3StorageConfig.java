@@ -43,7 +43,7 @@ public class S3StorageConfig
    */
   @JsonProperty("transfer")
   private final S3TransferConfig s3TransferConfig;
-    
+
   @JsonCreator
   public S3StorageConfig(
       @JsonProperty("sse") ServerSideEncryption serverSideEncryption,
@@ -65,5 +65,4 @@ public class S3StorageConfig
   {
     return s3TransferConfig;
   }
-    
 }
