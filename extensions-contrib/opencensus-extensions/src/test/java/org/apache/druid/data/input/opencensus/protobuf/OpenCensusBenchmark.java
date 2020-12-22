@@ -52,7 +52,7 @@ public class OpenCensusBenchmark
                                                       .setSeconds(INSTANT.getEpochSecond())
                                                       .setNanos(INSTANT.getNano()).build();
 
-  final static JSONParseSpec parseSpec = new JSONParseSpec(
+  private static final JSONParseSpec PARSE_SPEC = new JSONParseSpec(
       new TimestampSpec("timestamp", "millis", null),
       new DimensionsSpec(null, null, null),
       new JSONPathSpec(
@@ -65,11 +65,12 @@ public class OpenCensusBenchmark
       ), null, null
   );
 
-  final static OpenCensusProtobufInputRowParser parser = new OpenCensusProtobufInputRowParser(parseSpec, null, null, "");
+  private static final OpenCensusProtobufInputRowParser PARSER = new OpenCensusProtobufInputRowParser(PARSE_SPEC, null, null, "");
 
   private static final ByteBuffer BUFFER = ByteBuffer.wrap(createMetric().toByteArray());
 
-  static Metric createMetric() {
+  static Metric createMetric()
+  {
     final MetricDescriptor.Builder descriptorBuilder = MetricDescriptor.newBuilder()
                                                         .setName("io.confluent.domain/such/good/metric/wow")
                                                         .setUnit("ms")
@@ -109,7 +110,7 @@ public class OpenCensusBenchmark
   public void measureSerde(Blackhole blackhole)
   {
     // buffer must be reset / duplicated each time to ensure each iteration reads the entire buffer from the beginning
-    for(InputRow row : parser.parseBatch(BUFFER.duplicate())) {
+    for (InputRow row : PARSER.parseBatch(BUFFER.duplicate())) {
       blackhole.consume(row);
     }
   }
