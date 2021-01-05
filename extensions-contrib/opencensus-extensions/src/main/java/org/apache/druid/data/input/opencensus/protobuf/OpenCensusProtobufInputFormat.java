@@ -96,10 +96,9 @@ public class OpenCensusProtobufInputFormat implements InputFormat
       return false;
     }
     OpenCensusProtobufInputFormat that = (OpenCensusProtobufInputFormat) o;
-    return Objects.equals(metricDimension, that.metricDimension) && Objects.equals(
-        metricLabelPrefix,
-        that.metricLabelPrefix
-    ) && Objects.equals(resourceLabelPrefix, that.resourceLabelPrefix);
+    return Objects.equals(metricDimension, that.metricDimension)
+           && Objects.equals(metricLabelPrefix, that.metricLabelPrefix)
+           && Objects.equals(resourceLabelPrefix, that.resourceLabelPrefix);
   }
 
   @Override
