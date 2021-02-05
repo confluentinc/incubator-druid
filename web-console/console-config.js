@@ -19,4 +19,7 @@
 window.consoleConfig = {
   "exampleManifestsUrl": "https://druid.apache.org/data/example-manifests.tsv"
   /* future configs may go here */
+  "defaultQueryContext": {
+    "priority": -1
+  }
 };
