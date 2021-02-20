@@ -57,6 +57,11 @@ public class TaskStatus
     return new TaskStatus(taskId, TaskState.SUCCESS, -1, errorMsg, null);
   }
 
+  public static TaskStatus success(String taskId, TaskLocation location)
+  {
+    return new TaskStatus(taskId, TaskState.SUCCESS, -1, null, location);
+  }
+
   /**
    * All failed task status must have a non-null error message.
    */

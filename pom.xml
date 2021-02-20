@@ -201,6 +201,7 @@
         <module>extensions-contrib/confluent-extensions</module>
         <module>extensions-contrib/opentelemetry-emitter</module>
         <module>extensions-contrib/opentelemetry-extensions</module>
+        <module>extensions-contrib/kubernetes-middlemanager-extensions</module>
         <!-- distribution packaging -->
         <module>distribution</module>
     </modules>
