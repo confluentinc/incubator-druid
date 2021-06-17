@@ -1,0 +1,170 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.druid.data.input.kafkainput;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import org.apache.druid.data.input.InputEntity;
+import org.apache.druid.data.input.InputEntityReader;
+import org.apache.druid.data.input.InputFormat;
+import org.apache.druid.data.input.InputRowSchema;
+import org.apache.druid.data.input.impl.ByteEntity;
+import org.apache.druid.data.input.impl.DimensionsSpec;
+import org.apache.druid.data.input.impl.TimestampSpec;
+import org.apache.druid.data.input.kafka.KafkaRecordEntity;
+import org.joda.time.DateTime;
+
+import javax.annotation.Nullable;
+import java.io.File;
+import java.util.Collections;
+import java.util.Objects;
+
+public class KafkaInputFormat implements InputFormat
+{
+  private static final String DEFAULT_HEADER_LABEL_PREFIX = "kafka.header.";
+  private static final String DEFAULT_TIMESTAMP_LABEL_PREFIX = "kafka.";
+  private static final String DEFAULT_KEY_LABEL_PREFIX = "kafka.";
+
+  private final KafkaHeaderFormat headerReader;
+  private final InputFormat payloadValueFormat;
+  private final InputFormat payloadKeyFormat;
+  private final String headerLabelPrefix;
+  private final String keyLabelPrefix;
+  private final String recordTimestampLabelPrefix;
+
+  public KafkaInputFormat(
+      @JsonProperty("headerFormat") KafkaHeaderFormat headerReader,
+      @JsonProperty("payloadKeyFormat") InputFormat payloadKeyFormat,
+      @JsonProperty("payloadValueFormat") InputFormat payloadValueFormat,
+      @JsonProperty("headerLabelPrefix") @Nullable String headerLabelPrefix,
+      @JsonProperty("keyLabelPrefix") @Nullable String keyLabelPrefix,
+      @JsonProperty("recordTimestampLabelPrefix") @Nullable String recordTimestampLabelPrefix
+  )
+  {
+    this.headerReader = Preconditions.checkNotNull(headerReader, "headerFormat");
+    this.payloadKeyFormat = Preconditions.checkNotNull(payloadKeyFormat, "payloadKeyFormat");
+    this.payloadValueFormat = Preconditions.checkNotNull(payloadValueFormat, "payloadValueFormat");
+    this.headerLabelPrefix = headerLabelPrefix != null ? headerLabelPrefix : DEFAULT_HEADER_LABEL_PREFIX;
+    this.keyLabelPrefix = keyLabelPrefix != null ? keyLabelPrefix : DEFAULT_KEY_LABEL_PREFIX;
+    this.recordTimestampLabelPrefix = recordTimestampLabelPrefix != null ? recordTimestampLabelPrefix : DEFAULT_TIMESTAMP_LABEL_PREFIX;
+  }
+
+  @Override
+  public boolean isSplittable()
+  {
+    return false;
+  }
+
+  @Override
+  public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
+  {
+    KafkaRecordEntity record = (KafkaRecordEntity) source;
+    return new KafkaInputReader(
+            inputRowSchema.getDimensionsSpec(),
+            this.headerReader.createReader(
+                    record.getRecord().headers(),
+                    record.getRecord().timestamp(),
+                    this.headerLabelPrefix,
+                    this.recordTimestampLabelPrefix
+            ),
+            (record.getRecord().key() != null) ?
+            this.payloadKeyFormat.createReader(
+                    new InputRowSchema(
+                            new TimestampSpec(
+                      "timestamp",
+                              "auto",
+                                    new DateTime(record.getRecord().timestamp())
+                              ),
+                            new DimensionsSpec(DimensionsSpec.getDefaultSchemas(ImmutableList.of())),
+                            Collections.emptyList()),
+                    new ByteEntity(record.getRecord().key()),
+                    temporaryDirectory
+            ) : null,
+            this.payloadValueFormat.createReader(
+                    inputRowSchema,
+                    source,
+                    temporaryDirectory
+            ),
+            this.keyLabelPrefix
+    );
+  }
+
+  @JsonProperty
+  public KafkaHeaderFormat getHeaderFormat()
+  {
+    return headerReader;
+  }
+
+  @JsonProperty
+  public InputFormat getPayloadValueFormat()
+  {
+    return payloadValueFormat;
+  }
+
+  @JsonProperty
+  public InputFormat getPayloadKeyFormat()
+  {
+    return payloadKeyFormat;
+  }
+
+  @JsonProperty
+  public String getHeaderLabelPrefix()
+  {
+    return headerLabelPrefix;
+  }
+
+  @JsonProperty
+  public String getKeyLabelPrefix()
+  {
+    return keyLabelPrefix;
+  }
+
+  @JsonProperty
+  public String getRecordTimestampLabelPrefix()
+  {
+    return recordTimestampLabelPrefix;
+  }
+
+  @Override
+  public boolean equals(Object o)
+  {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof KafkaInputFormat)) {
+      return false;
+    }
+    KafkaInputFormat that = (KafkaInputFormat) o;
+    return Objects.equals(headerReader, that.headerReader)
+           && Objects.equals(payloadValueFormat, that.payloadValueFormat)
+           && Objects.equals(payloadKeyFormat, that.payloadKeyFormat)
+           && Objects.equals(headerLabelPrefix, that.headerLabelPrefix)
+           && Objects.equals(keyLabelPrefix, that.keyLabelPrefix)
+           && Objects.equals(recordTimestampLabelPrefix, that.recordTimestampLabelPrefix);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash(headerReader, payloadValueFormat, payloadKeyFormat,
+              headerLabelPrefix, keyLabelPrefix, recordTimestampLabelPrefix);
+  }
+}
