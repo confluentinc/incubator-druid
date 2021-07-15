@@ -36,16 +36,21 @@ public class Pac4jCommonConfig
   @JsonProperty
   private final Duration readTimeout;
 
+  @JsonProperty
+  private final String redirectParam;
+
   @JsonCreator
   public Pac4jCommonConfig(
       @JsonProperty("enableCustomSslContext") boolean enableCustomSslContext,
       @JsonProperty("cookiePassphrase") PasswordProvider cookiePassphrase,
-      @JsonProperty("readTimeout") Duration readTimeout
+      @JsonProperty("readTimeout") Duration readTimeout,
+      @JsonProperty("redirectParam") String redirectparam
   )
   {
     this.enableCustomSslContext = enableCustomSslContext;
     this.cookiePassphrase = Preconditions.checkNotNull(cookiePassphrase, "null cookiePassphrase");
     this.readTimeout = readTimeout == null ? Duration.millis(5000) : readTimeout;
+    this.redirectParam = redirectparam;
   }
 
   @JsonProperty
@@ -64,5 +69,11 @@ public class Pac4jCommonConfig
   public Duration getReadTimeout()
   {
     return readTimeout;
+  }
+
+  @JsonProperty
+  public String getRedirectParam()
+  {
+    return redirectParam;
   }
 }
