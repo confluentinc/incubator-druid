@@ -46,4 +46,27 @@ public class Pac4jCommonConfigTest
     Assert.assertEquals(10_000L, conf.getReadTimeout().getMillis());
     Assert.assertTrue(conf.isEnableCustomSslContext());
   }
+
+  @Test
+  public void testCustomCallbackUrl() throws Exception
+  {
+    ObjectMapper jsonMapper = new DefaultObjectMapper();
+
+    String jsonStr = "{\n"
+                     + "  \"cookiePassphrase\": \"testpass\",\n"
+                     + "  \"readTimeout\": \"PT10S\",\n"
+                     + "  \"enableCustomSslContext\": true,\n"
+                     + "  \"customCallbackUrl\": \"http://testCallback.com\"\n"
+                     + "}\n";
+
+    Pac4jCommonConfig conf = jsonMapper.readValue(
+        jsonMapper.writeValueAsString(jsonMapper.readValue(jsonStr, Pac4jCommonConfig.class)),
+        Pac4jCommonConfig.class
+    );
+
+    Assert.assertEquals("testpass", conf.getCookiePassphrase().getPassword());
+    Assert.assertEquals(10_000L, conf.getReadTimeout().getMillis());
+    Assert.assertTrue(conf.isEnableCustomSslContext());
+    Assert.assertEquals("http://testCallback.com", conf.getCustomCallbackUrl());
+  }
 }

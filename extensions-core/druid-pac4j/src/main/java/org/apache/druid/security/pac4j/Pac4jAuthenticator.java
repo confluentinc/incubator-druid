@@ -31,8 +31,11 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import org.apache.druid.server.security.AuthenticationResult;
 import org.apache.druid.server.security.Authenticator;
 import org.pac4j.core.config.Config;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.http.callback.CallbackUrlResolver;
 import org.pac4j.core.http.callback.NoParameterCallbackUrlResolver;
 import org.pac4j.core.http.url.DefaultUrlResolver;
+import org.pac4j.core.http.url.UrlResolver;
 import org.pac4j.oidc.client.OidcClient;
 import org.pac4j.oidc.config.OidcConfiguration;
 
@@ -141,7 +144,24 @@ public class Pac4jAuthenticator implements Authenticator
 
     OidcClient oidcClient = new OidcClient(oidcConf);
     oidcClient.setUrlResolver(new DefaultUrlResolver(true));
-    oidcClient.setCallbackUrlResolver(new NoParameterCallbackUrlResolver());
+    if (pac4jCommonConfig.getCustomCallbackUrl() != null) {
+      oidcClient.setCallbackUrlResolver(
+          new CallbackUrlResolver() {
+            @Override
+            public String compute(UrlResolver urlResolver, String url, String clientName, WebContext context)
+            {
+              return pac4jCommonConfig.getCustomCallbackUrl();
+            }
+            @Override
+            public boolean matches(String var1, WebContext var2)
+            {
+              return false;
+            }
+          }
+      );
+    } else {
+      oidcClient.setCallbackUrlResolver(new NoParameterCallbackUrlResolver());
+    }
 
     // This is used by OidcClient in various places to make HTTPrequests.
     if (sslSocketFactory != null) {
