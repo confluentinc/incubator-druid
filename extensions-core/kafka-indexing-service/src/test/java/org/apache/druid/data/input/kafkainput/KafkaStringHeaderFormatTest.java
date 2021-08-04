@@ -130,5 +130,52 @@ public class KafkaStringHeaderFormatTest
     Map<String, Object> row = headerParser.read();
     Assert.assertEquals(expectedResults, row);
   }
+
+  @Test
+  public void testIllegalHeaderCharacter() throws IOException
+  {
+    Iterable<Header> header = ImmutableList.of(
+        new Header() {
+          @Override
+          public String key()
+          {
+            return "encoding";
+          }
+          @Override
+          public byte[] value()
+          {
+            return "€pplic€tion/json".getBytes(StandardCharsets.US_ASCII);
+          }
+        },
+        new Header() {
+          @Override
+          public String key()
+          {
+            return "kafkapkc";
+          }
+          @Override
+          public byte[] value()
+          {
+            return "pkc-bar".getBytes(StandardCharsets.US_ASCII);
+          }
+        });
+
+    String headerLabelPrefix = "test.kafka.header.";
+    String timestampLablePrefix = "test.kafka.newts.";
+    Headers headers = new RecordHeaders(header);
+    inputEntity = new KafkaRecordEntity(new ConsumerRecord<byte[], byte[]>(
+        "sample", 0, 0, timestamp,
+        null, null, 0, 0,
+        null, "sampleValue".getBytes(StandardCharsets.UTF_8), headers));
+    Map<String, Object> expectedResults = new HashMap<String, Object>() {{
+      put("test.kafka.header.encoding","?pplic?tion/json");
+      put("test.kafka.header.kafkapkc","pkc-bar");
+    }};
+
+    KafkaHeaderFormat headerInput = new KafkaStringHeaderFormat("US-ASCII");
+    KafkaHeaderReader headerParser = headerInput.createReader(inputEntity.getRecord().headers(),headerLabelPrefix);
+    Map<String, Object> row = headerParser.read();
+    Assert.assertEquals(expectedResults, row);
+  }
 }
 
