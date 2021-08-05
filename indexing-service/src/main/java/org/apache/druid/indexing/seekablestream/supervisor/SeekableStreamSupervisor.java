@@ -89,6 +89,8 @@ import org.joda.time.DateTime;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -672,10 +674,10 @@ public abstract class SeekableStreamSupervisor<PartitionIdType, SequenceOffsetTy
           synchronized (stopLock) {
             if (stopGracefully) {
               log.info("Posting GracefulShutdownNotice, signalling managed tasks to complete and publish");
-              notices.add(new GracefulShutdownNotice());
+              addNotice(new GracefulShutdownNotice());
             } else {
               log.info("Posting ShutdownNotice");
-              notices.add(new ShutdownNotice());
+              addNotice(new ShutdownNotice());
             }
 
             long shutdownTimeoutMillis = tuningConfig.getShutdownTimeout().getMillis();
@@ -712,7 +714,7 @@ public abstract class SeekableStreamSupervisor<PartitionIdType, SequenceOffsetTy
   public void reset(DataSourceMetadata dataSourceMetadata)
   {
     log.info("Posting ResetNotice");
-    notices.add(new ResetNotice(dataSourceMetadata));
+    addNotice(new ResetNotice(dataSourceMetadata));
   }
 
   public ReentrantLock getRecordSupplierLock()
@@ -749,7 +751,11 @@ public abstract class SeekableStreamSupervisor<PartitionIdType, SequenceOffsetTy
                   }
 
                   try {
+                    Instant handleNoticeStartTime = Instant.now();
                     notice.handle();
+                    Instant handleNoticeEndTime = Instant.now();
+                    Duration timeElapsed = Duration.between(handleNoticeStartTime, handleNoticeEndTime);
+                    log.debug("Handled notice [%s] from notices queue in [%d] ms, current notices queue size [%d]", notice.getClass().getName(), timeElapsed.toMillis(), getNoticesQueueSize());
                   }
                   catch (Throwable e) {
                     stateManager.recordThrowableEvent(e);
@@ -799,7 +805,7 @@ public abstract class SeekableStreamSupervisor<PartitionIdType, SequenceOffsetTy
 
   private Runnable buildRunTask()
   {
-    return () -> notices.add(new RunNotice());
+    return () -> addNotice(new RunNotice());
   }
 
   @Override
@@ -1117,7 +1123,7 @@ public abstract class SeekableStreamSupervisor<PartitionIdType, SequenceOffsetTy
             @Override
             public void statusChanged(String taskId, TaskStatus status)
             {
-              notices.add(new RunNotice());
+              addNotice(new RunNotice());
             }
           }, Execs.directExecutor()
       );
@@ -2947,6 +2953,7 @@ public abstract class SeekableStreamSupervisor<PartitionIdType, SequenceOffsetTy
 
   private void addNotice(Notice notice)
   {
+    log.debug("Adding notice [%s] to notices queue", notice.getClass().getName());
     notices.add(notice);
   }
 
