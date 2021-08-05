@@ -236,15 +236,15 @@ public class KafkaInputFormatTest
   @Test
   public void testTimestampFromHeader() throws IOException
   {
-    Iterable<Header> SAMPLE_HEADERS_WITH_TS = Iterables.unmodifiableIterable(
+    Iterable<Header> sample_header_with_ts = Iterables.unmodifiableIterable(
         Iterables.concat(
             SAMPLE_HEADERS,
             ImmutableList.of(new Header() {
               @Override
               public String key()
-      {
-        return "headerTs";
-      }
+              {
+                return "headerTs";
+              }
               @Override
               public byte[] value()
               {
@@ -268,7 +268,7 @@ public class KafkaInputFormatTest
         + "    }\n"
         + "}");
 
-    Headers headers = new RecordHeaders(SAMPLE_HEADERS_WITH_TS);
+    Headers headers = new RecordHeaders(sample_header_with_ts);
     inputEntity = new KafkaRecordEntity(new ConsumerRecord<byte[], byte[]>(
         "sample", 0, 0, timestamp,
         null, null, 0, 0,

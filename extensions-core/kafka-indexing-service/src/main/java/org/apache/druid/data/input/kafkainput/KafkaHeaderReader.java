@@ -19,7 +19,6 @@
 
 package org.apache.druid.data.input.kafkainput;
 
-import org.apache.druid.data.input.InputRow;
 import java.io.IOException;
 import java.util.Map;
 
