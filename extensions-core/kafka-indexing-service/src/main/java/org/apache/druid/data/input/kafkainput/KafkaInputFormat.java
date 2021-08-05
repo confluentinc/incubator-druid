@@ -21,21 +21,17 @@ package org.apache.druid.data.input.kafkainput;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.impl.ByteEntity;
-import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.TimestampSpec;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.java.util.common.DateTimes;
-import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.util.Collections;
 import java.util.Objects;
 
 public class KafkaInputFormat implements InputFormat
