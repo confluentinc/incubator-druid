@@ -28,16 +28,18 @@ import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.java.util.common.CloseableIterators;
+import org.apache.druid.java.util.common.Pair;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
-import org.apache.druid.java.util.common.parsers.ParseException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class KafkaInputReader implements InputEntityReader
 {
@@ -65,9 +67,9 @@ public class KafkaInputReader implements InputEntityReader
   {
     this.inputRowSchema = inputRowSchema;
     this.record = record;
-    this.headerParser = headerParser;
-    this.keyParser = keyParser;
-    this.valueParser = valueParser;
+    this.headerParser = headerParser; //Header parser can be null by config
+    this.keyParser = keyParser; //Key parser can be null by config and data
+    this.valueParser = valueParser; //value parser can be null by data (tombstone records)
     this.keyLabelPrefix = keyLabelPrefix;
     this.recordTimestampLabelPrefix = recordTimestampLabelPrefix;
   }
@@ -75,85 +77,112 @@ public class KafkaInputReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read() throws IOException
   {
-    Map<String, Object> mergeList = new HashMap<>(headerParser.read());
     // Add kafka record timestamp to the mergelist
-    mergeList.put(recordTimestampLabelPrefix + DEFAULT_TIMESTAMP_STRING, record.getRecord().timestamp());
+    List<Pair<String, Object>> mergeList = new ArrayList<>();
+    if (headerParser != null) {
+      List<Pair<String, Object>> headerList = headerParser.read();
+      mergeList.addAll(headerList);
+    }
 
-    // Return type for the key parser should be of type MapBasedInputRow
-    // Parsers returning other types are not compatible currently.
+    Pair ts = new Pair(recordTimestampLabelPrefix + DEFAULT_TIMESTAMP_STRING,
+                      record.getRecord().timestamp());
+    if (!mergeList.contains(ts)) {
+      mergeList.add(ts);
+    }
+
     if (keyParser != null) {
       try (CloseableIterator<InputRow> keyIterator = keyParser.read()) {
         // Key currently only takes the first row and ignores the rest.
         if (keyIterator.hasNext()) {
+          // Return type for the key parser should be of type MapBasedInputRow
+          // Parsers returning other types are not compatible currently.
           MapBasedInputRow keyRow = (MapBasedInputRow) keyIterator.next();
-          mergeList.put(
-              keyLabelPrefix + DEFAULT_KEY_STRING,
-              keyRow.getEvent().entrySet().stream().findFirst().get().getValue()
-          );
+          Pair key = new Pair(keyLabelPrefix + DEFAULT_KEY_STRING,
+                            keyRow.getEvent().entrySet().stream().findFirst().get().getValue());
+          if (!mergeList.contains(key)) {
+            mergeList.add(key);
+          }
         }
       }
-      catch (Exception e) {
-        if (e instanceof IOException) {
-          log.error(e, "Encountered IOException during key parsing.");
-          throw (IOException) e;
-        } else if (e instanceof ParseException) {
-          log.error(e, "Encountered key parsing exception.");
-        } else {
-          log.error(e, "Encountered exception during key parsing.");
-          throw e;
-        }
+      catch (IOException e) {
+        throw e;
+      }
+      catch (ClassCastException e) {
+        log.error(e, "Encountered ClassCastException exception, please use parsers that return MapBasedInputRow based rows.");
       }
     }
 
-    List<InputRow> rows = new ArrayList<>();
-
-    // Return type for the value parser should be of type MapBasedInputRow
-    // Parsers returning other types are not compatible currently.
     if (valueParser != null) {
-      try (CloseableIterator<InputRow> iterator = valueParser.read()) {
-        while (iterator.hasNext()) {
-      /* Currently we prefer payload attributes if there is a collision in names.
-          We can change this beahvior in later changes with a config knob. This default
-          behavior lets easy porting of existing inputFormats to the new one without any changes.
-       */
-          MapBasedInputRow row = (MapBasedInputRow) iterator.next();
-          Map<String, Object> event = new HashMap<>(mergeList);
-          event.putAll(row.getEvent());
+      CloseableIterator<InputRow> iterator = valueParser.read();
 
-          HashSet<String> newDimensions = new HashSet<String>(row.getDimensions());
-          newDimensions.addAll(mergeList.keySet());
-          // Remove the dummy timestamp added in KafkaInputFormat
-          newDimensions.remove("__kif_auto_timestamp");
+      return new CloseableIterator<InputRow>()
+      {
+        @Override
+        public boolean hasNext()
+        {
+          return iterator.hasNext();
+        }
 
-          final List<String> schemaDimensions = inputRowSchema.getDimensionsSpec().getDimensionNames();
-          final List<String> dimensions;
-          if (!schemaDimensions.isEmpty()) {
-            dimensions = schemaDimensions;
-          } else {
-            dimensions = Lists.newArrayList(
-                Sets.difference(newDimensions, inputRowSchema.getDimensionsSpec().getDimensionExclusions())
+        @Override
+        public InputRow next()
+        {
+          InputRow row = null;
+          if (!iterator.hasNext()) {
+            throw new NoSuchElementException();
+          }
+          try {
+            // Return type for the value parser should be of type MapBasedInputRow
+            // Parsers returning other types are not compatible currently.
+            MapBasedInputRow valueRow = (MapBasedInputRow) iterator.next();
+            Map<String, Object> event = new HashMap<>();
+            HashSet<String> newDimensions = new HashSet<String>(valueRow.getDimensions());
+            for (Pair<String, Object> ele : mergeList) {
+              event.put(ele.lhs, ele.rhs);
+              newDimensions.add(ele.lhs);
+            }
+            /* Currently we prefer payload attributes if there is a collision in names.
+                We can change this beahvior in later changes with a config knob. This default
+                behavior lets easy porting of existing inputFormats to the new one without any changes.
+              */
+            event.putAll(valueRow.getEvent());
+
+            // Remove the dummy timestamp added in KafkaInputFormat
+            newDimensions.remove("__kif_auto_timestamp");
+
+            final List<String> schemaDimensions = inputRowSchema.getDimensionsSpec().getDimensionNames();
+            final List<String> dimensions;
+            if (!schemaDimensions.isEmpty()) {
+              dimensions = schemaDimensions;
+            } else {
+              dimensions = Lists.newArrayList(
+                  Sets.difference(newDimensions, inputRowSchema.getDimensionsSpec().getDimensionExclusions())
+              );
+            }
+            row = new MapBasedInputRow(
+                inputRowSchema.getTimestampSpec().extractTimestamp(event),
+                dimensions,
+                event
             );
           }
-          rows.add(new MapBasedInputRow(
-              inputRowSchema.getTimestampSpec().extractTimestamp(event),
-              dimensions,
-              event
-          ));
+          catch (ClassCastException e) {
+            log.error(e, "Encountered ClassCastException exception, please use parsers that return MapBasedInputRow based rows.");
+          }
+          return row;
         }
-      }
-      catch (Exception e) {
-        if (e instanceof IOException) {
-          log.error(e, "Encountered IOException during value parsing.");
-          throw (IOException) e;
-        } else if (e instanceof ParseException) {
-          log.error(e, "Encountered value parsing exception.");
-        } else {
-          log.error(e, "Encountered exception during value parsing.");
-          throw e;
+
+        @Override
+        public void close() throws IOException
+        {
+          iterator.close();
         }
-      }
+      };
     } else {
-      HashSet<String> newDimensions = new HashSet<String>(mergeList.keySet());
+      InputRow row = null;
+      Map<String, Object> event = new HashMap<>();
+      for (Pair<String, Object> ele : mergeList) {
+        event.put(ele.lhs, ele.rhs);
+      }
+      HashSet<String> newDimensions = new HashSet<String>(event.keySet());
       final List<String> schemaDimensions = inputRowSchema.getDimensionsSpec().getDimensionNames();
       final List<String> dimensions;
       if (!schemaDimensions.isEmpty()) {
@@ -163,14 +192,14 @@ public class KafkaInputReader implements InputEntityReader
             Sets.difference(newDimensions, inputRowSchema.getDimensionsSpec().getDimensionExclusions())
         );
       }
-      rows.add(new MapBasedInputRow(
-          inputRowSchema.getTimestampSpec().extractTimestamp(mergeList),
+      row = new MapBasedInputRow(
+          inputRowSchema.getTimestampSpec().extractTimestamp(event),
           dimensions,
-          mergeList
-      ));
+          event
+      );
+      List<InputRow> rows = Collections.singletonList(row);
+      return CloseableIterators.withEmptyBaggage(rows.iterator());
     }
-
-    return CloseableIterators.withEmptyBaggage(rows.iterator());
   }
 
   // This API is not implemented yet!

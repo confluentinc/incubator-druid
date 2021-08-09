@@ -19,14 +19,15 @@
 
 package org.apache.druid.data.input.kafkainput;
 
+import org.apache.druid.java.util.common.Pair;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KafkaStringHeaderReader implements KafkaHeaderReader
 {
@@ -36,22 +37,22 @@ public class KafkaStringHeaderReader implements KafkaHeaderReader
   private final Charset encoding;
 
   public KafkaStringHeaderReader(Headers headers,
-                                 Charset encoding,
-                                 String headerLabelPrefix)
+                                 String headerLabelPrefix,
+                                 Charset encoding)
   {
     this.headers = headers;
-    this.encoding = encoding;
     this.headerLabelPrefix = headerLabelPrefix;
+    this.encoding = encoding;
   }
 
   @Override
-  public Map<String, Object> read() throws IOException
+  public List<Pair<String, Object>> read() throws IOException
   {
-    Map<String, Object> events = new HashMap<>();
+    List<Pair<String, Object>> events = new ArrayList<>();
     for (Header hdr : headers) {
       String s = new String(hdr.value(), this.encoding);
       String newKey = this.headerLabelPrefix + hdr.key();
-      events.put(newKey, s);
+      events.add(Pair.of(newKey, s));
     }
     return events;
   }

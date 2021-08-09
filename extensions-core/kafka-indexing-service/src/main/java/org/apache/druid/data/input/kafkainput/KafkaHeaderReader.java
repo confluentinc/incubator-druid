@@ -19,10 +19,12 @@
 
 package org.apache.druid.data.input.kafkainput;
 
+import org.apache.druid.java.util.common.Pair;
+
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 public interface KafkaHeaderReader
 {
-  Map<String, Object> read() throws IOException;
+  List<Pair<String, Object>> read() throws IOException;
 }
