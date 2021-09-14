@@ -22,7 +22,7 @@ FROM alpine as extractor
 ARG VERSION=
 
 WORKDIR /src
-COPY ./target/apache-druid-${VERSION}-bin.tar.gz .
+COPY ./distribution/target/apache-druid-${VERSION}-bin.tar.gz .
 
 RUN tar -zxf /src/apache-druid-${VERSION}-bin.tar.gz -C /opt \
  && ln -s /opt/apache-druid-${VERSION} /opt/druid
@@ -39,7 +39,7 @@ RUN addgroup -S -g 1000 druid \
  && adduser -S -u 1000 -D -H -h /opt/druid -s /bin/sh -g '' -G druid druid
 
 COPY --chown=druid:druid --from=extractor /opt /opt
-COPY ./docker/druid.sh /druid.sh
+COPY ./distribution/docker/druid.sh /druid.sh
 
 RUN mkdir /opt/druid/var \
  && chown druid:druid /opt/druid/var \
