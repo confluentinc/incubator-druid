@@ -49,8 +49,8 @@ public class KafkaInputReader implements InputEntityReader
   private final KafkaHeaderReader headerParser;
   private final InputEntityReader keyParser;
   private final InputEntityReader valueParser;
-  private final String keyColumn;
-  private final String recordTimestampColumn;
+  private final String keyColumnName;
+  private final String timestampColumnName;
 
   /**
    *
@@ -59,8 +59,8 @@ public class KafkaInputReader implements InputEntityReader
    * @param headerParser Header parser for parsing the header section, kafkaInputFormat allows users to skip header parsing section and hence an be null
    * @param keyParser Key parser for key section, can be null as well
    * @param valueParser Value parser is a required section in kafkaInputFormat, but because of tombstone records we can have a null parser here.
-   * @param keyColumn Default key column prefix
-   * @param recordTimestampColumn Default kafka record's timestamp prefix
+   * @param keyColumnName Default key column name
+   * @param timestampColumnName Default kafka record's timestamp column name
    */
   public KafkaInputReader(
       InputRowSchema inputRowSchema,
@@ -68,8 +68,8 @@ public class KafkaInputReader implements InputEntityReader
       KafkaHeaderReader headerParser,
       InputEntityReader keyParser,
       InputEntityReader valueParser,
-      String keyColumn,
-      String recordTimestampColumn
+      String keyColumnName,
+      String timestampColumnName
   )
   {
     this.inputRowSchema = inputRowSchema;
@@ -77,8 +77,8 @@ public class KafkaInputReader implements InputEntityReader
     this.headerParser = headerParser;
     this.keyParser = keyParser;
     this.valueParser = valueParser;
-    this.keyColumn = keyColumn;
-    this.recordTimestampColumn = recordTimestampColumn;
+    this.keyColumnName = keyColumnName;
+    this.timestampColumnName = timestampColumnName;
   }
 
   private List<String> getFinalDimensionList(HashSet<String> newDimensions)
@@ -151,9 +151,7 @@ public class KafkaInputReader implements InputEntityReader
     }
 
     // Add kafka record timestamp to the mergelist, we will skip record timestamp if the same key exists already in the header list
-    if (!mergeMap.containsKey(recordTimestampColumn)) {
-      mergeMap.put(recordTimestampColumn, record.getRecord().timestamp());
-    }
+    mergeMap.putIfAbsent(timestampColumnName, record.getRecord().timestamp());
 
     if (keyParser != null) {
       try (CloseableIterator<InputRow> keyIterator = keyParser.read()) {
@@ -163,9 +161,7 @@ public class KafkaInputReader implements InputEntityReader
           // Parsers returning other types are not compatible currently.
           MapBasedInputRow keyRow = (MapBasedInputRow) keyIterator.next();
           // Add the key to the mergeList only if the key string is not already present
-          if (!mergeMap.containsKey(keyColumn)) {
-            mergeMap.put(keyColumn, keyRow.getEvent().entrySet().stream().findFirst().get().getValue());
-          }
+          mergeMap.putIfAbsent(keyColumnName, keyRow.getEvent().entrySet().stream().findFirst().get().getValue());
         }
       }
       catch (ClassCastException e) {

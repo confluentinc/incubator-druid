@@ -152,6 +152,51 @@ The `inputFormat` to load data of a delimited format. An example is:
 
 Be sure to change the `delimiter` to the appropriate delimiter for your data. Like CSV, you must specify the columns and which subset of the columns you want indexed.
 
+### KAFKA
+
+The `inputFormat` to load complete kafka record including header, key and value. An example is:
+
+```json
+"ioConfig": {
+  "inputFormat": {
+      "type": "kafka",
+      "headerLabelPrefix": "kafka.header.",
+      "timestampColumnName": "kafka.timestamp",
+      "keyColumnName": "kafka.key",
+      "headerFormat":
+      {
+        "type": "string"
+      },
+      "keyFormat":
+      {
+        "type": "json"
+      },
+      "valueFormat":
+      {
+        "type": "json"
+      }
+  },
+  ...
+}
+```
+
+The KAFKA `inputFormat` has the following components:
+
+| Field | Type | Description | Required |
+|-------|------|-------------|----------|
+| type | String | This should say `kafka`. | yes |
+| headerLabelPrefix | String | A custom label prefix for all the header columns. | no (default = "kafka.header.") |
+| timestampColumnName | String | Specifies the name of the column for the kafka record's timestamp.| no (default = "kafka.timestamp") |
+| keyColumnName | String | Specifies the name of the column for the kafka record's key.| no (default = "kafka.key") |
+| headerFormat | Object | headerFormat specifies how to parse the kafka headers. Current supported type is "string". | no |
+| keyFormat | Object | keyFormat can be any existing inputFormat to parse the kafka key. See [the below section](../development/extensions-core/kafka-ingestion.md#specifying-data-format) for details about specifying the input format. | no |
+| valueFormat | Object | valueFormat can be any existing inputFormat to parse the kafka value payload. See [the below section](../development/extensions-core/kafka-ingestion.md#specifying-data-format) for details about specifying the input format. | yes |
+
+```
+> For any conflicts in dimension/metric names, this inputFormat will prefer kafka value's column names.
+> This will enable seemless porting of existing kafka ingestion inputFormat to this new format, with additional columns from kafka header and key.
+```
+
 ### ORC
 
 > You need to include the [`druid-orc-extensions`](../development/extensions-core/orc.md) as an extension to use the ORC input format.

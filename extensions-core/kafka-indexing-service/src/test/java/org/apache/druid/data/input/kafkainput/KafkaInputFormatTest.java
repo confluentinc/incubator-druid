@@ -102,7 +102,7 @@ public class KafkaInputFormatTest
             ),
             null, null, false //make sure JsonReader is used
         ),
-        "kafka.newheader.", "kafka.newkey.", "kafka.newts."
+        "kafka.newheader.", "kafka.newkey.key", "kafka.newts.timestamp"
     );
   }
 
