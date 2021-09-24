@@ -24,7 +24,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.emitter.core.Emitter;
 import org.apache.druid.java.util.emitter.core.Event;
@@ -42,9 +41,9 @@ public class OpenTelemetryEmitter implements Emitter
   private static final Logger log = new Logger(OpenTelemetryEmitter.class);
   private final Tracer tracer;
 
-  OpenTelemetryEmitter()
+  OpenTelemetryEmitter(Tracer tracer)
   {
-    tracer = GlobalOpenTelemetry.getTracer("druid-opentelemtry-extension");
+    this.tracer = tracer;
   }
 
   @Override
@@ -66,27 +65,16 @@ public class OpenTelemetryEmitter implements Emitter
     if (!event.getMetric().equals("query/time")) {
       return;
     }
+
+    emitQueryTimeEvent(event);
+  }
+
+  private void emitQueryTimeEvent(ServiceMetricEvent event)
+  {
     DateTime endTime = event.getCreatedTime();
     DateTime startTime = event.getCreatedTime().minusMillis(event.getValue().intValue());
 
-    TextMapGetter<Map<String, String>> contextGetter =
-        new TextMapGetter<Map<String, String>>()
-        {
-          @Override
-          public String get(Map<String, String> carrier, String key)
-          {
-            if (carrier.containsKey(key)) {
-              return carrier.get(key);
-            }
-            return null;
-          }
-
-          @Override
-          public Iterable<String> keys(Map<String, String> carrier)
-          {
-            return carrier.keySet();
-          }
-        };
+    DruidContextTextMapGetter contextGetter = new DruidContextTextMapGetter();
 
     Context extractedContext = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
                                                   .extract(Context.current(), getContextAsString(event), contextGetter);

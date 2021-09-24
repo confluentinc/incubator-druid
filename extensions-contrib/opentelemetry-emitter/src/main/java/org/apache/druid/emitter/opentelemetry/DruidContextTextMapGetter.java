@@ -19,46 +19,24 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.opentelemetry.context.propagation.TextMapGetter;
 
-import javax.annotation.Nullable;
+import java.util.Map;
 
-public class OpenTelemetryEmitterConfig
+public class DruidContextTextMapGetter implements TextMapGetter<Map<String, String>>
 {
-  @JsonProperty
-  private final String protocol;
-
-  @JsonProperty
-  private final String endpoint;
-
-  @JsonProperty
-  private final String exporter;
-
-  @JsonCreator
-  public OpenTelemetryEmitterConfig(
-      @JsonProperty("protocol") @Nullable String protocol,
-      @JsonProperty("endpoint") @Nullable String endpoint,
-      @JsonProperty("exporter") @Nullable String exporter
-  )
+  @Override
+  public String get(Map<String, String> carrier, String key)
   {
-    this.protocol = protocol;
-    this.endpoint = endpoint;
-    this.exporter = exporter;
+    if (carrier.containsKey(key)) {
+      return carrier.get(key);
+    }
+    return null;
   }
 
-  public String getProtocol()
+  @Override
+  public Iterable<String> keys(Map<String, String> carrier)
   {
-    return protocol;
-  }
-
-  public String getEndpoint()
-  {
-    return endpoint;
-  }
-
-  public String getExporter()
-  {
-    return exporter;
+    return carrier.keySet();
   }
 }
