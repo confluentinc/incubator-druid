@@ -72,15 +72,17 @@ public class OpenTelemetryEmitter implements Emitter
 
   private void emitQueryTimeEvent(ServiceMetricEvent event)
   {
-    DateTime endTime = event.getCreatedTime();
-    DateTime startTime = event.getCreatedTime().minusMillis(event.getValue().intValue());
+    Context context = GlobalOpenTelemetry.getPropagators()
+                                         .getTextMapPropagator()
+                                         .extract(Context.current(),
+                                                  getContextAsString(event),
+                                                  DRUID_CONTEXT_MAP_GETTER
+                                         );
 
-    Context extractedContext = GlobalOpenTelemetry.getPropagators().getTextMapPropagator()
-                                                  .extract(Context.current(), getContextAsString(event),
-                                                           DRUID_CONTEXT_MAP_GETTER
-                                                  );
+    try (Scope scope = context.makeCurrent()) {
+      DateTime endTime = event.getCreatedTime();
+      DateTime startTime = endTime.minusMillis(event.getValue().intValue());
 
-    try (Scope scope = extractedContext.makeCurrent()) {
       Span span = tracer.spanBuilder(event.getService()).setStartTimestamp(
           startTime.getMillis(),
           TimeUnit.MILLISECONDS

@@ -57,23 +57,13 @@ public class OpenTelemetryEmitterModule implements DruidModule
   @Named(EMITTER_TYPE)
   public Emitter getEmitter(OpenTelemetryEmitterConfig config, ObjectMapper mapper)
   {
-    OpenTelemetrySdkAutoConfiguration.initialize();
-    String protocol = config.getProtocol();
     String endpoint = config.getEndpoint();
-    String exporter = config.getExporter();
-    if (protocol != null) {
-      System.setProperty("otel.experimental.exporter.otlp.traces.protocol", protocol);
-    }
     if (endpoint != null) {
       System.setProperty("otel.exporter.otlp.endpoint", endpoint);
     }
-    if (exporter != null) {
-      System.setProperty("otel.traces.exporter", exporter);
-    }
     System.setProperty("otel.service.name", "org.apache.druid");
-    log.info("Init OTel with otel.experimental.exporter.otlp.traces.protocol = " + protocol);
     log.info("Init OTel with otel.exporter.otlp.endpoint = " + endpoint);
-    log.info("Init OTel with otel.traces.exporter = " + exporter);
-    return new OpenTelemetryEmitter(GlobalOpenTelemetry.getTracer("druid-opentelemtry-extension"));
+    OpenTelemetrySdkAutoConfiguration.initialize();
+    return new OpenTelemetryEmitter(GlobalOpenTelemetry.getTracer("druid-opentelemetry-extension"));
   }
 }

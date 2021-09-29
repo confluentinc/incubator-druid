@@ -66,8 +66,10 @@ public class OpenTelemetryEmitterTest
     }
   }
 
+
+  // Check that we don't call "emitQueryTimeEvent" method for event that is not instance of ServiceMetricEvent
   @Test
-  public void testNoEmiteNotServiceMetric()
+  public void testNoEmitNotServiceMetric()
   {
     final Event notServiceMetricEvent =
         new Event()
@@ -93,8 +95,9 @@ public class OpenTelemetryEmitterTest
     EasyMock.verifyUnexpectedCalls(emitter);
   }
 
+  // Check that we don't call "emitQueryTimeEvent" method for ServiceMetricEvent that is not "query/time" type
   @Test
-  public void testNoEmiteNotQueryTimeMetric()
+  public void testNoEmitNotQueryTimeMetric()
   {
     final ServiceMetricEvent notQueryTimeMetric =
         new ServiceMetricEvent.Builder().build(

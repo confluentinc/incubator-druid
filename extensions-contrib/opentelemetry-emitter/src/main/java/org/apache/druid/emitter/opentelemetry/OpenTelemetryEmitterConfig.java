@@ -27,38 +27,18 @@ import javax.annotation.Nullable;
 public class OpenTelemetryEmitterConfig
 {
   @JsonProperty
-  private final String protocol;
-
-  @JsonProperty
   private final String endpoint;
-
-  @JsonProperty
-  private final String exporter;
 
   @JsonCreator
   public OpenTelemetryEmitterConfig(
-      @JsonProperty("protocol") @Nullable String protocol,
-      @JsonProperty("endpoint") @Nullable String endpoint,
-      @JsonProperty("exporter") @Nullable String exporter
+      @JsonProperty("endpoint") @Nullable String endpoint
   )
   {
-    this.protocol = protocol;
     this.endpoint = endpoint;
-    this.exporter = exporter;
-  }
-
-  public String getProtocol()
-  {
-    return protocol;
   }
 
   public String getEndpoint()
   {
     return endpoint;
-  }
-
-  public String getExporter()
-  {
-    return exporter;
   }
 }
