@@ -1,0 +1,118 @@
+# OpenTracing Emitter
+
+The OpenTelemetry emitter generates OpenTelemetry Spans for queries.
+
+
+## Configuration
+
+### Enabling
+
+Load the plugin and enable the emitter in `common.runtime.properties`.
+
+Load the plugin:
+
+```
+druid.extensions.loadList=[..., "opentelemetry-emitter"]
+```
+
+Enable the emitter:
+
+```
+druid.emitter=opentelemetry
+```
+
+*_Don't forget to remove the line_ `druid.emitter=noop` _to avoid rewriting_.
+
+## Testing
+### Part 1: Run zipkin and otel-collector
+Create `docker-compose.yaml` in your working dir:
+```
+version: "2"
+services:
+
+  zipkin-all-in-one:
+    image: openzipkin/zipkin:latest
+    ports:
+      - "9411:9411"
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=otel-local-config.yaml", "${OTELCOL_ARGS}"]
+    volumes:
+      - ${PWD}/config.yaml:/otel-local-config.yaml
+    ports:
+      - "4317:4317"
+```
+
+Create `config.yaml` file with configuration for otel-collector:
+```
+version: "2"
+receivers:
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+exporters:
+  zipkin:
+    endpoint: "http://zipkin-all-in-one:9411/api/v2/spans"
+    format: proto
+
+  logging:
+
+processors:
+  batch:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, zipkin]
+```
+*_How to configure otel-collector you can read [here](https://opentelemetry.io/docs/collector/configuration/)._
+
+Run otel-collector and zipkin.
+```
+docker-compose up
+```
+
+### Part 2: Run druid
+Build druid:
+
+```
+mvn clean install -Pdist
+tar -C /tmp -xf distribution/target/apache-druid-0.21.0-bin.tar.gz
+cd /tmp/apache-druid-0.21.0
+```
+
+
+Edit `conf/druid/single-server/micro-quickstart/_common/common.runtime.properties` to enable
+the emitter (see `Configuration` section above).
+
+Start the quickstart:
+
+```
+bin/start-micro-quickstart
+```
+
+Load sampel data - [example](https://druid.apache.org/docs/latest/tutorials/index.html#step-4-load-data).
+
+### Part 3: Send queries
+
+Create `query.json`:
+```
+{
+   "query":"YOUR QUERY",
+   "context":{
+      "traceparent":"00-54ef39243e3feb12072e0f8a74c1d55a-ad6d5b581d7c29c1-01"
+   }
+}
+```
+
+Send query:
+```
+curl -XPOST -H'Content-Type: application/json' http://localhost:8888/druid/v2/sql/ -d @query.json
+```
+
+Then open `http://localhost:9411/zipkin/` and you can see there your spans.
