@@ -101,20 +101,18 @@ public class CoordinatorServerViewTest extends CuratorTestBase
     setupZNodeForServer(druidServer, zkPathsConfig, jsonMapper);
 
     final DataSegment segment = dataSegmentWithIntervalAndVersion("2014-10-20T00:00:00Z/P1D", "v1");
-    final int partition = segment.getShardSpec().getPartitionNum();
-    final Interval intervals = Intervals.of("2014-10-20T00:00:00Z/P1D");
     announceSegmentForServer(druidServer, segment, zkPathsConfig, jsonMapper);
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentViewInitLatch));
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
     TimelineLookup timeline = overlordServerView.getTimeline(new TableDataSource("test_overlord_server_view"));
     List<TimelineObjectHolder> serverLookupRes = (List<TimelineObjectHolder>) timeline.lookup(
-        intervals
+        Intervals.of("2014-10-20T00:00:00Z/P1D")
     );
     Assert.assertEquals(1, serverLookupRes.size());
 
     TimelineObjectHolder<String, SegmentLoadInfo> actualTimelineObjectHolder = serverLookupRes.get(0);
-    Assert.assertEquals(intervals, actualTimelineObjectHolder.getInterval());
+    Assert.assertEquals(Intervals.of("2014-10-20T00:00:00Z/P1D"), actualTimelineObjectHolder.getInterval());
     Assert.assertEquals("v1", actualTimelineObjectHolder.getVersion());
 
     PartitionHolder<SegmentLoadInfo> actualPartitionHolder = actualTimelineObjectHolder.getObject();
@@ -127,7 +125,6 @@ public class CoordinatorServerViewTest extends CuratorTestBase
         druidServer.getMetadata(),
         Iterables.getOnlyElement(segmentLoadInfo.toImmutableSegmentLoadInfo().getServers())
     );
-    Assert.assertNotNull(timeline.findChunk(intervals, "v1", partition));
 
     unannounceSegmentForServer(druidServer, segment);
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentRemovedLatch));
@@ -136,7 +133,7 @@ public class CoordinatorServerViewTest extends CuratorTestBase
         0,
         ((List<TimelineObjectHolder>) timeline.lookup(Intervals.of("2014-10-20T00:00:00Z/P1D"))).size()
     );
-    Assert.assertNull(timeline.findChunk(intervals, "v1", partition));
+    Assert.assertNull(timeline.findEntry(Intervals.of("2014-10-20T00:00:00Z/P1D"), "v1"));
   }
 
   @Test

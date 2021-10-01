@@ -110,20 +110,22 @@ public class BrokerServerViewTest extends CuratorTestBase
     setupZNodeForServer(druidServer, zkPathsConfig, jsonMapper);
 
     final DataSegment segment = dataSegmentWithIntervalAndVersion("2014-10-20T00:00:00Z/P1D", "v1");
-    final int partition = segment.getShardSpec().getPartitionNum();
-    final Interval intervals = Intervals.of("2014-10-20T00:00:00Z/P1D");
     announceSegmentForServer(druidServer, segment, zkPathsConfig, jsonMapper);
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentViewInitLatch));
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentAddedLatch));
 
-    TimelineLookup<String, ServerSelector> timeline = brokerServerView.getTimeline(
+    TimelineLookup timeline = brokerServerView.getTimeline(
         DataSourceAnalysis.forDataSource(new TableDataSource("test_broker_server_view"))
     ).get();
-    List<TimelineObjectHolder<String, ServerSelector>> serverLookupRes = timeline.lookup(intervals);
+    List<TimelineObjectHolder> serverLookupRes = (List<TimelineObjectHolder>) timeline.lookup(
+        Intervals.of(
+            "2014-10-20T00:00:00Z/P1D"
+        )
+    );
     Assert.assertEquals(1, serverLookupRes.size());
 
     TimelineObjectHolder<String, ServerSelector> actualTimelineObjectHolder = serverLookupRes.get(0);
-    Assert.assertEquals(intervals, actualTimelineObjectHolder.getInterval());
+    Assert.assertEquals(Intervals.of("2014-10-20T00:00:00Z/P1D"), actualTimelineObjectHolder.getInterval());
     Assert.assertEquals("v1", actualTimelineObjectHolder.getVersion());
 
     PartitionHolder<ServerSelector> actualPartitionHolder = actualTimelineObjectHolder.getObject();
@@ -134,16 +136,15 @@ public class BrokerServerViewTest extends CuratorTestBase
     Assert.assertFalse(selector.isEmpty());
     Assert.assertEquals(segment, selector.getSegment());
     Assert.assertEquals(druidServer, selector.pick(null).getServer());
-    Assert.assertNotNull(timeline.findChunk(intervals, "v1", partition));
 
     unannounceSegmentForServer(druidServer, segment, zkPathsConfig);
     Assert.assertTrue(timing.forWaiting().awaitLatch(segmentRemovedLatch));
 
     Assert.assertEquals(
         0,
-        timeline.lookup(intervals).size()
+        ((List<TimelineObjectHolder>) timeline.lookup(Intervals.of("2014-10-20T00:00:00Z/P1D"))).size()
     );
-    Assert.assertNull(timeline.findChunk(intervals, "v1", partition));
+    Assert.assertNull(timeline.findEntry(Intervals.of("2014-10-20T00:00:00Z/P1D"), "v1"));
   }
 
   @Test

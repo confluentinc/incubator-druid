@@ -39,6 +39,7 @@ import org.apache.druid.timeline.DataSegment;
 import org.apache.druid.timeline.SegmentId;
 import org.apache.druid.timeline.VersionedIntervalTimeline;
 import org.apache.druid.timeline.partition.PartitionChunk;
+import org.apache.druid.timeline.partition.PartitionHolder;
 import org.apache.druid.timeline.partition.ShardSpec;
 import org.apache.druid.utils.CollectionUtils;
 
@@ -231,13 +232,12 @@ public class SegmentManager
           final DataSourceState dataSourceState = v == null ? new DataSourceState() : v;
           final VersionedIntervalTimeline<String, ReferenceCountingSegment> loadedIntervals =
               dataSourceState.getTimeline();
-          final PartitionChunk<ReferenceCountingSegment> entry = loadedIntervals.findChunk(
+          final PartitionHolder<ReferenceCountingSegment> entry = loadedIntervals.findEntry(
               segment.getInterval(),
-              segment.getVersion(),
-              segment.getShardSpec().getPartitionNum()
+              segment.getVersion()
           );
 
-          if (entry != null) {
+          if ((entry != null) && (entry.getChunk(segment.getShardSpec().getPartitionNum()) != null)) {
             log.warn("Told to load an adapter for segment[%s] that already exists", segment.getId());
             resultSupplier.set(false);
           } else {

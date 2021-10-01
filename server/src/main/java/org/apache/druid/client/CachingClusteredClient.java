@@ -26,7 +26,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.RangeSet;
@@ -85,8 +84,8 @@ import org.apache.druid.timeline.SegmentId;
 import org.apache.druid.timeline.TimelineLookup;
 import org.apache.druid.timeline.TimelineObjectHolder;
 import org.apache.druid.timeline.VersionedIntervalTimeline;
-import org.apache.druid.timeline.VersionedIntervalTimeline.PartitionChunkEntry;
 import org.apache.druid.timeline.partition.PartitionChunk;
+import org.apache.druid.timeline.partition.PartitionHolder;
 import org.joda.time.Interval;
 
 import javax.annotation.Nullable;
@@ -99,7 +98,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
@@ -231,7 +229,20 @@ public class CachingClusteredClient implements QuerySegmentWalker
         return CachingClusteredClient.this.run(
             queryPlus,
             responseContext,
-            new TimelineConverter(specs),
+            timeline -> {
+              final VersionedIntervalTimeline<String, ServerSelector> timeline2 =
+                  new VersionedIntervalTimeline<>(Ordering.natural());
+              for (SegmentDescriptor spec : specs) {
+                final PartitionHolder<ServerSelector> entry = timeline.findEntry(spec.getInterval(), spec.getVersion());
+                if (entry != null) {
+                  final PartitionChunk<ServerSelector> chunk = entry.getChunk(spec.getPartitionNumber());
+                  if (chunk != null) {
+                    timeline2.add(spec.getInterval(), spec.getVersion(), chunk);
+                  }
+                }
+              }
+              return timeline2;
+            },
             true
         );
       }
@@ -843,51 +854,6 @@ public class CachingClusteredClient implements QuerySegmentWalker
         return Bytes.concat(joinDataSourceCacheKey, strategy.computeCacheKey(query));
       }
       return strategy.computeCacheKey(query);
-    }
-  }
-
-  private static class TimelineConverter implements UnaryOperator<TimelineLookup<String, ServerSelector>>
-  {
-    private final Iterable<SegmentDescriptor> specs;
-
-    TimelineConverter(final Iterable<SegmentDescriptor> specs)
-    {
-      this.specs = specs;
-    }
-
-    @Override
-    public TimelineLookup<String, ServerSelector> apply(TimelineLookup<String, ServerSelector> timeline)
-    {
-      final VersionedIntervalTimeline<String, ServerSelector> timeline2 =
-          new VersionedIntervalTimeline<>(Ordering.natural());
-      Iterator<PartitionChunkEntry<String, ServerSelector>> unfilteredIterator =
-          Iterators.transform(specs.iterator(), spec -> toChunkEntry(timeline, spec));
-      Iterator<PartitionChunkEntry<String, ServerSelector>> iterator = Iterators.filter(
-          unfilteredIterator,
-          Objects::nonNull
-      );
-      // VersionedIntervalTimeline#addAll implementation is much more efficient than calling VersionedIntervalTimeline#add
-      // in a loop when there are lot of segments to be added for same interval and version.
-      timeline2.addAll(iterator);
-      return timeline2;
-    }
-
-    @Nullable
-    private PartitionChunkEntry<String, ServerSelector> toChunkEntry(
-        TimelineLookup<String, ServerSelector> timeline,
-        SegmentDescriptor spec
-    )
-    {
-      PartitionChunk<ServerSelector> chunk = timeline.findChunk(
-          spec.getInterval(),
-          spec.getVersion(),
-          spec.getPartitionNumber()
-      );
-      if (null == chunk) {
-        return null;
-      }
-      return new PartitionChunkEntry<>(spec.getInterval(), spec.getVersion(), chunk);
-
     }
   }
 }

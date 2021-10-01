@@ -64,6 +64,7 @@ import org.apache.druid.segment.realtime.plumber.Sink;
 import org.apache.druid.timeline.SegmentId;
 import org.apache.druid.timeline.VersionedIntervalTimeline;
 import org.apache.druid.timeline.partition.PartitionChunk;
+import org.apache.druid.timeline.partition.PartitionHolder;
 import org.joda.time.Interval;
 
 import java.io.Closeable;
@@ -182,12 +183,15 @@ public class SinkQuerySegmentWalker implements QuerySegmentWalker
     Iterable<QueryRunner<T>> perSegmentRunners = Iterables.transform(
         specs,
         descriptor -> {
-          final PartitionChunk<Sink> chunk = sinkTimeline.findChunk(
+          final PartitionHolder<Sink> holder = sinkTimeline.findEntry(
               descriptor.getInterval(),
-              descriptor.getVersion(),
-              descriptor.getPartitionNumber()
+              descriptor.getVersion()
           );
+          if (holder == null) {
+            return new ReportTimelineMissingSegmentQueryRunner<>(descriptor);
+          }
 
+          final PartitionChunk<Sink> chunk = holder.getChunk(descriptor.getPartitionNumber());
           if (chunk == null) {
             return new ReportTimelineMissingSegmentQueryRunner<>(descriptor);
           }

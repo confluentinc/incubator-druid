@@ -21,7 +21,6 @@ package org.apache.druid.timeline.partition;
 
 /**
  */
-@Deprecated
 public class SingleElementPartitionChunk<T> implements PartitionChunk<T>
 {
   private final T element;

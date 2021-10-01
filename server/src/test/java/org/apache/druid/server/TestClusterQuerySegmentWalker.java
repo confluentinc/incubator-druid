@@ -52,6 +52,7 @@ import org.apache.druid.segment.join.JoinableFactoryWrapper;
 import org.apache.druid.timeline.TimelineObjectHolder;
 import org.apache.druid.timeline.VersionedIntervalTimeline;
 import org.apache.druid.timeline.partition.PartitionChunk;
+import org.apache.druid.timeline.partition.PartitionHolder;
 import org.joda.time.Interval;
 
 import javax.annotation.Nullable;
@@ -258,12 +259,11 @@ public class TestClusterQuerySegmentWalker implements QuerySegmentWalker
       final List<WindowedSegment> retVal = new ArrayList<>();
 
       for (SegmentDescriptor spec : specs) {
-        final PartitionChunk<ReferenceCountingSegment> entry = timeline.findChunk(
+        final PartitionHolder<ReferenceCountingSegment> entry = timeline.findEntry(
             spec.getInterval(),
-            spec.getVersion(),
-            spec.getPartitionNumber()
+            spec.getVersion()
         );
-        retVal.add(new WindowedSegment(entry.getObject(), spec.getInterval()));
+        retVal.add(new WindowedSegment(entry.getChunk(spec.getPartitionNumber()).getObject(), spec.getInterval()));
       }
 
       return retVal;
