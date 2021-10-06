@@ -23,6 +23,11 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 
 import java.util.Map;
 
+/**
+ * Implementation of a text-based approach to read the W3C Trace Context from request.
+ * Opentelemetry context propagation - https://opentelemetry.io/docs/java/manual_instrumentation/#context-propagation
+ * W3C Trace Context - https://www.w3.org/TR/trace-context/
+ */
 public class DruidContextTextMapGetter implements TextMapGetter<Map<String, String>>
 {
   @Override
