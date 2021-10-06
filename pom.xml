@@ -200,6 +200,7 @@
         <module>extensions-contrib/aliyun-oss-extensions</module>
         <module>extensions-contrib/opencensus-extensions</module>
         <module>extensions-contrib/confluent-extensions</module>
+        <module>extensions-contrib/opentelemetry-emitter</module>
         <!-- distribution packaging -->
         <module>distribution</module>
     </modules>
@@ -1658,7 +1659,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>3.2.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
