@@ -1,4 +1,4 @@
-# OpenTracing Emitter
+# OpenTelemetry Emitter
 
 The OpenTelemetry emitter generates OpenTelemetry Spans for queries.
 
@@ -15,13 +15,20 @@ Load the plugin:
 druid.extensions.loadList=[..., "opentelemetry-emitter"]
 ```
 
-Enable the emitter:
+Then there are 2 options:
+
+* You want to use only `opentelemetry-emitter` 
 
 ```
 druid.emitter=opentelemetry
 ```
 
-*_Don't forget to remove the line_ `druid.emitter=noop` _to avoid rewriting_.
+* You want to use `opentelemetry-emitter` with others emitters
+```
+druid.emitter=composing
+druid.emitter.composing.emitters=[..., "opentelemetry"]
+```
+_*More about Druid configuration [here](https://druid.apache.org/docs/0.22.0/configuration/index.html)._
 
 ## Testing
 ### Part 1: Run zipkin and otel-collector
@@ -77,8 +84,8 @@ Run otel-collector and zipkin.
 docker-compose up
 ```
 
-### Part 2: Run druid
-Build druid:
+### Part 2: Run Druid
+Build Druid:
 
 ```
 mvn clean install -Pdist
@@ -90,20 +97,20 @@ cd /tmp/apache-druid-0.21.0
 Edit `conf/druid/single-server/micro-quickstart/_common/common.runtime.properties` to enable
 the emitter (see `Configuration` section above).
 
-Start the quickstart:
-
+Start the quickstart with the apppropriate environment variables for opentelemetry autoconfiguration:
 ```
-bin/start-micro-quickstart
+OTEL_SERVICE_NAME="org.apache.druid" OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317" bin/start-micro-quickstart
 ```
+*_More about opentelemetry autoconfiguration [here](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure)_
 
-Load sampel data - [example](https://druid.apache.org/docs/latest/tutorials/index.html#step-4-load-data).
+Load sample data - [example](https://druid.apache.org/docs/latest/tutorials/index.html#step-4-load-data).
 
 ### Part 3: Send queries
 
 Create `query.json`:
 ```
 {
-   "query":"YOUR QUERY",
+   "query":"SELECT COUNT(*) as total FROM wiki WHERE countryName IS NOT NULL",
    "context":{
       "traceparent":"00-54ef39243e3feb12072e0f8a74c1d55a-ad6d5b581d7c29c1-01"
    }

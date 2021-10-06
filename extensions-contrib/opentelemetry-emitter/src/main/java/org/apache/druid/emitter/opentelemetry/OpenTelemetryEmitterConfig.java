@@ -19,26 +19,6 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import javax.annotation.Nullable;
-
 public class OpenTelemetryEmitterConfig
 {
-  @JsonProperty
-  private final String endpoint;
-
-  @JsonCreator
-  public OpenTelemetryEmitterConfig(
-      @JsonProperty("endpoint") @Nullable String endpoint
-  )
-  {
-    this.endpoint = endpoint;
-  }
-
-  public String getEndpoint()
-  {
-    return endpoint;
-  }
 }

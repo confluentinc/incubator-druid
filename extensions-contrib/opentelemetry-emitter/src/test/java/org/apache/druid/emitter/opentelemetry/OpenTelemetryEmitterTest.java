@@ -19,7 +19,6 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -147,12 +146,12 @@ public class OpenTelemetryEmitterTest
                                             serviceName,
                                             "host"
                                         );
-    Tracer tracer = OpenTelemetrySdk.builder()
-                                    .setTracerProvider(tracerProvider)
-                                    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-                                    .buildAndRegisterGlobal().getTracer("test", "v1");
+    OpenTelemetrySdk.builder()
+                    .setTracerProvider(tracerProvider)
+                    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+                    .buildAndRegisterGlobal();
 
-    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(tracer);
+    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter();
     emitter.emit(queryTimeMetric);
 
     Assert.assertEquals(1, noopExporter.spanData.size());
