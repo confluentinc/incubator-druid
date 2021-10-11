@@ -36,39 +36,32 @@ import java.util.Objects;
 
 public class KafkaInputFormat implements InputFormat
 {
-  private static final String DEFAULT_HEADER_COLUMN_PREFIX = "kafka.header.";
-  private static final String DEFAULT_TIMESTAMP_COLUMN_PREFIX = "kafka.";
-  private static final String DEFAULT_KEY_COLUMN_PREFIX = "kafka.";
-  private static final String DEFAULT_TIMESTAMP_STRING = "timestamp";
-  private static final String DEFAULT_KEY_STRING = "key";
-
-  // Since KafkaInputFormat blends data from header, key and payload, timestamp spec can be pointing to an attribute within one of these
-  // 3 sections. To handle scenarios where there is no timestamp value either in key or payload, we induce an artifical timestamp value
-  // to avoid unnecessary parser barf out. Users in such situations can use the inputFormat's kafka record timestamp as its primary timestamp.
-  private final TimestampSpec dummyTimestampSpec = new TimestampSpec("__kif_auto_timestamp", "auto", DateTimes.EPOCH);
+  private static final String DEFAULT_HEADER_LABEL_PREFIX = "kafka.header.";
+  private static final String DEFAULT_TIMESTAMP_LABEL_PREFIX = "kafka.";
+  private static final String DEFAULT_KEY_LABEL_PREFIX = "kafka.";
 
   private final KafkaHeaderFormat headerFormat;
   private final InputFormat valueFormat;
   private final InputFormat keyFormat;
-  private final String headerColumnPrefix;
-  private final String keyColumnPrefix;
-  private final String recordTimestampColumnPrefix;
+  private final String headerLabelPrefix;
+  private final String keyLabelPrefix;
+  private final String recordTimestampLabelPrefix;
 
   public KafkaInputFormat(
       @JsonProperty("headerFormat") @Nullable KafkaHeaderFormat headerFormat,
       @JsonProperty("keyFormat") @Nullable InputFormat keyFormat,
       @JsonProperty("valueFormat") InputFormat valueFormat,
-      @JsonProperty("headerColumnPrefix") @Nullable String headerColumnPrefix,
-      @JsonProperty("keyColumnPrefix") @Nullable String keyColumnPrefix,
-      @JsonProperty("recordTimestampColumnPrefix") @Nullable String recordTimestampColumnPrefix
+      @JsonProperty("headerLabelPrefix") @Nullable String headerLabelPrefix,
+      @JsonProperty("keyLabelPrefix") @Nullable String keyLabelPrefix,
+      @JsonProperty("recordTimestampLabelPrefix") @Nullable String recordTimestampLabelPrefix
   )
   {
     this.headerFormat = headerFormat;
     this.keyFormat = keyFormat;
-    this.valueFormat = Preconditions.checkNotNull(valueFormat, "valueFormat must not be null");
-    this.headerColumnPrefix = headerColumnPrefix != null ? headerColumnPrefix : DEFAULT_HEADER_COLUMN_PREFIX;
-    this.keyColumnPrefix = keyColumnPrefix != null ? keyColumnPrefix : DEFAULT_KEY_COLUMN_PREFIX;
-    this.recordTimestampColumnPrefix = recordTimestampColumnPrefix != null ? recordTimestampColumnPrefix : DEFAULT_TIMESTAMP_COLUMN_PREFIX;
+    this.valueFormat = Preconditions.checkNotNull(valueFormat, "valueFormat");
+    this.headerLabelPrefix = headerLabelPrefix != null ? headerLabelPrefix : DEFAULT_HEADER_LABEL_PREFIX;
+    this.keyLabelPrefix = keyLabelPrefix != null ? keyLabelPrefix : DEFAULT_KEY_LABEL_PREFIX;
+    this.recordTimestampLabelPrefix = recordTimestampLabelPrefix != null ? recordTimestampLabelPrefix : DEFAULT_TIMESTAMP_LABEL_PREFIX;
   }
 
   @Override
@@ -81,13 +74,17 @@ public class KafkaInputFormat implements InputFormat
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
     KafkaRecordEntity record = (KafkaRecordEntity) source;
+    // Since KafkaInputFormat blends data from header, key and payload, timestamp spec can be pointing to an attribute within one of these
+    // 3 sections. To handle scenarios where there is no timestamp value either in key or payload, we induce an artifical timestamp value
+    // to avoid unnecessary parser barf out. Users in such situations can use the inputFormat's kafka record timestamp as its primary timestamp.
+    TimestampSpec dummyTimestampSpec = new TimestampSpec("__kif_auto_timestamp", "auto", DateTimes.EPOCH);
     InputRowSchema newInputRowSchema = new InputRowSchema(dummyTimestampSpec, inputRowSchema.getDimensionsSpec(), inputRowSchema.getMetricNames());
     return new KafkaInputReader(
         inputRowSchema,
         record,
         (headerFormat == null) ?
           null :
-          headerFormat.createReader(record.getRecord().headers(), headerColumnPrefix),
+          headerFormat.createReader(record.getRecord().headers(), headerLabelPrefix),
         (keyFormat == null || record.getRecord().key() == null) ?
           null :
           keyFormat.createReader(
@@ -102,8 +99,8 @@ public class KafkaInputFormat implements InputFormat
                   source,
                   temporaryDirectory
           ),
-        keyColumnPrefix + DEFAULT_KEY_STRING,
-        recordTimestampColumnPrefix + DEFAULT_TIMESTAMP_STRING
+        keyLabelPrefix,
+        recordTimestampLabelPrefix
     );
   }
 
@@ -126,21 +123,21 @@ public class KafkaInputFormat implements InputFormat
   }
 
   @JsonProperty
-  public String getHeaderColumnPrefix()
+  public String getHeaderLabelPrefix()
   {
-    return headerColumnPrefix;
+    return headerLabelPrefix;
   }
 
   @JsonProperty
-  public String getKeyColumnPrefix()
+  public String getKeyLabelPrefix()
   {
-    return keyColumnPrefix;
+    return keyLabelPrefix;
   }
 
   @JsonProperty
-  public String getRecordTimestampColumnPrefix()
+  public String getRecordTimestampLabelPrefix()
   {
-    return recordTimestampColumnPrefix;
+    return recordTimestampLabelPrefix;
   }
 
   @Override
@@ -156,16 +153,15 @@ public class KafkaInputFormat implements InputFormat
     return Objects.equals(headerFormat, that.headerFormat)
            && Objects.equals(valueFormat, that.valueFormat)
            && Objects.equals(keyFormat, that.keyFormat)
-           && Objects.equals(headerColumnPrefix, that.headerColumnPrefix)
-           && Objects.equals(keyColumnPrefix, that.keyColumnPrefix)
-           && Objects.equals(recordTimestampColumnPrefix, that.recordTimestampColumnPrefix);
+           && Objects.equals(headerLabelPrefix, that.headerLabelPrefix)
+           && Objects.equals(keyLabelPrefix, that.keyLabelPrefix)
+           && Objects.equals(recordTimestampLabelPrefix, that.recordTimestampLabelPrefix);
   }
 
   @Override
   public int hashCode()
   {
     return Objects.hash(headerFormat, valueFormat, keyFormat,
-                        headerColumnPrefix, keyColumnPrefix, recordTimestampColumnPrefix
-    );
+                        headerLabelPrefix, keyLabelPrefix, recordTimestampLabelPrefix);
   }
 }
