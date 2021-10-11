@@ -19,6 +19,7 @@
 
 package org.apache.druid.data.input.kafkainput;
 
+import org.apache.druid.java.util.common.logger.Logger;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.druid.data.input.InputEntityReader;
@@ -28,7 +29,6 @@ import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.java.util.common.CloseableIterators;
-import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
@@ -91,12 +91,11 @@ public class KafkaInputReader implements InputEntityReader
               keyRow.getEvent().entrySet().stream().findFirst().get().getValue()
           );
         }
-      }
-      catch (Exception e) {
-        if (e instanceof IOException) {
+      } catch (Exception e) {
+        if (e instanceof IOException){
           log.error(e, "Encountered IOException during key parsing.");
-          throw (IOException) e;
-        } else if (e instanceof ParseException) {
+          throw (IOException)e;
+        } else if (e instanceof  ParseException) {
           log.error(e, "Encountered key parsing exception.");
         } else {
           log.error(e, "Encountered exception during key parsing.");
@@ -140,12 +139,11 @@ public class KafkaInputReader implements InputEntityReader
               event
           ));
         }
-      }
-      catch (Exception e) {
-        if (e instanceof IOException) {
+      } catch (Exception e) {
+        if (e instanceof IOException){
           log.error(e, "Encountered IOException during value parsing.");
-          throw (IOException) e;
-        } else if (e instanceof ParseException) {
+          throw (IOException)e;
+        } else if (e instanceof  ParseException) {
           log.error(e, "Encountered value parsing exception.");
         } else {
           log.error(e, "Encountered exception during value parsing.");
@@ -180,3 +178,4 @@ public class KafkaInputReader implements InputEntityReader
     return read().map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
   }
 }
+
