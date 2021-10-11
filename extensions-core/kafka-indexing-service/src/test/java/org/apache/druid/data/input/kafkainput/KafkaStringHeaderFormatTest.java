@@ -22,7 +22,6 @@ package org.apache.druid.data.input.kafkainput;
 import com.google.common.collect.ImmutableList;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.java.util.common.DateTimes;
-import org.apache.druid.java.util.common.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
@@ -32,8 +31,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class KafkaStringHeaderFormatTest
@@ -75,16 +74,19 @@ public class KafkaStringHeaderFormatTest
   public void testDefaultHeaderFormat() throws IOException
   {
     String headerLabelPrefix = "test.kafka.header.";
+    String timestampLablePrefix = "test.kafka.newts.";
     Headers headers = new RecordHeaders(SAMPLE_HEADERS);
     inputEntity = new KafkaRecordEntity(new ConsumerRecord<byte[], byte[]>(
         "sample", 0, 0, timestamp,
         null, null, 0, 0,
         null, "sampleValue".getBytes(StandardCharsets.UTF_8), headers
     ));
-    List<Pair<String, Object>> expectedResults = Arrays.asList(
-        Pair.of("test.kafka.header.encoding", "application/json"),
-        Pair.of("test.kafka.header.kafkapkc", "pkc-bar")
-    );
+    Map<String, Object> expectedResults = new HashMap<String, Object>() {
+      {
+        put("test.kafka.header.encoding", "application/json");
+        put("test.kafka.header.kafkapkc", "pkc-bar");
+      }
+    };
 
     KafkaHeaderFormat headerInput = new KafkaStringHeaderFormat(null);
     KafkaHeaderReader headerParser = headerInput.createReader(inputEntity.getRecord().headers(), headerLabelPrefix);
@@ -126,21 +128,24 @@ public class KafkaStringHeaderFormatTest
     );
 
     String headerLabelPrefix = "test.kafka.header.";
+    String timestampLablePrefix = "test.kafka.newts.";
     Headers headers = new RecordHeaders(header);
     inputEntity = new KafkaRecordEntity(new ConsumerRecord<byte[], byte[]>(
         "sample", 0, 0, timestamp,
         null, null, 0, 0,
         null, "sampleValue".getBytes(StandardCharsets.UTF_8), headers
     ));
-    List<Pair<String, Object>> expectedResults = Arrays.asList(
-        Pair.of("test.kafka.header.encoding", "application/json"),
-        Pair.of("test.kafka.header.kafkapkc", "pkc-bar")
-    );
+    Map<String, Object> expectedResults = new HashMap<String, Object>() {
+      {
+        put("test.kafka.header.encoding", "application/json");
+        put("test.kafka.header.kafkapkc", "pkc-bar");
+      }
+    };
 
     KafkaHeaderFormat headerInput = new KafkaStringHeaderFormat("US-ASCII");
     KafkaHeaderReader headerParser = headerInput.createReader(inputEntity.getRecord().headers(), headerLabelPrefix);
-    List<Pair<String, Object>> rows = headerParser.read();
-    Assert.assertEquals(expectedResults, rows);
+    Map<String, Object> row = headerParser.read();
+    Assert.assertEquals(expectedResults, row);
   }
 
   @Test
@@ -178,21 +183,24 @@ public class KafkaStringHeaderFormatTest
     );
 
     String headerLabelPrefix = "test.kafka.header.";
+    String timestampLablePrefix = "test.kafka.newts.";
     Headers headers = new RecordHeaders(header);
     inputEntity = new KafkaRecordEntity(new ConsumerRecord<byte[], byte[]>(
         "sample", 0, 0, timestamp,
         null, null, 0, 0,
         null, "sampleValue".getBytes(StandardCharsets.UTF_8), headers
     ));
-    List<Pair<String, Object>> expectedResults = Arrays.asList(
-        Pair.of("test.kafka.header.encoding", "?pplic?tion/json"),
-        Pair.of("test.kafka.header.kafkapkc", "pkc-bar")
-    );
+    Map<String, Object> expectedResults = new HashMap<String, Object>() {
+      {
+        put("test.kafka.header.encoding", "?pplic?tion/json");
+        put("test.kafka.header.kafkapkc", "pkc-bar");
+      }
+    };
 
     KafkaHeaderFormat headerInput = new KafkaStringHeaderFormat("US-ASCII");
     KafkaHeaderReader headerParser = headerInput.createReader(inputEntity.getRecord().headers(), headerLabelPrefix);
-    List<Pair<String, Object>> rows = headerParser.read();
-    Assert.assertEquals(expectedResults, rows);
+    Map<String, Object> row = headerParser.read();
+    Assert.assertEquals(expectedResults, row);
   }
 }
 

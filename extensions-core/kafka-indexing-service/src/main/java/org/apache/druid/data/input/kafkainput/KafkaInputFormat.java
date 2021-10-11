@@ -40,7 +40,7 @@ public class KafkaInputFormat implements InputFormat
   private static final String DEFAULT_TIMESTAMP_LABEL_PREFIX = "kafka.";
   private static final String DEFAULT_KEY_LABEL_PREFIX = "kafka.";
 
-  private final KafkaHeaderFormat headerFormat;
+  private final KafkaHeaderFormat headerReader;
   private final InputFormat valueFormat;
   private final InputFormat keyFormat;
   private final String headerLabelPrefix;
@@ -48,16 +48,16 @@ public class KafkaInputFormat implements InputFormat
   private final String recordTimestampLabelPrefix;
 
   public KafkaInputFormat(
-      @JsonProperty("headerFormat") @Nullable KafkaHeaderFormat headerFormat,
-      @JsonProperty("keyFormat") @Nullable InputFormat keyFormat,
+      @JsonProperty("headerFormat") KafkaHeaderFormat headerReader,
+      @JsonProperty("keyFormat") InputFormat keyFormat,
       @JsonProperty("valueFormat") InputFormat valueFormat,
       @JsonProperty("headerLabelPrefix") @Nullable String headerLabelPrefix,
       @JsonProperty("keyLabelPrefix") @Nullable String keyLabelPrefix,
       @JsonProperty("recordTimestampLabelPrefix") @Nullable String recordTimestampLabelPrefix
   )
   {
-    this.headerFormat = headerFormat;
-    this.keyFormat = keyFormat;
+    this.headerReader = Preconditions.checkNotNull(headerReader, "headerFormat");
+    this.keyFormat = Preconditions.checkNotNull(keyFormat, "keyFormat");
     this.valueFormat = Preconditions.checkNotNull(valueFormat, "valueFormat");
     this.headerLabelPrefix = headerLabelPrefix != null ? headerLabelPrefix : DEFAULT_HEADER_LABEL_PREFIX;
     this.keyLabelPrefix = keyLabelPrefix != null ? keyLabelPrefix : DEFAULT_KEY_LABEL_PREFIX;
@@ -80,34 +80,30 @@ public class KafkaInputFormat implements InputFormat
     TimestampSpec dummyTimestampSpec = new TimestampSpec("__kif_auto_timestamp", "auto", DateTimes.EPOCH);
     InputRowSchema newInputRowSchema = new InputRowSchema(dummyTimestampSpec, inputRowSchema.getDimensionsSpec(), inputRowSchema.getMetricNames());
     return new KafkaInputReader(
-        inputRowSchema,
-        record,
-        (headerFormat == null) ?
-          null :
-          headerFormat.createReader(record.getRecord().headers(), headerLabelPrefix),
-        (keyFormat == null || record.getRecord().key() == null) ?
-          null :
-          keyFormat.createReader(
-                  newInputRowSchema,
-                  new ByteEntity(record.getRecord().key()),
-                  temporaryDirectory
-          ),
-        (record.getRecord().value() == null) ?
-          null :
-          valueFormat.createReader(
-                  newInputRowSchema,
-                  source,
-                  temporaryDirectory
-          ),
-        keyLabelPrefix,
-        recordTimestampLabelPrefix
+            inputRowSchema,
+            record,
+            headerReader.createReader(record.getRecord().headers(), headerLabelPrefix),
+            (record.getRecord().key() != null) ?
+            keyFormat.createReader(
+                    newInputRowSchema,
+                    new ByteEntity(record.getRecord().key()),
+                    temporaryDirectory
+            ) : null,
+            (record.getRecord().value() != null) ?
+            valueFormat.createReader(
+                    newInputRowSchema,
+                    source,
+                    temporaryDirectory
+            ) : null,
+            keyLabelPrefix,
+            recordTimestampLabelPrefix
     );
   }
 
   @JsonProperty
   public KafkaHeaderFormat getHeaderFormat()
   {
-    return headerFormat;
+    return headerReader;
   }
 
   @JsonProperty
@@ -150,7 +146,7 @@ public class KafkaInputFormat implements InputFormat
       return false;
     }
     KafkaInputFormat that = (KafkaInputFormat) o;
-    return Objects.equals(headerFormat, that.headerFormat)
+    return Objects.equals(headerReader, that.headerReader)
            && Objects.equals(valueFormat, that.valueFormat)
            && Objects.equals(keyFormat, that.keyFormat)
            && Objects.equals(headerLabelPrefix, that.headerLabelPrefix)
@@ -161,7 +157,7 @@ public class KafkaInputFormat implements InputFormat
   @Override
   public int hashCode()
   {
-    return Objects.hash(headerFormat, valueFormat, keyFormat,
+    return Objects.hash(headerReader, valueFormat, keyFormat,
                         headerLabelPrefix, keyLabelPrefix, recordTimestampLabelPrefix);
   }
 }

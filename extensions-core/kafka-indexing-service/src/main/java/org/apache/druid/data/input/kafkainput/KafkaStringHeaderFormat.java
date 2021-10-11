@@ -20,6 +20,7 @@
 package org.apache.druid.data.input.kafkainput;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.kafka.common.header.Headers;
 
 import javax.annotation.Nullable;
@@ -29,19 +30,21 @@ import java.util.Objects;
 
 public class KafkaStringHeaderFormat implements KafkaHeaderFormat
 {
+  private static final Logger log = new Logger(KafkaStringHeaderFormat.class);
+  private static final Charset DEFAULT_STRING_ENCODING = StandardCharsets.UTF_8;
   private final Charset encoding;
 
   public KafkaStringHeaderFormat(
       @JsonProperty("encoding") @Nullable String encoding
   )
   {
-    this.encoding = (encoding != null) ? Charset.forName(encoding) : StandardCharsets.UTF_8;
+    this.encoding = (encoding != null) ? Charset.forName(encoding) : DEFAULT_STRING_ENCODING;
   }
 
   @JsonProperty
   public String getEncoding()
   {
-    return encoding.name();
+    return encoding.displayName();
   }
 
   @Override
@@ -52,8 +55,8 @@ public class KafkaStringHeaderFormat implements KafkaHeaderFormat
   {
     return new KafkaStringHeaderReader(
         headers,
-        headerLabelPrefix,
-        encoding
+        this.encoding,
+        headerLabelPrefix
     );
   }
 
