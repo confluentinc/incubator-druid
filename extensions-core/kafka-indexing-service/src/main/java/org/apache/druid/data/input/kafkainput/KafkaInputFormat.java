@@ -41,12 +41,11 @@ public class KafkaInputFormat implements InputFormat
   private static final String DEFAULT_KEY_COLUMN_PREFIX = "kafka.";
   private static final String DEFAULT_TIMESTAMP_STRING = "timestamp";
   private static final String DEFAULT_KEY_STRING = "key";
-  public static final String DEFAULT_AUTO_TIMESTAMP_STRING = "__kif_auto_timestamp";
 
   // Since KafkaInputFormat blends data from header, key and payload, timestamp spec can be pointing to an attribute within one of these
   // 3 sections. To handle scenarios where there is no timestamp value either in key or payload, we induce an artifical timestamp value
   // to avoid unnecessary parser barf out. Users in such situations can use the inputFormat's kafka record timestamp as its primary timestamp.
-  private final TimestampSpec dummyTimestampSpec = new TimestampSpec(DEFAULT_AUTO_TIMESTAMP_STRING, "auto", DateTimes.EPOCH);
+  private final TimestampSpec dummyTimestampSpec = new TimestampSpec("__kif_auto_timestamp", "auto", DateTimes.EPOCH);
 
   private final KafkaHeaderFormat headerFormat;
   private final InputFormat valueFormat;
