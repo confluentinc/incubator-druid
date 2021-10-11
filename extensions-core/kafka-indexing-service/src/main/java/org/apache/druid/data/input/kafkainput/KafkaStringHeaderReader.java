@@ -24,7 +24,6 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,10 +32,10 @@ public class KafkaStringHeaderReader implements KafkaHeaderReader
   private static final Logger log = new Logger(KafkaStringHeaderReader.class);
   private final Headers headers;
   private final String headerLabelPrefix;
-  private final Charset encoding;
+  private final String encoding;
 
   public KafkaStringHeaderReader(Headers headers,
-                                 Charset encoding,
+                                 String encoding,
                                  String headerLabelPrefix)
   {
     this.headers = headers;

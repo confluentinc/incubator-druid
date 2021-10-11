@@ -78,29 +78,25 @@ public class KafkaInputFormat implements InputFormat
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
     KafkaRecordEntity record = (KafkaRecordEntity) source;
-    // Since KafkaInputFormat blends data from header, key and payload, timestamp spec can be pointing to an attribute within one of these
-    // 3 sections. To handle scenarios where there is no timestamp value either in key or payload, we induce an artifical timestamp value
-    // to avoid unnecessary parser barf out. Users in such situations can use the inputFormat's kafka record timestamp as its primary timestamp.
-    TimestampSpec dummyTimestampSpec = new TimestampSpec("__kif_auto_timestamp", "auto", DateTimes.EPOCH);
+    TimestampSpec dummyTimestampSpec = new TimestampSpec("__kif_auto_timestamp", "auto", DateTimes.of("2021-06-24"));
     InputRowSchema newInputRowSchema = new InputRowSchema(dummyTimestampSpec, inputRowSchema.getDimensionsSpec(), inputRowSchema.getMetricNames());
     return new KafkaInputReader(
             inputRowSchema,
             record,
-            headerReader.createReader(record.getRecord().headers(), headerLabelPrefix),
+            this.headerReader.createReader(record.getRecord().headers(), this.headerLabelPrefix),
             (record.getRecord().key() != null) ?
-            keyFormat.createReader(
+            this.keyFormat.createReader(
                     newInputRowSchema,
                     new ByteEntity(record.getRecord().key()),
                     temporaryDirectory
             ) : null,
-            (record.getRecord().value() != null) ?
-            valueFormat.createReader(
+            this.valueFormat.createReader(
                     newInputRowSchema,
                     source,
                     temporaryDirectory
-            ) : null,
-            keyLabelPrefix,
-            recordTimestampLabelPrefix
+            ),
+            this.keyLabelPrefix,
+            this.recordTimestampLabelPrefix
     );
   }
 
