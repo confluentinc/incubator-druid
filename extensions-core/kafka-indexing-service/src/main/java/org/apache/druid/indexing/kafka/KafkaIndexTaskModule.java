@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.TypeLiteral;
-import org.apache.druid.data.input.kafkainput.KafkaInputFormat;
 import org.apache.druid.guice.LazySingleton;
 import org.apache.druid.indexing.kafka.supervisor.KafkaSupervisorSpec;
 import org.apache.druid.indexing.kafka.supervisor.KafkaSupervisorTuningConfig;
@@ -50,8 +49,7 @@ public class KafkaIndexTaskModule implements DruidModule
                 new NamedType(KafkaIndexTaskTuningConfig.class, "KafkaTuningConfig"),
                 new NamedType(KafkaSupervisorTuningConfig.class, "kafka"),
                 new NamedType(KafkaSupervisorSpec.class, "kafka"),
-                new NamedType(KafkaSamplerSpec.class, "kafka"),
-                new NamedType(KafkaInputFormat.class, "kafka")
+                new NamedType(KafkaSamplerSpec.class, "kafka")
             )
     );
   }
