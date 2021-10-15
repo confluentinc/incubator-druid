@@ -19,7 +19,7 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -45,10 +45,10 @@ public class OpenTelemetryEmitter implements Emitter
   private final Tracer tracer;
   private final TextMapPropagator propagator;
 
-  OpenTelemetryEmitter()
+  OpenTelemetryEmitter(OpenTelemetry openTelemetry)
   {
-    tracer = GlobalOpenTelemetry.getTracer("druid-opentelemetry-extension");
-    propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+    tracer = openTelemetry.getTracer("druid-opentelemetry-extension");
+    propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
   @Override
@@ -76,8 +76,7 @@ public class OpenTelemetryEmitter implements Emitter
 
   private void emitQueryTimeEvent(ServiceMetricEvent event)
   {
-    Map<String, String> druidContext = getContextAsString(event);
-    Context opentelemetryContext = propagator.extract(Context.current(), druidContext, DRUID_CONTEXT_MAP_GETTER);
+    Context opentelemetryContext = propagator.extract(Context.current(), event, DRUID_CONTEXT_MAP_GETTER);
 
     try (Scope scope = opentelemetryContext.makeCurrent()) {
       DateTime endTime = event.getCreatedTime();
@@ -86,7 +85,7 @@ public class OpenTelemetryEmitter implements Emitter
       Span span = tracer.spanBuilder(event.getService())
                         .setStartTimestamp(startTime.getMillis(), TimeUnit.MILLISECONDS)
                         .startSpan();
-      druidContext.forEach(span::setAttribute);
+      getContextAsString(event).forEach(span::setAttribute);
       span.setStatus(StatusCode.OK).end(endTime.getMillis(), TimeUnit.MILLISECONDS);
     }
   }

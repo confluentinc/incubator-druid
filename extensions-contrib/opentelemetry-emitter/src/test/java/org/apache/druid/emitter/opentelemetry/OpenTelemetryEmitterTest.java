@@ -19,6 +19,7 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -30,25 +31,25 @@ import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.apache.druid.java.util.common.DateTimes;
 import org.apache.druid.java.util.emitter.core.Event;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
-import org.easymock.EasyMock;
 import org.joda.time.DateTime;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class OpenTelemetryEmitterTest
 {
   private static class NoopExporter implements SpanExporter
   {
-    public Collection<SpanData> spanData;
+    public Collection<SpanData> spanDataCollection;
 
     @Override
     public CompletableResultCode export(Collection<SpanData> collection)
     {
-      this.spanData = collection;
+      this.spanDataCollection = collection;
       return CompletableResultCode.ofSuccess();
     }
 
@@ -65,6 +66,22 @@ public class OpenTelemetryEmitterTest
     }
   }
 
+  private OpenTelemetry openTelemetry;
+  private NoopExporter noopExporter;
+
+  @Before
+  public void setup()
+  {
+    System.out.println("!!!!!!!!!!!!!!!!!!!!!!");
+    noopExporter = new NoopExporter();
+    openTelemetry = OpenTelemetrySdk.builder()
+                                    .setTracerProvider(SdkTracerProvider.builder()
+                                                                        .addSpanProcessor(SimpleSpanProcessor.create(
+                                                                            noopExporter))
+                                                                        .build())
+                                    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+                                    .build();
+  }
 
   // Check that we don't call "emitQueryTimeEvent" method for event that is not instance of ServiceMetricEvent
   @Test
@@ -86,12 +103,9 @@ public class OpenTelemetryEmitterTest
           }
         };
 
-    OpenTelemetryEmitter emitter = EasyMock.createMock(OpenTelemetryEmitter.class);
+    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(openTelemetry);
     emitter.emit(notServiceMetricEvent);
-    EasyMock.replay(emitter);
-
-    emitter.emit(notServiceMetricEvent);
-    EasyMock.verifyUnexpectedCalls(emitter);
+    Assert.assertNull(noopExporter.spanDataCollection);
   }
 
   // Check that we don't call "emitQueryTimeEvent" method for ServiceMetricEvent that is not "query/time" type
@@ -109,12 +123,9 @@ public class OpenTelemetryEmitterTest
                                             "brokerHost1"
                                         );
 
-    OpenTelemetryEmitter emitter = EasyMock.createMock(OpenTelemetryEmitter.class);
+    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(openTelemetry);
     emitter.emit(notQueryTimeMetric);
-    EasyMock.replay(emitter);
-
-    emitter.emit(notQueryTimeMetric);
-    EasyMock.verifyUnexpectedCalls(emitter);
+    Assert.assertNull(noopExporter.spanDataCollection);
   }
 
   @Test
@@ -130,11 +141,6 @@ public class OpenTelemetryEmitterTest
     final DateTime createdTime = DateTimes.nowUtc();
     final long metricValue = 100;
 
-    NoopExporter noopExporter = new NoopExporter();
-    SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
-                                                        .addSpanProcessor(SimpleSpanProcessor.create(noopExporter))
-                                                        .build();
-
     final ServiceMetricEvent queryTimeMetric =
         new ServiceMetricEvent.Builder().setDimension("context", context)
                                         .build(
@@ -146,17 +152,13 @@ public class OpenTelemetryEmitterTest
                                             serviceName,
                                             "host"
                                         );
-    OpenTelemetrySdk.builder()
-                    .setTracerProvider(tracerProvider)
-                    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-                    .buildAndRegisterGlobal();
 
-    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter();
+    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(openTelemetry);
     emitter.emit(queryTimeMetric);
 
-    Assert.assertEquals(1, noopExporter.spanData.size());
+    Assert.assertEquals(1, noopExporter.spanDataCollection.size());
 
-    SpanData actualSpanData = noopExporter.spanData.iterator().next();
+    SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
     Assert.assertEquals(serviceName, actualSpanData.getName());
     Assert.assertEquals((createdTime.getMillis() - metricValue) * 1_000_000, actualSpanData.getStartEpochNanos());
     Assert.assertEquals(expectedParentTraceId, actualSpanData.getParentSpanContext().getTraceId());
