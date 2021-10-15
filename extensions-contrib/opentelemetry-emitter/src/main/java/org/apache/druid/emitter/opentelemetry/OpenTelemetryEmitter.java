@@ -19,7 +19,7 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -35,20 +35,19 @@ import org.joda.time.DateTime;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class OpenTelemetryEmitter implements Emitter
 {
   private static final Logger log = new Logger(OpenTelemetryEmitter.class);
-  private static final DruidContextTextMapGetter DRUID_CONTEXT_MAP_GETTER = new DruidContextTextMapGetter();
   private final Tracer tracer;
   private final TextMapPropagator propagator;
 
-  OpenTelemetryEmitter()
+  OpenTelemetryEmitter(OpenTelemetry openTelemetry)
   {
-    tracer = GlobalOpenTelemetry.getTracer("druid-opentelemetry-extension");
-    propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+    tracer = openTelemetry.getTracer("druid-opentelemetry-extension");
+    propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
   @Override
@@ -76,8 +75,8 @@ public class OpenTelemetryEmitter implements Emitter
 
   private void emitQueryTimeEvent(ServiceMetricEvent event)
   {
-    Map<String, String> druidContext = getContextAsString(event);
-    Context opentelemetryContext = propagator.extract(Context.current(), druidContext, DRUID_CONTEXT_MAP_GETTER);
+    DruidContextTextMapGetter druidContextTextMapGetter = new DruidContextTextMapGetter();
+    Context opentelemetryContext = propagator.extract(Context.current(), event, druidContextTextMapGetter);
 
     try (Scope scope = opentelemetryContext.makeCurrent()) {
       DateTime endTime = event.getCreatedTime();
@@ -86,17 +85,15 @@ public class OpenTelemetryEmitter implements Emitter
       Span span = tracer.spanBuilder(event.getService())
                         .setStartTimestamp(startTime.getMillis(), TimeUnit.MILLISECONDS)
                         .startSpan();
-      druidContext.forEach(span::setAttribute);
+      Set<String> extractedKeys = druidContextTextMapGetter.getExtractedKeys();
+
+      getContext(event).entrySet()
+                       .stream()
+                       .filter(entry -> entry.getValue() != null)
+                       .filter(entry -> !extractedKeys.contains(entry.getKey()))
+                       .forEach(entry -> span.setAttribute(entry.getKey(), entry.getValue().toString()));
       span.setStatus(StatusCode.OK).end(endTime.getMillis(), TimeUnit.MILLISECONDS);
     }
-  }
-
-  private static Map<String, String> getContextAsString(ServiceMetricEvent event)
-  {
-    return getContext(event).entrySet()
-                            .stream()
-                            .filter(entry -> entry.getValue() != null)
-                            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
   }
 
   private static Map<String, Object> getContext(ServiceMetricEvent event)

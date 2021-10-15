@@ -1,7 +1,16 @@
 # OpenTelemetry Emitter
 
-The OpenTelemetry emitter generates OpenTelemetry Spans for queries.
+The [OpenTelemetry](https://opentelemetry.io/) emitter generates OpenTelemetry Spans for queries.
 
+## How OpenTelemetry emitter works
+
+The [OpenTelemetry](https://opentelemetry.io/) emitter processes`ServiceMetricEvent` type of event with a `query/time`
+metric. It extacts OpenTelemetry context
+from [druid context](https://druid.apache.org/docs/latest/querying/query-context.html). To link druid spans to parent
+trace druid context should contain `traceparent` key, at least. More
+about [context propagation](https://www.w3.org/TR/trace-context/). If there is no `traceparent` key is provided, then
+spans are created without `parentTraceId` and link to no parent. Also, the emitter adds other druid context entries to
+the span attributes.
 
 ## Configuration
 
@@ -17,22 +26,27 @@ druid.extensions.loadList=[..., "opentelemetry-emitter"]
 
 Then there are 2 options:
 
-* You want to use only `opentelemetry-emitter` 
+* You want to use only `opentelemetry-emitter`
 
 ```
 druid.emitter=opentelemetry
 ```
 
-* You want to use `opentelemetry-emitter` with others emitters
+* You want to use `opentelemetry-emitter` with other emitters
+
 ```
 druid.emitter=composing
 druid.emitter.composing.emitters=[..., "opentelemetry"]
 ```
-_*More about Druid configuration [here](https://druid.apache.org/docs/0.22.0/configuration/index.html)._
+
+_*More about Druid configuration [here](https://druid.apache.org/docs/latest/configuration/index.html)._
 
 ## Testing
+
 ### Part 1: Run zipkin and otel-collector
+
 Create `docker-compose.yaml` in your working dir:
+
 ```
 version: "2"
 services:
@@ -52,6 +66,7 @@ services:
 ```
 
 Create `config.yaml` file with configuration for otel-collector:
+
 ```
 version: "2"
 receivers:
@@ -77,14 +92,17 @@ service:
       processors: [batch]
       exporters: [logging, zipkin]
 ```
+
 *_How to configure otel-collector you can read [here](https://opentelemetry.io/docs/collector/configuration/)._
 
 Run otel-collector and zipkin.
+
 ```
 docker-compose up
 ```
 
 ### Part 2: Run Druid
+
 Build Druid:
 
 ```
@@ -93,21 +111,24 @@ tar -C /tmp -xf distribution/target/apache-druid-0.21.0-bin.tar.gz
 cd /tmp/apache-druid-0.21.0
 ```
 
-
-Edit `conf/druid/single-server/micro-quickstart/_common/common.runtime.properties` to enable
-the emitter (see `Configuration` section above).
+Edit `conf/druid/single-server/micro-quickstart/_common/common.runtime.properties` to enable the emitter (
+see `Configuration` section above).
 
 Start the quickstart with the apppropriate environment variables for opentelemetry autoconfiguration:
+
 ```
 OTEL_SERVICE_NAME="org.apache.druid" OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317" bin/start-micro-quickstart
 ```
-*_More about opentelemetry autoconfiguration [here](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure)_
+
+*_More about opentelemetry
+autoconfiguration [here](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk-extensions/autoconfigure)_
 
 Load sample data - [example](https://druid.apache.org/docs/latest/tutorials/index.html#step-4-load-data).
 
 ### Part 3: Send queries
 
 Create `query.json`:
+
 ```
 {
    "query":"SELECT COUNT(*) as total FROM wiki WHERE countryName IS NOT NULL",
@@ -118,6 +139,7 @@ Create `query.json`:
 ```
 
 Send query:
+
 ```
 curl -XPOST -H'Content-Type: application/json' http://localhost:8888/druid/v2/sql/ -d @query.json
 ```
