@@ -20,28 +20,41 @@
 package org.apache.druid.emitter.opentelemetry;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
+import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 
+import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Implementation of a text-based approach to read the W3C Trace Context from request.
- * Opentelemetry context propagation - https://opentelemetry.io/docs/java/manual_instrumentation/#context-propagation
- * W3C Trace Context - https://www.w3.org/TR/trace-context/
+ * <a href="https://opentelemetry.io/docs/java/manual_instrumentation/#context-propagation">Context propagation</a>
+ * <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
  */
-public class DruidContextTextMapGetter implements TextMapGetter<Map<String, String>>
+public class DruidContextTextMapGetter implements TextMapGetter<ServiceMetricEvent>
 {
-  @Override
-  public String get(Map<String, String> carrier, String key)
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getContext(ServiceMetricEvent event)
   {
-    if (carrier.containsKey(key)) {
-      return carrier.get(key);
+    Object context = event.getUserDims().get("context");
+    if (!(context instanceof Map)) {
+      return Collections.emptyMap();
     }
-    return null;
+    return (Map<String, Object>) context;
+  }
+
+  @Nullable
+  @Override
+  public String get(ServiceMetricEvent event, String key)
+  {
+    return Optional.ofNullable(getContext(event).get(key)).map(Objects::toString).orElse(null);
   }
 
   @Override
-  public Iterable<String> keys(Map<String, String> carrier)
+  public Iterable<String> keys(ServiceMetricEvent event)
   {
-    return carrier.keySet();
+    return getContext(event).keySet();
   }
 }
