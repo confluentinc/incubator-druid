@@ -36,13 +36,36 @@
   <properties>
     <opentelemetry.version>1.6.0</opentelemetry.version>
     <opentelemetry.instrumentation.version>1.6.2-alpha</opentelemetry.instrumentation.version>
-    <opentelemetry.autoinstrumentation.version>1.6.0-alpha</opentelemetry.autoinstrumentation.version>
     <!-- These guava and grpc versions are used only in the opentelemetry-extension.
       Look at build section for more details about shading. -->
     <shade.guava.version>30.1.1-jre</shade.guava.version>
     <shade.grpc.version>1.41.0</shade.grpc.version>
   </properties>
-
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom-alpha</artifactId>
+        <version>${opentelemetry.version}-alpha</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
+        <version>${opentelemetry.instrumentation.version}</version>
+        <type>pom</type>
+        <scope>compile</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>org.apache.druid</groupId>
@@ -53,32 +76,12 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
-      <version>${opentelemetry.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-bom</artifactId>
-      <version>${opentelemetry.version}</version>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-bom-alpha</artifactId>
-      <version>${opentelemetry.version}-alpha</version>
-      <type>pom</type>
-    </dependency>
-    <dependency>
-      <groupId>io.opentelemetry.instrumentation</groupId>
-      <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
-      <version>${opentelemetry.instrumentation.version}</version>
-      <type>pom</type>
     </dependency>
     <!-- OpenTelemetry extension bundles the OpenTelemetry auto-instrumentation,
       So it could potentially affect performance -->
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
-      <version>${opentelemetry.autoinstrumentation.version}</version>
     </dependency>
     <dependency>
       <groupId>io.grpc</groupId>
@@ -117,11 +120,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
