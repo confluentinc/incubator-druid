@@ -54,6 +54,7 @@ public class OpenTelemetryEmitterModule implements DruidModule
   @Named(EMITTER_TYPE)
   public Emitter getEmitter(OpenTelemetryEmitterConfig config, ObjectMapper mapper)
   {
+    // It's a good practice to not set the GlobalOpenTelemetry since there's no need to do that
     return new OpenTelemetryEmitter(OpenTelemetrySdkAutoConfiguration.initialize(false));
   }
 }
