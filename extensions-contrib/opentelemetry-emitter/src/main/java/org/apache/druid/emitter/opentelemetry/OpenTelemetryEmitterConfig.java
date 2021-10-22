@@ -19,6 +19,9 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
+/**
+ * The placeholder for future configurations but there is any yet
+ */
 public class OpenTelemetryEmitterConfig
 {
 }

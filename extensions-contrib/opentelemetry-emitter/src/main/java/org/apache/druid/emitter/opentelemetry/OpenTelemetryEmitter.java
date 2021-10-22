@@ -33,13 +33,16 @@ import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class OpenTelemetryEmitter implements Emitter
 {
+  static final DruidContextTextMapGetter DRUID_CONTEXT_TEXT_MAP_GETTER = new DruidContextTextMapGetter();
+  static final HashSet<String> TRACEPARENT_PROPAGATION_FIELDS = new HashSet<>(Arrays.asList("traceparent", "tracestate"));
   private static final Logger log = new Logger(OpenTelemetryEmitter.class);
   private final Tracer tracer;
   private final TextMapPropagator propagator;
@@ -64,7 +67,7 @@ public class OpenTelemetryEmitter implements Emitter
     }
     ServiceMetricEvent event = (ServiceMetricEvent) e;
 
-    // We generate spans for the following types of events:
+    // We only generate spans for the following types of events:
     // query/time
     if (!event.getMetric().equals("query/time")) {
       return;
@@ -75,8 +78,7 @@ public class OpenTelemetryEmitter implements Emitter
 
   private void emitQueryTimeEvent(ServiceMetricEvent event)
   {
-    DruidContextTextMapGetter druidContextTextMapGetter = new DruidContextTextMapGetter();
-    Context opentelemetryContext = propagator.extract(Context.current(), event, druidContextTextMapGetter);
+    Context opentelemetryContext = propagator.extract(Context.current(), event, DRUID_CONTEXT_TEXT_MAP_GETTER);
 
     try (Scope scope = opentelemetryContext.makeCurrent()) {
       DateTime endTime = event.getCreatedTime();
@@ -85,24 +87,33 @@ public class OpenTelemetryEmitter implements Emitter
       Span span = tracer.spanBuilder(event.getService())
                         .setStartTimestamp(startTime.getMillis(), TimeUnit.MILLISECONDS)
                         .startSpan();
-      Set<String> extractedKeys = druidContextTextMapGetter.getExtractedKeys();
 
       getContext(event).entrySet()
                        .stream()
                        .filter(entry -> entry.getValue() != null)
-                       .filter(entry -> !extractedKeys.contains(entry.getKey()))
+                       .filter(entry -> !TRACEPARENT_PROPAGATION_FIELDS.contains(entry.getKey()))
                        .forEach(entry -> span.setAttribute(entry.getKey(), entry.getValue().toString()));
-      span.setStatus(StatusCode.OK).end(endTime.getMillis(), TimeUnit.MILLISECONDS);
+
+      Object status = event.getUserDims().get("success");
+      if (status == null) {
+        span.setStatus(StatusCode.UNSET);
+      } else if (status.toString().equals("true")) {
+        span.setStatus(StatusCode.OK);
+      } else {
+        span.setStatus(StatusCode.ERROR);
+      }
+
+      span.end(endTime.getMillis(), TimeUnit.MILLISECONDS);
     }
   }
 
   private static Map<String, Object> getContext(ServiceMetricEvent event)
   {
     Object context = event.getUserDims().get("context");
-    if (!(context instanceof Map)) {
-      return Collections.emptyMap();
+    if (context instanceof Map) {
+      return (Map<String, Object>) context;
     }
-    return (Map<String, Object>) context;
+    return Collections.emptyMap();
   }
 
   @Override

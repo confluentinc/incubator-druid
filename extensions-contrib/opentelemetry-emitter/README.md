@@ -4,19 +4,19 @@ The [OpenTelemetry](https://opentelemetry.io/) emitter generates OpenTelemetry S
 
 ## How OpenTelemetry emitter works
 
-The [OpenTelemetry](https://opentelemetry.io/) emitter processes`ServiceMetricEvent` type of event with a `query/time`
-metric. It extacts OpenTelemetry context
-from [druid context](https://druid.apache.org/docs/latest/querying/query-context.html). To link druid spans to parent
-trace druid context should contain `traceparent` key, at least. More
-about [context propagation](https://www.w3.org/TR/trace-context/). If there is no `traceparent` key is provided, then
-spans are created without `parentTraceId` and link to no parent. Also, the emitter adds other druid context entries to
-the span attributes.
+The [OpenTelemetry](https://opentelemetry.io/) emitter processes `ServiceMetricEvent` events for the `query/time`
+metric. It extracts OpenTelemetry context from
+the [query context](https://druid.apache.org/docs/latest/querying/query-context.html). To link druid spans to parent
+traces, the query context should contain at least `traceparent` key.
+See [context propagation](https://www.w3.org/TR/trace-context/) for more information. If no `traceparent` key is
+provided, then spans are created without `parentTraceId` and are not linked to the parent span. In addition, the emitter
+also adds other druid context entries to the span attributes.
 
 ## Configuration
 
 ### Enabling
 
-Load the plugin and enable the emitter in `common.runtime.properties`.
+To enable the OpenTelemetry emitter, add the extension and enable the emitter in `common.runtime.properties`.
 
 Load the plugin:
 
