@@ -25,46 +25,34 @@ import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 /**
- * Implementation of a text-based approach to read the W3C Trace Context from request.
+ * Implementation of a text-based approach to read the W3C Trace Context from the metric query context.
  * <a href="https://opentelemetry.io/docs/java/manual_instrumentation/#context-propagation">Context propagation</a>
  * <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
  */
 @NotThreadSafe
 public class DruidContextTextMapGetter implements TextMapGetter<ServiceMetricEvent>
 {
-  private final Set<String> extractedKeys = new HashSet<>();
 
   @SuppressWarnings("unchecked")
   private Map<String, Object> getContext(ServiceMetricEvent event)
   {
     Object context = event.getUserDims().get("context");
-    if (!(context instanceof Map)) {
-      return Collections.emptyMap();
+    if (context instanceof Map) {
+      return (Map<String, Object>) context;
     }
-    return (Map<String, Object>) context;
-  }
-
-  public Set<String> getExtractedKeys()
-  {
-    return extractedKeys;
+    return Collections.emptyMap();
   }
 
   @Nullable
   @Override
   public String get(ServiceMetricEvent event, String key)
   {
-    String res = Optional.ofNullable(getContext(event).get(key)).map(Objects::toString).orElse(null);
-    if (res != null) {
-      extractedKeys.add(key);
-    }
-    return res;
+    return Optional.ofNullable(getContext(event).get(key)).map(Objects::toString).orElse(null);
   }
 
   @Override
