@@ -23,7 +23,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -34,7 +33,6 @@ import java.util.Optional;
  * <a href="https://opentelemetry.io/docs/java/manual_instrumentation/#context-propagation">Context propagation</a>
  * <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
  */
-@NotThreadSafe
 public class DruidContextTextMapGetter implements TextMapGetter<ServiceMetricEvent>
 {
 
