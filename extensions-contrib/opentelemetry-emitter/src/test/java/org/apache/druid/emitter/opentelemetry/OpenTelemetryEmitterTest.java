@@ -20,6 +20,8 @@
 package org.apache.druid.emitter.opentelemetry;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -35,6 +37,7 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,6 +72,7 @@ public class OpenTelemetryEmitterTest
 
   private OpenTelemetry openTelemetry;
   private NoopExporter noopExporter;
+  private OpenTelemetryEmitter emitter;
 
   @Before
   public void setup()
@@ -81,6 +85,7 @@ public class OpenTelemetryEmitterTest
                                                                         .build())
                                     .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
                                     .build();
+    emitter = new OpenTelemetryEmitter(openTelemetry);
   }
 
   // Check that we don't call "emitQueryTimeEvent" method for event that is not instance of ServiceMetricEvent
@@ -103,7 +108,6 @@ public class OpenTelemetryEmitterTest
           }
         };
 
-    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(openTelemetry);
     emitter.emit(notServiceMetricEvent);
     Assert.assertNull(noopExporter.spanDataCollection);
   }
@@ -123,7 +127,6 @@ public class OpenTelemetryEmitterTest
                                             "brokerHost1"
                                         );
 
-    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(openTelemetry);
     emitter.emit(notQueryTimeMetric);
     Assert.assertNull(noopExporter.spanDataCollection);
   }
@@ -153,7 +156,6 @@ public class OpenTelemetryEmitterTest
                                             "host"
                                         );
 
-    OpenTelemetryEmitter emitter = new OpenTelemetryEmitter(openTelemetry);
     emitter.emit(queryTimeMetric);
 
     Assert.assertEquals(1, noopExporter.spanDataCollection.size());
@@ -163,5 +165,98 @@ public class OpenTelemetryEmitterTest
     Assert.assertEquals((createdTime.getMillis() - metricValue) * 1_000_000, actualSpanData.getStartEpochNanos());
     Assert.assertEquals(expectedParentTraceId, actualSpanData.getParentSpanContext().getTraceId());
     Assert.assertEquals(expectedParentSpanId, actualSpanData.getParentSpanContext().getSpanId());
+  }
+
+  @Test
+  public void testAttributes()
+  {
+    final Map<String, String> context = new HashMap<>();
+    final String expectedAttributeKey = "attribute";
+    final String expectedAttributeValue = "value";
+    context.put(expectedAttributeKey, expectedAttributeValue);
+
+    final ServiceMetricEvent queryTimeMetricWithAttributes =
+        new ServiceMetricEvent.Builder().setDimension("context", context)
+                                        .build(
+                                            DateTimes.nowUtc(),
+                                            "query/time",
+                                            100
+                                        )
+                                        .build(
+                                            "druid/broker",
+                                            "host"
+                                        );
+
+    emitter.emit(queryTimeMetricWithAttributes);
+
+    SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
+    Assert.assertEquals(1, actualSpanData.getAttributes().size());
+    Assert.assertEquals(expectedAttributeValue, actualSpanData.getAttributes().get(AttributeKey.stringKey(expectedAttributeKey)));
+  }
+
+  @Test
+  public void testFilterNullValue()
+  {
+    final Map<String, String> context = new HashMap<>();
+    context.put("attributeKey", null);
+
+    final ServiceMetricEvent queryTimeMetric =
+        new ServiceMetricEvent.Builder().setDimension("context", context)
+                                        .build(
+                                            DateTimes.nowUtc(),
+                                            "query/time",
+                                            100
+                                        )
+                                        .build(
+                                            "druid/broker",
+                                            "host"
+                                        );
+
+    emitter.emit(queryTimeMetric);
+
+    SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
+    Assert.assertEquals(0, actualSpanData.getAttributes().size());
+  }
+
+  @Test
+  public void testOkStatus()
+  {
+    final ServiceMetricEvent queryTimeMetric =
+        new ServiceMetricEvent.Builder().setDimension("success", "true")
+                                        .build(
+                                            DateTimes.nowUtc(),
+                                            "query/time",
+                                            100
+                                        )
+                                        .build(
+                                            "druid/broker",
+                                            "host"
+                                        );
+
+    emitter.emit(queryTimeMetric);
+
+    SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
+    Assert.assertEquals(StatusCode.OK, actualSpanData.getStatus().getStatusCode());
+  }
+
+  @Test
+  public void testErrorStatus()
+  {
+    final ServiceMetricEvent queryTimeMetric =
+        new ServiceMetricEvent.Builder().setDimension("success", "false")
+                                        .build(
+                                            DateTimes.nowUtc(),
+                                            "query/time",
+                                            100
+                                        )
+                                        .build(
+                                            "druid/broker",
+                                            "host"
+                                        );
+
+    emitter.emit(queryTimeMetric);
+
+    SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
+    Assert.assertEquals(StatusCode.ERROR, actualSpanData.getStatus().getStatusCode());
   }
 }
