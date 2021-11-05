@@ -69,6 +69,7 @@ public class OpenTelemetryEmitterTest
       return CompletableResultCode.ofSuccess();
     }
   }
+  private static final DateTime TIMESTAMP = DateTimes.of(2021, 11, 5, 1, 1);
 
   private OpenTelemetry openTelemetry;
   private NoopExporter noopExporter;
@@ -118,7 +119,7 @@ public class OpenTelemetryEmitterTest
   {
     final ServiceMetricEvent notQueryTimeMetric =
         new ServiceMetricEvent.Builder().build(
-                                            DateTimes.nowUtc(),
+                                            TIMESTAMP,
                                             "query/cache/total/hitRate",
                                             0.54
                                         )
@@ -141,7 +142,7 @@ public class OpenTelemetryEmitterTest
     context.put("traceparent", traceId);
 
     final String serviceName = "druid/broker";
-    final DateTime createdTime = DateTimes.nowUtc();
+    final DateTime createdTime = TIMESTAMP;
     final long metricValue = 100;
 
     final ServiceMetricEvent queryTimeMetric =
@@ -178,7 +179,7 @@ public class OpenTelemetryEmitterTest
     final ServiceMetricEvent queryTimeMetricWithAttributes =
         new ServiceMetricEvent.Builder().setDimension("context", context)
                                         .build(
-                                            DateTimes.nowUtc(),
+                                            TIMESTAMP,
                                             "query/time",
                                             100
                                         )
@@ -203,7 +204,7 @@ public class OpenTelemetryEmitterTest
     final ServiceMetricEvent queryTimeMetric =
         new ServiceMetricEvent.Builder().setDimension("context", context)
                                         .build(
-                                            DateTimes.nowUtc(),
+                                            TIMESTAMP,
                                             "query/time",
                                             100
                                         )
@@ -224,7 +225,7 @@ public class OpenTelemetryEmitterTest
     final ServiceMetricEvent queryTimeMetric =
         new ServiceMetricEvent.Builder().setDimension("success", "true")
                                         .build(
-                                            DateTimes.nowUtc(),
+                                            TIMESTAMP,
                                             "query/time",
                                             100
                                         )
@@ -245,7 +246,7 @@ public class OpenTelemetryEmitterTest
     final ServiceMetricEvent queryTimeMetric =
         new ServiceMetricEvent.Builder().setDimension("success", "false")
                                         .build(
-                                            DateTimes.nowUtc(),
+                                            TIMESTAMP,
                                             "query/time",
                                             100
                                         )
