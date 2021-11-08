@@ -283,6 +283,11 @@ public abstract class SQLMetadataConnector implements MetadataStorageConnector
                 "CREATE INDEX idx_%1$s_datasource_used_end ON %1$s(dataSource, used, %2$send%2$s)",
                 tableName,
                 getQuoteString()
+            ),
+            StringUtils.format(
+                "CREATE INDEX idx_%1$s_datasource_used_start_end ON %1$s(dataSource, used, start, %2$send%2$s)",
+                tableName,
+                getQuoteString()
             )
         )
     );
