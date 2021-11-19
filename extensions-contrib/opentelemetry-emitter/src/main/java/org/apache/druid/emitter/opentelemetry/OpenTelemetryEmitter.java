@@ -46,11 +46,13 @@ public class OpenTelemetryEmitter implements Emitter
   private static final Logger log = new Logger(OpenTelemetryEmitter.class);
   private final Tracer tracer;
   private final TextMapPropagator propagator;
+  private final OpenTelemetryEmitterConfig config;
 
-  OpenTelemetryEmitter(OpenTelemetry openTelemetry)
+  OpenTelemetryEmitter(OpenTelemetry openTelemetry, OpenTelemetryEmitterConfig config)
   {
     tracer = openTelemetry.getTracer("druid-opentelemetry-extension");
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
+    this.config = config;
   }
 
   @Override
@@ -94,7 +96,8 @@ public class OpenTelemetryEmitter implements Emitter
                        .filter(entry -> !TRACEPARENT_PROPAGATION_FIELDS.contains(entry.getKey()))
                        .forEach(entry -> span.setAttribute(entry.getKey(), entry.getValue().toString()));
 
-      span.setAttribute("exporter.kafka", "exclude");
+      config.getDefaultAttributes().forEach((key, value) -> span.setAttribute(key, value.toString()));
+
       Object status = event.getUserDims().get("success");
       if (status == null) {
         span.setStatus(StatusCode.UNSET);

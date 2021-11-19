@@ -19,6 +19,7 @@
 
 package org.apache.druid.emitter.opentelemetry;
 
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
@@ -69,8 +70,8 @@ public class OpenTelemetryEmitterTest
       return CompletableResultCode.ofSuccess();
     }
   }
+
   private static final DateTime TIMESTAMP = DateTimes.of(2021, 11, 5, 1, 1);
-  private static int DEFAULT_ATTRIBUTES_SIZE = 1;
 
   private OpenTelemetry openTelemetry;
   private NoopExporter noopExporter;
@@ -87,7 +88,7 @@ public class OpenTelemetryEmitterTest
                                                                         .build())
                                     .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
                                     .build();
-    emitter = new OpenTelemetryEmitter(openTelemetry);
+    emitter = new OpenTelemetryEmitter(openTelemetry, new OpenTelemetryEmitterConfig(null));
   }
 
   // Check that we don't call "emitQueryTimeEvent" method for event that is not instance of ServiceMetricEvent
@@ -192,8 +193,11 @@ public class OpenTelemetryEmitterTest
     emitter.emit(queryTimeMetricWithAttributes);
 
     SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
-    Assert.assertEquals(DEFAULT_ATTRIBUTES_SIZE + 1, actualSpanData.getAttributes().size());
-    Assert.assertEquals(expectedAttributeValue, actualSpanData.getAttributes().get(AttributeKey.stringKey(expectedAttributeKey)));
+    Assert.assertEquals(1, actualSpanData.getAttributes().size());
+    Assert.assertEquals(
+        expectedAttributeValue,
+        actualSpanData.getAttributes().get(AttributeKey.stringKey(expectedAttributeKey))
+    );
   }
 
   @Test
@@ -217,7 +221,7 @@ public class OpenTelemetryEmitterTest
     emitter.emit(queryTimeMetric);
 
     SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
-    Assert.assertEquals(DEFAULT_ATTRIBUTES_SIZE, actualSpanData.getAttributes().size());
+    Assert.assertEquals(0, actualSpanData.getAttributes().size());
   }
 
   @Test
@@ -260,5 +264,38 @@ public class OpenTelemetryEmitterTest
 
     SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
     Assert.assertEquals(StatusCode.ERROR, actualSpanData.getStatus().getStatusCode());
+  }
+
+  @Test
+  public void testDefaultAttributes()
+  {
+    String expectedDefaultAttributeKey = "key";
+    String expectedDefaultAttributeValue = "value";
+    OpenTelemetryEmitterConfig config = new OpenTelemetryEmitterConfig(ImmutableMap.of(
+        expectedDefaultAttributeKey,
+        expectedDefaultAttributeValue
+    ));
+    emitter = new OpenTelemetryEmitter(openTelemetry, config);
+
+
+    final ServiceMetricEvent queryTimeMetric =
+        new ServiceMetricEvent.Builder().build(
+                                            TIMESTAMP,
+                                            "query/time",
+                                            100
+                                        )
+                                        .build(
+                                            "druid/broker",
+                                            "host"
+                                        );
+
+    emitter.emit(queryTimeMetric);
+
+    SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
+    Assert.assertEquals(1, actualSpanData.getAttributes().size());
+    Assert.assertEquals(
+        expectedDefaultAttributeValue,
+        actualSpanData.getAttributes().get(AttributeKey.stringKey(expectedDefaultAttributeKey))
+    );
   }
 }
