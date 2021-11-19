@@ -96,7 +96,7 @@ public class OpenTelemetryEmitter implements Emitter
                        .filter(entry -> !TRACEPARENT_PROPAGATION_FIELDS.contains(entry.getKey()))
                        .forEach(entry -> span.setAttribute(entry.getKey(), entry.getValue().toString()));
 
-      config.getDefaultAttributes().forEach((key, value) -> span.setAttribute(key, value.toString()));
+      config.getDefaultAttributes().forEach((key, value) -> span.setAttribute(key, value));
 
       Object status = event.getUserDims().get("success");
       if (status == null) {
