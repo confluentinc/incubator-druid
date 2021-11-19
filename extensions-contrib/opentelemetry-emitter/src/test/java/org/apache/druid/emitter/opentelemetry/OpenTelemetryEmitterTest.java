@@ -70,6 +70,7 @@ public class OpenTelemetryEmitterTest
     }
   }
   private static final DateTime TIMESTAMP = DateTimes.of(2021, 11, 5, 1, 1);
+  private static int DEFAULT_ATTRIBUTES_SIZE = 1;
 
   private OpenTelemetry openTelemetry;
   private NoopExporter noopExporter;
@@ -191,7 +192,7 @@ public class OpenTelemetryEmitterTest
     emitter.emit(queryTimeMetricWithAttributes);
 
     SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
-    Assert.assertEquals(1, actualSpanData.getAttributes().size());
+    Assert.assertEquals(DEFAULT_ATTRIBUTES_SIZE + 1, actualSpanData.getAttributes().size());
     Assert.assertEquals(expectedAttributeValue, actualSpanData.getAttributes().get(AttributeKey.stringKey(expectedAttributeKey)));
   }
 
@@ -216,7 +217,7 @@ public class OpenTelemetryEmitterTest
     emitter.emit(queryTimeMetric);
 
     SpanData actualSpanData = noopExporter.spanDataCollection.iterator().next();
-    Assert.assertEquals(0, actualSpanData.getAttributes().size());
+    Assert.assertEquals(DEFAULT_ATTRIBUTES_SIZE, actualSpanData.getAttributes().size());
   }
 
   @Test
