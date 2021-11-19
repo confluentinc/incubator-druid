@@ -22,6 +22,7 @@ package org.apache.druid.emitter.opentelemetry;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import java.util.Map;
 public class OpenTelemetryEmitterConfig
 {
   @JsonProperty
+  @NotNull
   private final Map<String, String> defaultAttributes;
 
   @JsonCreator
