@@ -26,31 +26,31 @@ import org.junit.Test;
 
 public class OpenTelemetryMetricsInputFormatTest
 {
-    @Test
-    public void testSerde() throws Exception
-    {
-        OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat("metric.name", "descriptor.", "custom.");
+  @Test
+  public void testSerde() throws Exception
+  {
+    OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat("metric.name", "descriptor.", "custom.");
 
-        final ObjectMapper jsonMapper = new ObjectMapper();
-        jsonMapper.registerModules(new OpenTelemetryMetricsProtobufExtensionsModule().getJacksonModules());
+    final ObjectMapper jsonMapper = new ObjectMapper();
+    jsonMapper.registerModules(new OpenTelemetryMetricsProtobufExtensionsModule().getJacksonModules());
 
-        final OpenTelemetryMetricsProtobufInputFormat actual = (OpenTelemetryMetricsProtobufInputFormat) jsonMapper.readValue(
-                jsonMapper.writeValueAsString(inputFormat),
-                InputFormat.class
-        );
-        Assert.assertEquals(inputFormat, actual);
-        Assert.assertEquals("metric.name", actual.getMetricDimension());
-        Assert.assertEquals("descriptor.", actual.getMetricLabelPrefix());
-        Assert.assertEquals("custom.", actual.getResourceLabelPrefix());
-    }
+    final OpenTelemetryMetricsProtobufInputFormat actual = (OpenTelemetryMetricsProtobufInputFormat) jsonMapper.readValue(
+            jsonMapper.writeValueAsString(inputFormat),
+            InputFormat.class
+    );
+    Assert.assertEquals(inputFormat, actual);
+    Assert.assertEquals("metric.name", actual.getMetricDimension());
+    Assert.assertEquals("descriptor.", actual.getMetricLabelPrefix());
+    Assert.assertEquals("custom.", actual.getResourceLabelPrefix());
+  }
 
-    @Test
-    public void testDefaults()
-    {
-        OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat(null, null, null);
+  @Test
+  public void testDefaults()
+  {
+    OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat(null, null, null);
 
-        Assert.assertEquals("name", inputFormat.getMetricDimension());
-        Assert.assertEquals("", inputFormat.getMetricLabelPrefix());
-        Assert.assertEquals("resource.", inputFormat.getResourceLabelPrefix());
-    }
+    Assert.assertEquals("name", inputFormat.getMetricDimension());
+    Assert.assertEquals("", inputFormat.getMetricLabelPrefix());
+    Assert.assertEquals("resource.", inputFormat.getResourceLabelPrefix());
+  }
 }

@@ -24,9 +24,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.metrics.v1.IntDataPoint;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
+import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputRow;
@@ -86,10 +86,12 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     }
   }
 
-  private List<InputRow> parseRequest(final MetricsData request) {
+  private List<InputRow> parseRequest(final MetricsData request)
+  {
 
     List<ResourceMetrics> resourceMetricsList = request.getResourceMetricsList();
-    return resourceMetricsList.stream().flatMap(
+    return resourceMetricsList.stream()
+            .flatMap(
             resourceMetrics -> {
               List<KeyValue> resourceAttributes = resourceMetrics.getResource().getAttributesList();
               return resourceMetrics.getInstrumentationLibraryMetricsList()
@@ -103,7 +105,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     ).collect(Collectors.toList());
   }
 
-  private List<InputRow> parseMetric(Metric metric, List<KeyValue> resourceAttributes){
+  private List<InputRow> parseMetric(Metric metric, List<KeyValue> resourceAttributes)
+  {
 
     List<String> schemaDimensions = dimensionsSpec.getDimensionNames();
     if (!schemaDimensions.isEmpty()) {
@@ -158,9 +161,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     return rows;
   }
 
-  private List<NumberDataPoint> getDataPoints(Metric metric){
+  private List<NumberDataPoint> getDataPoints(Metric metric)
+  {
     List<NumberDataPoint> dataPoints;
-
     switch (metric.getDataCase()) {
       case INT_SUM: {
         dataPoints = metric.getIntSum()
@@ -192,7 +195,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     return dataPoints;
   }
 
-  private NumberDataPoint dataPointConverter(IntDataPoint dataPoint){
+  private NumberDataPoint dataPointConverter(IntDataPoint dataPoint)
+  {
     NumberDataPoint.Builder builder = NumberDataPoint.newBuilder()
             .setTimeUnixNano(dataPoint.getTimeUnixNano())
             .setAsInt(dataPoint.getValue());
@@ -205,7 +209,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     return builder.build();
   }
 
-  private static Number getValue(NumberDataPoint dataPoint) {
+  private static Number getValue(NumberDataPoint dataPoint)
+  {
     if (dataPoint.hasAsInt()) {
       return dataPoint.getAsInt();
     } else {
