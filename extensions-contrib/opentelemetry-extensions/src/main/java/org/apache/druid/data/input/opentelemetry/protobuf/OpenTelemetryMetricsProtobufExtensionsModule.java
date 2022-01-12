@@ -28,7 +28,7 @@ import org.apache.druid.initialization.DruidModule;
 import java.util.Collections;
 import java.util.List;
 
-public class OpenTelemetryProtobufExtensionsModule implements DruidModule
+public class OpenTelemetryMetricsProtobufExtensionsModule implements DruidModule
 {
 
   @Override
@@ -37,7 +37,7 @@ public class OpenTelemetryProtobufExtensionsModule implements DruidModule
     return Collections.singletonList(
         new SimpleModule("OpenTelemetryProtobufInputRowParserModule")
             .registerSubtypes(
-                new NamedType(OpenTelemetryProtobufInputFormat.class, "opentelemetry-protobuf")
+                new NamedType(OpenTelemetryMetricsProtobufInputFormat.class, "opentelemetry-metrics-protobuf")
             )
     );
   }

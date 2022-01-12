@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.common.v1.StringKeyValue;
 import io.opentelemetry.proto.metrics.v1.IntDataPoint;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
@@ -40,15 +39,13 @@ import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-public class OpenTelemetryProtobufReader implements InputEntityReader
+public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 {
   private static final String VALUE_COLUMN = "value";
 
@@ -58,7 +55,7 @@ public class OpenTelemetryProtobufReader implements InputEntityReader
   private final String metricAttributePrefix;
   private final String resourceAttributePrefix;
 
-  public OpenTelemetryProtobufReader(
+  public OpenTelemetryMetricsProtobufReader(
       DimensionsSpec dimensionsSpec,
       ByteEntity source,
       String metricDimension,
@@ -97,15 +94,10 @@ public class OpenTelemetryProtobufReader implements InputEntityReader
               List<KeyValue> resourceAttributes = resourceMetrics.getResource().getAttributesList();
               return resourceMetrics.getInstrumentationLibraryMetricsList()
                       .stream()
-                      .flatMap(
-                              libraryMetrics -> {
-                                return libraryMetrics.getMetricsList()
-                                      .stream()
-                                      .map(
-                                              metric -> parseMetric(metric, resourceAttributes)
-                                      )
-                                      .flatMap(List::stream);
-                              }
+                      .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
+                              .stream()
+                              .map(metric -> parseMetric(metric, resourceAttributes))
+                              .flatMap(List::stream)
                       );
             }
     ).collect(Collectors.toList());
@@ -113,6 +105,60 @@ public class OpenTelemetryProtobufReader implements InputEntityReader
 
   private List<InputRow> parseMetric(Metric metric, List<KeyValue> resourceAttributes){
 
+    List<String> schemaDimensions = dimensionsSpec.getDimensionNames();
+    if (!schemaDimensions.isEmpty()) {
+      return createRows(metric, resourceAttributes, schemaDimensions::contains);
+    } else {
+      return createRows(metric, resourceAttributes, att -> !dimensionsSpec.getDimensionExclusions().contains(att));
+    }
+  }
+
+  private List<InputRow> createRows(Metric metric,
+                                    List<KeyValue> resourceAttributes,
+                                    Function<String, Boolean> attributeMembershipFn)
+  {
+
+    List<NumberDataPoint> dataPoints = getDataPoints(metric);
+    List<InputRow> rows = new ArrayList<>();
+
+    for (NumberDataPoint dataPoint : dataPoints) {
+
+      final long timeUnixMilli = TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano());
+      final List<KeyValue> metricAttributes = dataPoint.getAttributesList();
+      final Number value = getValue(dataPoint);
+
+      final int capacity = resourceAttributes.size()
+              + metricAttributes.size()
+              + 2; // metric name + value columns
+
+      Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
+      event.put(metricDimension, metric.getName());
+      event.put(VALUE_COLUMN, value);
+
+      List<String> dimensions = new ArrayList<>();
+      dimensions.add(metricDimension);
+      dimensions.add(VALUE_COLUMN);
+
+      resourceAttributes.stream()
+              .filter(ra -> attributeMembershipFn.apply(this.resourceAttributePrefix + ra.getKey()))
+              .forEach(ra -> {
+                dimensions.add(this.resourceAttributePrefix + ra.getKey());
+                event.put(this.resourceAttributePrefix + ra.getKey(), ra.getValue().getStringValue());
+              });
+
+      metricAttributes.stream()
+              .filter(ma -> attributeMembershipFn.apply(this.metricAttributePrefix + ma.getKey()))
+              .forEach(ma -> {
+                dimensions.add(this.metricAttributePrefix + ma.getKey());
+                event.put(this.metricAttributePrefix + ma.getKey(), ma.getValue().getStringValue());
+              });
+
+      rows.add(new MapBasedInputRow(timeUnixMilli, dimensions, event));
+    }
+    return rows;
+  }
+
+  private List<NumberDataPoint> getDataPoints(Metric metric){
     List<NumberDataPoint> dataPoints;
 
     switch (metric.getDataCase()) {
@@ -143,42 +189,7 @@ public class OpenTelemetryProtobufReader implements InputEntityReader
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
-
-    List<InputRow> rows = new ArrayList<>();
-    final Set<String> schemaDimensions = new HashSet(dimensionsSpec.getDimensionNames());
-
-    for (NumberDataPoint dataPoint : dataPoints) {
-      List<String> dimensions = new ArrayList<>();
-      final long timeUnixMilli = TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano());
-      final List<KeyValue> metricAttributes = dataPoint.getAttributesList();
-      final Number value = getValue(dataPoint);
-
-      final int capacity = resourceAttributes.size()
-              + metricAttributes.size()
-              + 2; // metric name + value columns
-
-      Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-
-      resourceAttributes.stream()
-              .filter(ra -> schemaDimensions.contains(this.resourceAttributePrefix + ra.getKey()))
-              .forEach(ra -> {
-                dimensions.add(this.resourceAttributePrefix + ra.getKey());
-                event.put(this.resourceAttributePrefix + ra.getKey(), ra.getValue());
-              });
-
-      metricAttributes.stream()
-              .filter(ma -> schemaDimensions.contains(this.metricAttributePrefix + ma.getKey()))
-              .forEach(ma -> {
-                dimensions.add(this.metricAttributePrefix + ma.getKey());
-                event.put(this.metricAttributePrefix + ma.getKey(), ma.getValue());
-              });
-
-      event.put(metricDimension, metric.getName());
-      event.put(VALUE_COLUMN, value);
-
-      rows.add(new MapBasedInputRow(timeUnixMilli, dimensions, event));
-    }
-    return rows;
+    return dataPoints;
   }
 
   private NumberDataPoint dataPointConverter(IntDataPoint dataPoint){
@@ -186,15 +197,11 @@ public class OpenTelemetryProtobufReader implements InputEntityReader
             .setTimeUnixNano(dataPoint.getTimeUnixNano())
             .setAsInt(dataPoint.getValue());
 
-    IntStream.range(0, dataPoint.getLabelsCount())
-            .forEach( idx -> {
-              StringKeyValue label = dataPoint.getLabelsList().get(idx);
-              builder.setAttributes(idx,
-                      KeyValue.newBuilder()
-                              .setKey(label.getKey())
-                              .setValue(AnyValue.newBuilder().setStringValue(label.getValue()))
-              );
-            });
+    dataPoint.getLabelsList().forEach(label -> builder.addAttributes(
+            KeyValue.newBuilder()
+                    .setKey(label.getKey())
+                    .setValue(AnyValue.newBuilder().setStringValue(label.getValue()))
+            ));
     return builder.build();
   }
 

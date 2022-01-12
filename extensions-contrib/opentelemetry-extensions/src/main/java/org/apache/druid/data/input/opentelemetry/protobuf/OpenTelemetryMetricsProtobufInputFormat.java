@@ -30,7 +30,7 @@ import org.apache.druid.java.util.common.StringUtils;
 import java.io.File;
 import java.util.Objects;
 
-public class OpenTelemetryProtobufInputFormat implements InputFormat
+public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
 {
   private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
@@ -39,7 +39,7 @@ public class OpenTelemetryProtobufInputFormat implements InputFormat
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
-  public OpenTelemetryProtobufInputFormat(
+  public OpenTelemetryMetricsProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
       @JsonProperty("metricLabelPrefix") String metricLabelPrefix,
       @JsonProperty("resourceLabelPrefix") String resourceLabelPrefix
@@ -59,7 +59,7 @@ public class OpenTelemetryProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
-    return new OpenTelemetryProtobufReader(
+    return new OpenTelemetryMetricsProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         (ByteEntity) source,
         metricDimension,
@@ -92,10 +92,10 @@ public class OpenTelemetryProtobufInputFormat implements InputFormat
     if (this == o) {
       return true;
     }
-    if (!(o instanceof OpenTelemetryProtobufInputFormat)) {
+    if (!(o instanceof OpenTelemetryMetricsProtobufInputFormat)) {
       return false;
     }
-    OpenTelemetryProtobufInputFormat that = (OpenTelemetryProtobufInputFormat) o;
+    OpenTelemetryMetricsProtobufInputFormat that = (OpenTelemetryMetricsProtobufInputFormat) o;
     return Objects.equals(metricDimension, that.metricDimension)
            && Objects.equals(metricLabelPrefix, that.metricLabelPrefix)
            && Objects.equals(resourceLabelPrefix, that.resourceLabelPrefix);

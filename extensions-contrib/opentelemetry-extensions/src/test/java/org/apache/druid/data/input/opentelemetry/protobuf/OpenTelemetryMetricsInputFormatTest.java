@@ -24,17 +24,17 @@ import org.apache.druid.data.input.InputFormat;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class OpenTelemetryInputFormatTest
+public class OpenTelemetryMetricsInputFormatTest
 {
     @Test
     public void testSerde() throws Exception
     {
-        OpenTelemetryProtobufInputFormat inputFormat = new OpenTelemetryProtobufInputFormat("metric.name", "descriptor.", "custom.");
+        OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat("metric.name", "descriptor.", "custom.");
 
         final ObjectMapper jsonMapper = new ObjectMapper();
-        jsonMapper.registerModules(new OpenTelemetryProtobufExtensionsModule().getJacksonModules());
+        jsonMapper.registerModules(new OpenTelemetryMetricsProtobufExtensionsModule().getJacksonModules());
 
-        final OpenTelemetryProtobufInputFormat actual = (OpenTelemetryProtobufInputFormat) jsonMapper.readValue(
+        final OpenTelemetryMetricsProtobufInputFormat actual = (OpenTelemetryMetricsProtobufInputFormat) jsonMapper.readValue(
                 jsonMapper.writeValueAsString(inputFormat),
                 InputFormat.class
         );
@@ -47,7 +47,7 @@ public class OpenTelemetryInputFormatTest
     @Test
     public void testDefaults()
     {
-        OpenTelemetryProtobufInputFormat inputFormat = new OpenTelemetryProtobufInputFormat(null, null, null);
+        OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat(null, null, null);
 
         Assert.assertEquals("name", inputFormat.getMetricDimension());
         Assert.assertEquals("", inputFormat.getMetricLabelPrefix());
