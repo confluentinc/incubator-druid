@@ -32,7 +32,7 @@ public class OpenTelemetryMetricsInputFormatTest
     OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat("metric.name", "descriptor.", "custom.");
 
     final ObjectMapper jsonMapper = new ObjectMapper();
-    jsonMapper.registerModules(new OpenTelemetryMetricsProtobufExtensionsModule().getJacksonModules());
+    jsonMapper.registerModules(new OpenTelemetryProtobufExtensionsModule().getJacksonModules());
 
     final OpenTelemetryMetricsProtobufInputFormat actual = (OpenTelemetryMetricsProtobufInputFormat) jsonMapper.readValue(
             jsonMapper.writeValueAsString(inputFormat),

@@ -56,9 +56,9 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public static final String METRIC_ATTRIBUTE_FOO_KEY = "foo_key";
   public static final String METRIC_ATTRIBUTE_FOO_VAL = "foo_value";
 
-  private final MetricsData.Builder requestBuilder = MetricsData.newBuilder();
+  private final MetricsData.Builder metricsDataBuilder = MetricsData.newBuilder();
 
-  private final Metric.Builder metricBuilder = requestBuilder.addResourceMetricsBuilder()
+  private final Metric.Builder metricBuilder = metricsDataBuilder.addResourceMetricsBuilder()
           .addInstrumentationLibraryMetricsBuilder()
           .addMetricsBuilder();
 
@@ -75,7 +75,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
   @Before
   public void setUp()
   {
-    requestBuilder
+    metricsDataBuilder
             .getResourceMetricsBuilder(0)
             .getResourceBuilder()
             .addAttributes(
@@ -84,7 +84,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
                             .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_USA))
                             .build());
 
-    requestBuilder
+    metricsDataBuilder
             .getResourceMetricsBuilder(0)
             .getInstrumentationLibraryMetricsBuilder(0)
             .getInstrumentationLibraryBuilder()
@@ -103,11 +103,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setTimeUnixNano(TIMESTAMP)
             .addLabelsBuilder().setKey(METRIC_ATTRIBUTE_COLOR).setValue(METRIC_ATTRIBUTE_VALUE_RED);
 
-    MetricsData request = requestBuilder.build();
+    MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
             dimensionsSpec,
-            new ByteEntity(request.toByteArray()),
+            new ByteEntity(metricsData.toByteArray()),
             "metric.name",
             "descriptor.",
             "custom."
@@ -134,11 +134,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setTimeUnixNano(TIMESTAMP)
             .addLabelsBuilder().setKey(METRIC_ATTRIBUTE_COLOR).setValue(METRIC_ATTRIBUTE_VALUE_RED);
 
-    MetricsData request = requestBuilder.build();
+    MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
             dimensionsSpec,
-            new ByteEntity(request.toByteArray()),
+            new ByteEntity(metricsData.toByteArray()),
             "metric.name",
             "descriptor.",
             "custom."
@@ -168,11 +168,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setKey(METRIC_ATTRIBUTE_COLOR)
             .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
-    MetricsData request = requestBuilder.build();
+    MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
             dimensionsSpec,
-            new ByteEntity(request.toByteArray()),
+            new ByteEntity(metricsData.toByteArray()),
             "metric.name",
             "descriptor.",
             "custom."
@@ -201,11 +201,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setKey(METRIC_ATTRIBUTE_COLOR)
             .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
-    MetricsData request = requestBuilder.build();
+    MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
             dimensionsSpec,
-            new ByteEntity(request.toByteArray()),
+            new ByteEntity(metricsData.toByteArray()),
             "metric.name",
             "descriptor.",
             "custom."
@@ -235,11 +235,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
     // Create Second Metric
-    Metric.Builder gaugeMetricBuilder = requestBuilder.addResourceMetricsBuilder()
+    Metric.Builder gaugeMetricBuilder = metricsDataBuilder.addResourceMetricsBuilder()
             .addInstrumentationLibraryMetricsBuilder()
             .addMetricsBuilder();
 
-    requestBuilder.getResourceMetricsBuilder(1)
+    metricsDataBuilder.getResourceMetricsBuilder(1)
             .getResourceBuilder()
             .addAttributes(
                     KeyValue.newBuilder()
@@ -247,7 +247,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
                             .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_DEVEL))
                             .build());
 
-    requestBuilder.getResourceMetricsBuilder(1)
+    metricsDataBuilder.getResourceMetricsBuilder(1)
             .getInstrumentationLibraryMetricsBuilder(0)
             .getInstrumentationLibraryBuilder()
             .setName(INSTRUMENTATION_LIBRARY_NAME)
@@ -262,11 +262,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setKey(METRIC_ATTRIBUTE_FOO_KEY)
             .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_FOO_VAL).build());
 
-    MetricsData request = requestBuilder.build();
+    MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
             dimensionsSpec,
-            new ByteEntity(request.toByteArray()),
+            new ByteEntity(metricsData.toByteArray()),
             "metric.name",
             "descriptor.",
             "custom."
@@ -302,7 +302,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .setKey(METRIC_ATTRIBUTE_COLOR)
             .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
-    MetricsData request = requestBuilder.build();
+    MetricsData metricsData = metricsDataBuilder.build();
 
     DimensionsSpec dimensionsSpecWithExclusions = new DimensionsSpec(null,
             ImmutableList.of(
@@ -312,7 +312,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
             dimensionsSpecWithExclusions,
-            new ByteEntity(request.toByteArray()),
+            new ByteEntity(metricsData.toByteArray()),
             "metric.name",
             "descriptor.",
             "custom."
