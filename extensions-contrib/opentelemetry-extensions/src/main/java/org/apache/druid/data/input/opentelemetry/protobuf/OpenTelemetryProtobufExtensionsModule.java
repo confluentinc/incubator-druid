@@ -28,7 +28,7 @@ import org.apache.druid.initialization.DruidModule;
 import java.util.Collections;
 import java.util.List;
 
-public class OpenTelemetryMetricsProtobufExtensionsModule implements DruidModule
+public class OpenTelemetryProtobufExtensionsModule implements DruidModule
 {
 
   @Override
