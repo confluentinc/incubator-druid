@@ -29,7 +29,12 @@ public class OpenTelemetryMetricsInputFormatTest
   @Test
   public void testSerde() throws Exception
   {
-    OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat("metric.name", "descriptor.", "custom.");
+    OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat(
+            "metric.name",
+            "raw.value",
+            "descriptor.",
+            "custom."
+    );
 
     final ObjectMapper jsonMapper = new ObjectMapper();
     jsonMapper.registerModules(new OpenTelemetryProtobufExtensionsModule().getJacksonModules());
@@ -40,6 +45,7 @@ public class OpenTelemetryMetricsInputFormatTest
     );
     Assert.assertEquals(inputFormat, actual);
     Assert.assertEquals("metric.name", actual.getMetricDimension());
+    Assert.assertEquals("raw.value", actual.getValueDimension());
     Assert.assertEquals("descriptor.", actual.getMetricLabelPrefix());
     Assert.assertEquals("custom.", actual.getResourceLabelPrefix());
   }
@@ -47,9 +53,15 @@ public class OpenTelemetryMetricsInputFormatTest
   @Test
   public void testDefaults()
   {
-    OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat(null, null, null);
+    OpenTelemetryMetricsProtobufInputFormat inputFormat = new OpenTelemetryMetricsProtobufInputFormat(
+            null,
+            null,
+            null,
+            null
+    );
 
-    Assert.assertEquals("name", inputFormat.getMetricDimension());
+    Assert.assertEquals("metric", inputFormat.getMetricDimension());
+    Assert.assertEquals("value", inputFormat.getValueDimension());
     Assert.assertEquals("", inputFormat.getMetricLabelPrefix());
     Assert.assertEquals("resource.", inputFormat.getResourceLabelPrefix());
   }

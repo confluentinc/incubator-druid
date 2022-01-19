@@ -109,6 +109,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
+            null,
             "descriptor.",
             "custom."
     ).read();
@@ -140,6 +141,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
+            null,
             "descriptor.",
             "custom."
     ).read();
@@ -174,6 +176,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
+            null,
             "descriptor.",
             "custom."
     ).read();
@@ -207,6 +210,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
+            null,
             "descriptor.",
             "custom."
     ).read();
@@ -268,6 +272,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
+            null,
             "descriptor.",
             "custom."
     ).read();
@@ -314,6 +319,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpecWithExclusions,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
+            null,
             "descriptor.",
             "custom."
     ).read();

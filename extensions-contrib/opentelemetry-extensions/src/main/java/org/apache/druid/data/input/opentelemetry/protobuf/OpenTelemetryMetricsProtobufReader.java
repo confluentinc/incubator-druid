@@ -46,28 +46,31 @@ import java.util.stream.Collectors;
 
 public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 {
-  private static final String VALUE_COLUMN = "value";
 
   private final ByteEntity source;
   private final String metricDimension;
+  private final String valueDimension;
   private final String metricAttributePrefix;
   private final String resourceAttributePrefix;
   private final Predicate<String> attributeMembership;
+  private final List<String> schemaDimensions;
 
   public OpenTelemetryMetricsProtobufReader(
       DimensionsSpec dimensionsSpec,
       ByteEntity source,
       String metricDimension,
+      String valueDimension,
       String metricLabelPrefix,
       String resourceLabelPrefix
   )
   {
     this.source = source;
     this.metricDimension = metricDimension;
+    this.valueDimension = valueDimension;
     this.metricAttributePrefix = metricLabelPrefix;
     this.resourceAttributePrefix = resourceLabelPrefix;
 
-    List<String> schemaDimensions = dimensionsSpec.getDimensionNames();
+    this.schemaDimensions = dimensionsSpec.getDimensionNames();
     if (!schemaDimensions.isEmpty()) {
       this.attributeMembership = schemaDimensions::contains;
     } else {
@@ -100,95 +103,114 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
                     .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
                             .stream()
                             .flatMap(metric -> parseMetric(metric, resourceMetrics.getResource().getAttributesList())
-                                    .stream()
-                            )
-                    )
-            ).collect(Collectors.toList());
+                                    .stream())))
+            .collect(Collectors.toList());
   }
 
   private List<InputRow> parseMetric(Metric metric, List<KeyValue> resourceAttributes)
   {
     switch (metric.getDataCase()) {
       case INT_SUM: {
-        List<NumberDataPoint> dataPoints = metric.getIntSum()
+        return metric.getIntSum()
                 .getDataPointsList()
                 .stream()
-                .map(OpenTelemetryMetricsProtobufReader::intDataPointToNumDataPoint)
+                .map(OpenTelemetryMetricsProtobufReader::intDataPointToNumberDataPoint)
+                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
                 .collect(Collectors.toList());
-        return parseNumDataPoints(dataPoints, metric.getName(), resourceAttributes);
       }
       case INT_GAUGE: {
-        List<NumberDataPoint> dataPoints = metric.getIntGauge()
+        return metric.getIntGauge()
                 .getDataPointsList()
                 .stream()
-                .map(OpenTelemetryMetricsProtobufReader::intDataPointToNumDataPoint)
+                .map(OpenTelemetryMetricsProtobufReader::intDataPointToNumberDataPoint)
+                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
                 .collect(Collectors.toList());
-        return parseNumDataPoints(dataPoints, metric.getName(), resourceAttributes);
       }
       case SUM: {
-        return parseNumDataPoints(metric.getSum().getDataPointsList(), metric.getName(), resourceAttributes);
+        return metric.getSum()
+                .getDataPointsList()
+                .stream()
+                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
+                .collect(Collectors.toList());
       }
       case GAUGE: {
-        return parseNumDataPoints(metric.getGauge().getDataPointsList(), metric.getName(), resourceAttributes);
+        return metric.getGauge()
+                .getDataPointsList()
+                .stream()
+                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
+                .collect(Collectors.toList());
       }
-      // TODO Support HISTOGRAM and SUMMARY
+      // TODO Support HISTOGRAM and SUMMARY metrics
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
   }
 
-  private List<InputRow> parseNumDataPoints(List<NumberDataPoint> dataPoints,
-                                            String metricName,
-                                            List<KeyValue> resourceAttributes)
+  private static NumberDataPoint intDataPointToNumberDataPoint(IntDataPoint dataPoint)
   {
-    List<InputRow> rows = new ArrayList<>();
-    for (NumberDataPoint dataPoint : dataPoints) {
-
-      long timeUnixMilli = TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano());
-      List<KeyValue> metricAttributes = dataPoint.getAttributesList();
-      Number value = getValue(dataPoint);
-
-      int capacity = resourceAttributes.size()
-              + metricAttributes.size()
-              + 2; // metric name + value columns
-
-      Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-      event.put(metricDimension, metricName);
-      event.put(VALUE_COLUMN, value);
-
-      resourceAttributes.stream()
-              .filter(ra -> attributeMembership.test(this.resourceAttributePrefix + ra.getKey()))
-              .forEach(ra -> event.put(this.resourceAttributePrefix + ra.getKey(), ra.getValue().getStringValue()));
-
-      metricAttributes.stream()
-              .filter(ma -> attributeMembership.test(this.metricAttributePrefix + ma.getKey()))
-              .forEach(ma -> event.put(this.metricAttributePrefix + ma.getKey(), ma.getValue().getStringValue()));
-
-      rows.add(new MapBasedInputRow(timeUnixMilli, new ArrayList<>(event.keySet()), event));
-    }
-    return rows;
+    return NumberDataPoint.newBuilder()
+            .setTimeUnixNano(dataPoint.getTimeUnixNano())
+            .setAsInt(dataPoint.getValue())
+            .addAllAttributes(dataPoint.getLabelsList()
+                    .stream()
+                    .map(label -> KeyValue.newBuilder()
+                            .setKey(label.getKey())
+                            .setValue(AnyValue.newBuilder().setStringValue(label.getValue()))
+                            .build())
+                    .collect(Collectors.toList()))
+            .build();
   }
 
-  private static NumberDataPoint intDataPointToNumDataPoint(IntDataPoint dataPoint)
+  private InputRow parseNumberDataPoint(NumberDataPoint dataPoint,
+                                        String metricName,
+                                        List<KeyValue> resourceAttributes)
   {
-    NumberDataPoint.Builder builder = NumberDataPoint.newBuilder()
-            .setTimeUnixNano(dataPoint.getTimeUnixNano())
-            .setAsInt(dataPoint.getValue());
+    long timeUnixMilli = TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano());
+    List<KeyValue> metricAttributes = labelsToAttributes(dataPoint);
+    Number value = getValue(dataPoint);
 
-    dataPoint.getLabelsList().forEach(label -> builder.addAttributes(
-            KeyValue.newBuilder()
+    int capacity = resourceAttributes.size()
+            + metricAttributes.size()
+            + 2; // metric name + value columns
+
+    Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
+    event.put(this.metricDimension, metricName);
+    event.put(this.valueDimension, value);
+
+    resourceAttributes.stream()
+            .filter(ra -> this.attributeMembership.test(this.resourceAttributePrefix + ra.getKey()))
+            .forEach(ra -> event.put(this.resourceAttributePrefix + ra.getKey(), ra.getValue().getStringValue()));
+
+    metricAttributes.stream()
+            .filter(ma -> this.attributeMembership.test(this.metricAttributePrefix + ma.getKey()))
+            .forEach(ma -> event.put(this.metricAttributePrefix + ma.getKey(), ma.getValue().getStringValue()));
+
+    List<String> dimensions = this.schemaDimensions.isEmpty() ? new ArrayList<>(event.keySet()) : this.schemaDimensions;
+    return new MapBasedInputRow(timeUnixMilli, dimensions, event);
+  }
+
+  private static List<KeyValue> labelsToAttributes(NumberDataPoint dataPoint)
+  {
+    if (!dataPoint.getAttributesList().isEmpty()) {
+      return dataPoint.getAttributesList();
+    }
+    return dataPoint.getLabelsList()
+            .stream()
+            .map(label -> KeyValue.newBuilder()
                     .setKey(label.getKey())
                     .setValue(AnyValue.newBuilder().setStringValue(label.getValue()))
-            ));
-    return builder.build();
+                    .build())
+            .collect(Collectors.toList());
   }
 
   private static Number getValue(NumberDataPoint dataPoint)
   {
     if (dataPoint.hasAsInt()) {
       return dataPoint.getAsInt();
-    } else {
+    } else if (dataPoint.hasAsDouble()) {
       return dataPoint.getAsDouble();
+    } else {
+      throw new IllegalStateException("Unexpected dataPoint value type. Expected Int or Double");
     }
   }
 

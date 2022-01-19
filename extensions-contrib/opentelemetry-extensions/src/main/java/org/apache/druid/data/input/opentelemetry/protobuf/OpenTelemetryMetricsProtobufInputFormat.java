@@ -32,20 +32,24 @@ import java.util.Objects;
 
 public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
 {
-  private static final String DEFAULT_METRIC_DIMENSION = "name";
+  private static final String DEFAULT_METRIC_DIMENSION = "metric";
+  private static final String DEFAULT_VALUE_DIMENSION = "value";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
 
   private final String metricDimension;
+  private final String valueDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
   public OpenTelemetryMetricsProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
+      @JsonProperty("valueDimension") String valueDimension,
       @JsonProperty("metricLabelPrefix") String metricLabelPrefix,
       @JsonProperty("resourceLabelPrefix") String resourceLabelPrefix
   )
   {
     this.metricDimension = metricDimension != null ? metricDimension : DEFAULT_METRIC_DIMENSION;
+    this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
     this.metricLabelPrefix = StringUtils.nullToEmptyNonDruidDataString(metricLabelPrefix);
     this.resourceLabelPrefix = resourceLabelPrefix != null ? resourceLabelPrefix : DEFAULT_RESOURCE_PREFIX;
   }
@@ -60,11 +64,12 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
     return new OpenTelemetryMetricsProtobufReader(
-        inputRowSchema.getDimensionsSpec(),
-        (ByteEntity) source,
-        metricDimension,
-        metricLabelPrefix,
-        resourceLabelPrefix
+            inputRowSchema.getDimensionsSpec(),
+            (ByteEntity) source,
+            metricDimension,
+            valueDimension,
+            metricLabelPrefix,
+            resourceLabelPrefix
     );
   }
 
@@ -72,6 +77,12 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
   public String getMetricDimension()
   {
     return metricDimension;
+  }
+
+  @JsonProperty
+  public String getValueDimension()
+  {
+    return valueDimension;
   }
 
   @JsonProperty
