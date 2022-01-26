@@ -20,9 +20,8 @@
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.metrics.v1.IntDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
@@ -41,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
@@ -52,30 +50,24 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   private final String valueDimension;
   private final String metricAttributePrefix;
   private final String resourceAttributePrefix;
-  private final Predicate<String> attributeMembership;
-  private final List<String> schemaDimensions;
+  private final DimensionsSpec dimensionsSpec;
 
   public OpenTelemetryMetricsProtobufReader(
       DimensionsSpec dimensionsSpec,
       ByteEntity source,
       String metricDimension,
       String valueDimension,
-      String metricLabelPrefix,
-      String resourceLabelPrefix
+      String metricAttributePrefix,
+      String resourceAttributePrefix
   )
   {
+    this.dimensionsSpec = dimensionsSpec;
     this.source = source;
     this.metricDimension = metricDimension;
     this.valueDimension = valueDimension;
-    this.metricAttributePrefix = metricLabelPrefix;
-    this.resourceAttributePrefix = resourceLabelPrefix;
+    this.metricAttributePrefix = metricAttributePrefix;
+    this.resourceAttributePrefix = resourceAttributePrefix;
 
-    this.schemaDimensions = dimensionsSpec.getDimensionNames();
-    if (!schemaDimensions.isEmpty()) {
-      this.attributeMembership = schemaDimensions::contains;
-    } else {
-      this.attributeMembership = att -> !dimensionsSpec.getDimensionExclusions().contains(att);
-    }
   }
 
   @Override
@@ -98,46 +90,50 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   {
     return metricsData.getResourceMetricsList()
             .stream()
-            .flatMap(resourceMetrics -> resourceMetrics.getInstrumentationLibraryMetricsList()
-                    .stream()
-                    .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
-                            .stream()
-                            .flatMap(metric -> parseMetric(metric, resourceMetrics.getResource().getAttributesList())
-                                    .stream())))
+            .flatMap(resourceMetrics -> {
+              Map<String, Object> resourceAttributes = resourceMetrics.getResource()
+                      .getAttributesList()
+                      .stream()
+                      .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(),
+                          kv -> kv.getValue().getStringValue()));
+              return resourceMetrics.getInstrumentationLibraryMetricsList()
+                      .stream()
+                      .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
+                              .stream()
+                              .flatMap(metric -> parseMetric(metric, resourceAttributes).stream()));
+            })
             .collect(Collectors.toList());
   }
 
-  private List<InputRow> parseMetric(Metric metric, List<KeyValue> resourceAttributes)
+  private List<InputRow> parseMetric(Metric metric, Map<String, Object> resourceAttributes)
   {
     switch (metric.getDataCase()) {
       case INT_SUM: {
         return metric.getIntSum()
                 .getDataPointsList()
                 .stream()
-                .map(OpenTelemetryMetricsProtobufReader::intDataPointToNumberDataPoint)
-                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
+                .map(dataPoint -> parseIntDataPoint(dataPoint, resourceAttributes, metric.getName()))
                 .collect(Collectors.toList());
       }
       case INT_GAUGE: {
         return metric.getIntGauge()
                 .getDataPointsList()
                 .stream()
-                .map(OpenTelemetryMetricsProtobufReader::intDataPointToNumberDataPoint)
-                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
+                .map(dataPoint -> parseIntDataPoint(dataPoint, resourceAttributes, metric.getName()))
                 .collect(Collectors.toList());
       }
       case SUM: {
         return metric.getSum()
                 .getDataPointsList()
                 .stream()
-                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
+                .map(dataPoint -> parseNumberDataPoint(dataPoint, resourceAttributes, metric.getName()))
                 .collect(Collectors.toList());
       }
       case GAUGE: {
         return metric.getGauge()
                 .getDataPointsList()
                 .stream()
-                .map(dataPoint -> parseNumberDataPoint(dataPoint, metric.getName(), resourceAttributes))
+                .map(dataPoint -> parseNumberDataPoint(dataPoint, resourceAttributes, metric.getName()))
                 .collect(Collectors.toList());
       }
       // TODO Support HISTOGRAM and SUMMARY metrics
@@ -146,72 +142,56 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     }
   }
 
-  private static NumberDataPoint intDataPointToNumberDataPoint(IntDataPoint dataPoint)
+  private InputRow parseIntDataPoint(IntDataPoint dataPoint, Map<String, Object> resourceAttributes, String metricName)
   {
-    return NumberDataPoint.newBuilder()
-            .setTimeUnixNano(dataPoint.getTimeUnixNano())
-            .setAsInt(dataPoint.getValue())
-            .addAllAttributes(dataPoint.getLabelsList()
-                    .stream()
-                    .map(label -> KeyValue.newBuilder()
-                            .setKey(label.getKey())
-                            .setValue(AnyValue.newBuilder().setStringValue(label.getValue()))
-                            .build())
-                    .collect(Collectors.toList()))
-            .build();
+    int capacity = resourceAttributes.size() + dataPoint.getLabelsCount() + 2;
+    Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
+    event.put(metricDimension, metricName);
+    event.put(valueDimension, dataPoint.getValue());
+    event.putAll(resourceAttributes);
+    dataPoint.getLabelsList().forEach(label -> event.put(metricAttributePrefix + label.getKey(), label.getValue()));
+    return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
   private InputRow parseNumberDataPoint(NumberDataPoint dataPoint,
-                                        String metricName,
-                                        List<KeyValue> resourceAttributes)
+                                        Map<String, Object> resourceAttributes,
+                                        String metricName)
   {
-    long timeUnixMilli = TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano());
-    List<KeyValue> metricAttributes = labelsToAttributes(dataPoint);
-    Number value = getValue(dataPoint);
 
     int capacity = resourceAttributes.size()
-            + metricAttributes.size()
+            + (dataPoint.getAttributesList().isEmpty() ? dataPoint.getLabelsCount() : dataPoint.getAttributesCount())
             + 2; // metric name + value columns
-
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-    event.put(this.metricDimension, metricName);
-    event.put(this.valueDimension, value);
+    event.putAll(resourceAttributes);
+    event.put(metricDimension, metricName);
 
-    resourceAttributes.stream()
-            .filter(ra -> this.attributeMembership.test(this.resourceAttributePrefix + ra.getKey()))
-            .forEach(ra -> event.put(this.resourceAttributePrefix + ra.getKey(), ra.getValue().getStringValue()));
-
-    metricAttributes.stream()
-            .filter(ma -> this.attributeMembership.test(this.metricAttributePrefix + ma.getKey()))
-            .forEach(ma -> event.put(this.metricAttributePrefix + ma.getKey(), ma.getValue().getStringValue()));
-
-    List<String> dimensions = this.schemaDimensions.isEmpty() ? new ArrayList<>(event.keySet()) : this.schemaDimensions;
-    return new MapBasedInputRow(timeUnixMilli, dimensions, event);
-  }
-
-  private static List<KeyValue> labelsToAttributes(NumberDataPoint dataPoint)
-  {
     if (!dataPoint.getAttributesList().isEmpty()) {
-      return dataPoint.getAttributesList();
+      dataPoint.getAttributesList()
+          .forEach(att -> event.put(metricAttributePrefix + att.getKey(), att.getValue().getStringValue()));
+    } else {
+      dataPoint.getLabelsList().forEach(label -> event.put(metricAttributePrefix + label.getKey(), label.getValue()));
     }
-    return dataPoint.getLabelsList()
-            .stream()
-            .map(label -> KeyValue.newBuilder()
-                    .setKey(label.getKey())
-                    .setValue(AnyValue.newBuilder().setStringValue(label.getValue()))
-                    .build())
-            .collect(Collectors.toList());
-  }
 
-  private static Number getValue(NumberDataPoint dataPoint)
-  {
     if (dataPoint.hasAsInt()) {
-      return dataPoint.getAsInt();
+      event.put(valueDimension, dataPoint.getAsInt());
     } else if (dataPoint.hasAsDouble()) {
-      return dataPoint.getAsDouble();
+      event.put(valueDimension, dataPoint.getAsDouble());
     } else {
       throw new IllegalStateException("Unexpected dataPoint value type. Expected Int or Double");
     }
+
+    return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
+  }
+
+  InputRow createRow(long timeUnixMilli, Map<String, Object> event)
+  {
+    List<String> dimensions;
+    if (dimensionsSpec.getDimensionNames().isEmpty()) {
+      dimensions = new ArrayList<>(Sets.difference(event.keySet(), dimensionsSpec.getDimensionExclusions()));
+    } else {
+      dimensions = dimensionsSpec.getDimensionNames();
+    }
+    return new MapBasedInputRow(timeUnixMilli, dimensions, event);
   }
 
   @Override

@@ -38,20 +38,20 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
 
   private final String metricDimension;
   private final String valueDimension;
-  private final String metricLabelPrefix;
-  private final String resourceLabelPrefix;
+  private final String metricAttributePrefix;
+  private final String resourceAttributePrefix;
 
   public OpenTelemetryMetricsProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
       @JsonProperty("valueDimension") String valueDimension,
-      @JsonProperty("metricLabelPrefix") String metricLabelPrefix,
-      @JsonProperty("resourceLabelPrefix") String resourceLabelPrefix
+      @JsonProperty("metricAttributePrefix") String metricAttributePrefix,
+      @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix
   )
   {
     this.metricDimension = metricDimension != null ? metricDimension : DEFAULT_METRIC_DIMENSION;
     this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
-    this.metricLabelPrefix = StringUtils.nullToEmptyNonDruidDataString(metricLabelPrefix);
-    this.resourceLabelPrefix = resourceLabelPrefix != null ? resourceLabelPrefix : DEFAULT_RESOURCE_PREFIX;
+    this.metricAttributePrefix = StringUtils.nullToEmptyNonDruidDataString(metricAttributePrefix);
+    this.resourceAttributePrefix = resourceAttributePrefix != null ? resourceAttributePrefix : DEFAULT_RESOURCE_PREFIX;
   }
 
   @Override
@@ -68,8 +68,8 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
             (ByteEntity) source,
             metricDimension,
             valueDimension,
-            metricLabelPrefix,
-            resourceLabelPrefix
+            metricAttributePrefix,
+            resourceAttributePrefix
     );
   }
 
@@ -88,13 +88,13 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
   @JsonProperty
   public String getMetricLabelPrefix()
   {
-    return metricLabelPrefix;
+    return metricAttributePrefix;
   }
 
   @JsonProperty
   public String getResourceLabelPrefix()
   {
-    return resourceLabelPrefix;
+    return resourceAttributePrefix;
   }
 
   @Override
@@ -108,13 +108,14 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
     }
     OpenTelemetryMetricsProtobufInputFormat that = (OpenTelemetryMetricsProtobufInputFormat) o;
     return Objects.equals(metricDimension, that.metricDimension)
-           && Objects.equals(metricLabelPrefix, that.metricLabelPrefix)
-           && Objects.equals(resourceLabelPrefix, that.resourceLabelPrefix);
+            && Objects.equals(valueDimension, that.valueDimension)
+            && Objects.equals(metricAttributePrefix, that.metricAttributePrefix)
+            && Objects.equals(resourceAttributePrefix, that.resourceAttributePrefix);
   }
 
   @Override
   public int hashCode()
   {
-    return Objects.hash(metricDimension, metricLabelPrefix, resourceLabelPrefix);
+    return Objects.hash(metricDimension, valueDimension, metricAttributePrefix, resourceAttributePrefix);
   }
 }

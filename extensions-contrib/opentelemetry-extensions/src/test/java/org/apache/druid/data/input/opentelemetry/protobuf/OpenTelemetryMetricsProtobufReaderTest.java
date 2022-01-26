@@ -78,11 +78,9 @@ public class OpenTelemetryMetricsProtobufReaderTest
     metricsDataBuilder
             .getResourceMetricsBuilder(0)
             .getResourceBuilder()
-            .addAttributes(
-                    KeyValue.newBuilder()
-                            .setKey(RESOURCE_ATTRIBUTE_COUNTRY)
-                            .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_USA))
-                            .build());
+            .addAttributes(KeyValue.newBuilder()
+                    .setKey(RESOURCE_ATTRIBUTE_COUNTRY)
+                    .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_USA)));
 
     metricsDataBuilder
             .getResourceMetricsBuilder(0)
@@ -215,11 +213,9 @@ public class OpenTelemetryMetricsProtobufReaderTest
             "custom."
     ).read();
 
-    List<InputRow> rowList = new ArrayList<>();
-    rows.forEachRemaining(rowList::add);
-    Assert.assertEquals(1, rowList.size());
+    Assert.assertTrue(rows.hasNext());
+    InputRow row = rows.next();
 
-    InputRow row = rowList.get(0);
     Assert.assertEquals(4, row.getDimensions().size());
     assertDimensionEquals(row, "metric.name", "example_gauge");
     assertDimensionEquals(row, "custom.country", "usa");
@@ -245,8 +241,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
 
     metricsDataBuilder.getResourceMetricsBuilder(1)
             .getResourceBuilder()
-            .addAttributes(
-                    KeyValue.newBuilder()
+            .addAttributes(KeyValue.newBuilder()
                             .setKey(RESOURCE_ATTRIBUTE_ENV)
                             .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_DEVEL))
                             .build());
@@ -277,17 +272,16 @@ public class OpenTelemetryMetricsProtobufReaderTest
             "custom."
     ).read();
 
-    List<InputRow> rowList = new ArrayList<>();
-    rows.forEachRemaining(rowList::add);
-    Assert.assertEquals(2, rowList.size());
+    Assert.assertTrue(rows.hasNext());
+    InputRow row = rows.next();
 
-    InputRow row = rowList.get(0);
     Assert.assertEquals(4, row.getDimensions().size());
     assertDimensionEquals(row, "metric.name", "example_sum");
     assertDimensionEquals(row, "custom.country", "usa");
     assertDimensionEquals(row, "descriptor.color", "red");
 
-    row = rowList.get(1);
+    Assert.assertTrue(rows.hasNext());
+    row = rows.next();
     Assert.assertEquals(4, row.getDimensions().size());
     assertDimensionEquals(row, "metric.name", "example_gauge");
     assertDimensionEquals(row, "custom.env", "devel");
@@ -324,19 +318,14 @@ public class OpenTelemetryMetricsProtobufReaderTest
             "custom."
     ).read();
 
-    List<InputRow> rowList = new ArrayList<>();
-    rows.forEachRemaining(rowList::add);
-    Assert.assertEquals(1, rowList.size());
+    Assert.assertTrue(rows.hasNext());
+    InputRow row = rows.next();
 
-    InputRow row = rowList.get(0);
     Assert.assertEquals(2, row.getDimensions().size());
     assertDimensionEquals(row, "metric.name", "example_gauge");
 
-    List<String> values = row.getDimension("custom.country");
-    Assert.assertEquals(0, values.size());
-
-    values = row.getDimension("descriptor.color");
-    Assert.assertEquals(0, values.size());
+    Assert.assertFalse(row.getDimensions().contains("custom.country"));
+    Assert.assertFalse(row.getDimensions().contains("descriptor.color"));
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)

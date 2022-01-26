@@ -35,7 +35,7 @@ public class OpenTelemetryProtobufExtensionsModule implements DruidModule
   public List<? extends Module> getJacksonModules()
   {
     return Collections.singletonList(
-        new SimpleModule("OpenTelemetryProtobufInputRowParserModule")
+        new SimpleModule("OpenTelemetryProtobufInputFormat")
             .registerSubtypes(
                 new NamedType(OpenTelemetryMetricsProtobufInputFormat.class, "opentelemetry-metrics-protobuf")
             )
