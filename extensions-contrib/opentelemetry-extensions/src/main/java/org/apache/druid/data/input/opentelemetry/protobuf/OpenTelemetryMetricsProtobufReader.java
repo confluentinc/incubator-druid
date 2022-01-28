@@ -22,10 +22,12 @@ package org.apache.druid.data.input.opentelemetry.protobuf;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.IntDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
+import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.InputRowListPlusRawValues;
@@ -40,7 +42,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 {
@@ -67,7 +68,6 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     this.valueDimension = valueDimension;
     this.metricAttributePrefix = metricAttributePrefix;
     this.resourceAttributePrefix = resourceAttributePrefix;
-
   }
 
   @Override
@@ -88,58 +88,86 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 
   private List<InputRow> parseMetricsData(final MetricsData metricsData)
   {
-    return metricsData.getResourceMetricsList()
-            .stream()
-            .flatMap(resourceMetrics -> {
-              Map<String, Object> resourceAttributes = resourceMetrics.getResource()
-                      .getAttributesList()
-                      .stream()
-                      .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(),
-                          kv -> kv.getValue().getStringValue()));
-              return resourceMetrics.getInstrumentationLibraryMetricsList()
-                      .stream()
-                      .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
-                              .stream()
-                              .flatMap(metric -> parseMetric(metric, resourceAttributes).stream()));
-            })
-            .collect(Collectors.toList());
+    List<InputRow> rows = new ArrayList<>(getRowCount(metricsData));
+    metricsData.getResourceMetricsList().forEach(rm -> {
+      Map<String, Object> resourceAttributes = Maps.newHashMapWithExpectedSize(rm.getResource().getAttributesCount());
+      rm.getResource()
+          .getAttributesList()
+          .forEach(kv -> resourceAttributes.put(resourceAttributePrefix + kv.getKey(), kv.getValue().getStringValue()));
+      rm.getInstrumentationLibraryMetricsList()
+          .forEach(ilm -> ilm.getMetricsList().forEach(metric -> rows.addAll(parseMetric(metric, resourceAttributes))));
+    });
+    return rows;
+  }
+
+  private int getRowCount(MetricsData metricsData)
+  {
+    int rowCount = 0;
+    for (ResourceMetrics rm : metricsData.getResourceMetricsList()) {
+      for (InstrumentationLibraryMetrics ilm : rm.getInstrumentationLibraryMetricsList()) {
+        for (Metric metric : ilm.getMetricsList()) {
+          switch (metric.getDataCase()) {
+            case INT_SUM: {
+              rowCount += metric.getIntSum().getDataPointsCount();
+              break;
+            }
+            case INT_GAUGE: {
+              rowCount += metric.getIntGauge().getDataPointsCount();
+              break;
+            }
+            case SUM: {
+              rowCount += metric.getSum().getDataPointsCount();
+              break;
+            }
+            case GAUGE: {
+              rowCount += metric.getGauge().getDataPointsCount();
+              break;
+            }
+          }
+        }
+      }
+    }
+    return rowCount;
   }
 
   private List<InputRow> parseMetric(Metric metric, Map<String, Object> resourceAttributes)
   {
+    List<InputRow> inputRows;
+    String metricName = metric.getName();
     switch (metric.getDataCase()) {
       case INT_SUM: {
-        return metric.getIntSum()
-                .getDataPointsList()
-                .stream()
-                .map(dataPoint -> parseIntDataPoint(dataPoint, resourceAttributes, metric.getName()))
-                .collect(Collectors.toList());
+        inputRows = new ArrayList<>(metric.getIntSum().getDataPointsCount());
+        metric.getIntSum()
+            .getDataPointsList()
+            .forEach(dataPoint -> inputRows.add(parseIntDataPoint(dataPoint, resourceAttributes, metricName)));
+        break;
       }
       case INT_GAUGE: {
-        return metric.getIntGauge()
-                .getDataPointsList()
-                .stream()
-                .map(dataPoint -> parseIntDataPoint(dataPoint, resourceAttributes, metric.getName()))
-                .collect(Collectors.toList());
+        inputRows = new ArrayList<>(metric.getIntGauge().getDataPointsCount());
+        metric.getIntGauge()
+            .getDataPointsList()
+            .forEach(dataPoint -> inputRows.add(parseIntDataPoint(dataPoint, resourceAttributes, metricName)));
+        break;
       }
       case SUM: {
-        return metric.getSum()
-                .getDataPointsList()
-                .stream()
-                .map(dataPoint -> parseNumberDataPoint(dataPoint, resourceAttributes, metric.getName()))
-                .collect(Collectors.toList());
+        inputRows = new ArrayList<>(metric.getSum().getDataPointsCount());
+        metric.getSum()
+            .getDataPointsList()
+            .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
+        break;
       }
       case GAUGE: {
-        return metric.getGauge()
-                .getDataPointsList()
-                .stream()
-                .map(dataPoint -> parseNumberDataPoint(dataPoint, resourceAttributes, metric.getName()))
-                .collect(Collectors.toList());
+        inputRows = new ArrayList<>(metric.getGauge().getDataPointsCount());
+        metric.getGauge()
+            .getDataPointsList()
+            .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metric.getName())));
+        break;
       }
-      // TODO Support HISTOGRAM and SUMMARY metrics
+      // TODO Support and SUMMARY metrics
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
+    return inputRows;
   }
 
   private InputRow parseIntDataPoint(IntDataPoint dataPoint, Map<String, Object> resourceAttributes, String metricName)
@@ -162,15 +190,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
             + (dataPoint.getAttributesList().isEmpty() ? dataPoint.getLabelsCount() : dataPoint.getAttributesCount())
             + 2; // metric name + value columns
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-    event.putAll(resourceAttributes);
-    event.put(metricDimension, metricName);
 
-    if (!dataPoint.getAttributesList().isEmpty()) {
-      dataPoint.getAttributesList()
-          .forEach(att -> event.put(metricAttributePrefix + att.getKey(), att.getValue().getStringValue()));
-    } else {
-      dataPoint.getLabelsList().forEach(label -> event.put(metricAttributePrefix + label.getKey(), label.getValue()));
-    }
+    event.put(metricDimension, metricName);
 
     if (dataPoint.hasAsInt()) {
       event.put(valueDimension, dataPoint.getAsInt());
@@ -180,16 +201,25 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       throw new IllegalStateException("Unexpected dataPoint value type. Expected Int or Double");
     }
 
+    event.putAll(resourceAttributes);
+
+    if (!dataPoint.getAttributesList().isEmpty()) {
+      dataPoint.getAttributesList()
+          .forEach(att -> event.put(metricAttributePrefix + att.getKey(), att.getValue().getStringValue()));
+    } else {
+      dataPoint.getLabelsList().forEach(label -> event.put(metricAttributePrefix + label.getKey(), label.getValue()));
+    }
+
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
   InputRow createRow(long timeUnixMilli, Map<String, Object> event)
   {
     List<String> dimensions;
-    if (dimensionsSpec.getDimensionNames().isEmpty()) {
-      dimensions = new ArrayList<>(Sets.difference(event.keySet(), dimensionsSpec.getDimensionExclusions()));
-    } else {
+    if (!dimensionsSpec.getDimensionNames().isEmpty()) {
       dimensions = dimensionsSpec.getDimensionNames();
+    } else {
+      dimensions = new ArrayList<>(Sets.difference(event.keySet(), dimensionsSpec.getDimensionExclusions()));
     }
     return new MapBasedInputRow(timeUnixMilli, dimensions, event);
   }
