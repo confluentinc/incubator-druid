@@ -95,6 +95,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
   private final ObjectMapper jsonMapper;
   private final MetadataStorageTablesConfig dbTables;
   private final SQLMetadataConnector connector;
+  private final SegmentsMetadataPublisher segmentMetadataPublisher;
 
   @Inject
   public IndexerSQLMetadataStorageCoordinator(
@@ -106,6 +107,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
     this.jsonMapper = jsonMapper;
     this.dbTables = dbTables;
     this.connector = connector;
+    this.segmentMetadataPublisher = new SegmentsMetadataPublisher();
   }
 
   enum DataSourceMetadataUpdateResult
@@ -999,6 +1001,11 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
         final boolean succeeded = Arrays.stream(affectedRows).allMatch(eachAffectedRows -> eachAffectedRows == 1);
         if (succeeded) {
           log.infoSegments(partition, "Published segments to DB");
+          for (DataSegment segment: partition)
+          {
+            // Since publishing went successfully, lets push the event to kafka topic
+            this.segmentMetadataPublisher.publishSegmentMetadata(segment.getDataSource(), DateTimes.nowUtc().toString(), segment.getInterval().getStart().toString(), segment.getInterval().getEnd().toString(), segment.getVersion());
+          }
         } else {
           final List<DataSegment> failedToPublish = IntStream.range(0, partition.size())
               .filter(i -> affectedRows[i] != 1)
