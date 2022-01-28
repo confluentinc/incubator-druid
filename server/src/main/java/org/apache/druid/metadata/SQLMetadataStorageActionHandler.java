@@ -69,6 +69,7 @@ public abstract class SQLMetadataStorageActionHandler<EntryType, StatusType, Log
   private final String lockTable;
 
   private final TaskInfoMapper<EntryType, StatusType> taskInfoMapper;
+  private final SegmentsMetadataPublisher segmentMetadataPublisher;
 
   public SQLMetadataStorageActionHandler(
       final SQLMetadataConnector connector,
@@ -94,6 +95,7 @@ public abstract class SQLMetadataStorageActionHandler<EntryType, StatusType, Log
     this.logTable = logTable;
     this.lockTable = lockTable;
     this.taskInfoMapper = new TaskInfoMapper<>(jsonMapper, entryType, statusType);
+    this.segmentMetadataPublisher = new SegmentsMetadataPublisher();
   }
 
   protected SQLMetadataConnector getConnector()
@@ -170,6 +172,8 @@ public abstract class SQLMetadataStorageActionHandler<EntryType, StatusType, Log
         throw new RuntimeException(e);
       }
     }
+    // Since publishing went successfully, lets push the event to kafka topic
+    //this.segmentMetadataPublisher.publishSegmentMetadata(dataSource, timestamp.toString(), DateTimes.nowUtc().toString(), DateTimes.nowUtc().toString(), id + ":" + status.toString());
   }
 
   public static boolean isStatementException(Throwable e)

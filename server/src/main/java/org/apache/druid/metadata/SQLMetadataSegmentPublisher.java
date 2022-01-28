@@ -43,6 +43,7 @@ public class SQLMetadataSegmentPublisher implements MetadataSegmentPublisher
   private final MetadataStorageTablesConfig config;
   private final SQLMetadataConnector connector;
   private final String statement;
+  private final SegmentsMetadataPublisher segmentMetadataPublisher;
 
   @Inject
   public SQLMetadataSegmentPublisher(
@@ -54,6 +55,7 @@ public class SQLMetadataSegmentPublisher implements MetadataSegmentPublisher
     this.jsonMapper = jsonMapper;
     this.config = config;
     this.connector = connector;
+    this.segmentMetadataPublisher = new SegmentsMetadataPublisher();
     this.statement = StringUtils.format(
         "INSERT INTO %1$s (id, dataSource, created_date, start, %2$send%2$s, partitioned, version, used, payload) "
         + "VALUES (:id, :dataSource, :created_date, :start, :end, :partitioned, :version, :used, :payload)",
@@ -129,7 +131,6 @@ public class SQLMetadataSegmentPublisher implements MetadataSegmentPublisher
                     .bind("used", used)
                     .bind("payload", payload)
                     .execute();
-
               return null;
             }
           }
@@ -139,5 +140,7 @@ public class SQLMetadataSegmentPublisher implements MetadataSegmentPublisher
       log.error(e, "Exception inserting into DB");
       throw new RuntimeException(e);
     }
+    // Since publishing went successfully, lets push the event to kafka topic
+    this.segmentMetadataPublisher.publishSegmentMetadata(dataSource, createdDate, start, end, version);
   }
 }
