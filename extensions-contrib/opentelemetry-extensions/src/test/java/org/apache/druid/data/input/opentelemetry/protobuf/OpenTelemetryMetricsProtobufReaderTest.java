@@ -35,12 +35,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class OpenTelemetryMetricsProtobufReaderTest
 {
-  private static final long TIMESTAMP = System.nanoTime();
+  private static final long TIMESTAMP = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z").toEpochMilli());
   public static final String RESOURCE_ATTRIBUTE_COUNTRY = "country";
   public static final String RESOURCE_ATTRIBUTE_VALUE_USA = "usa";
 

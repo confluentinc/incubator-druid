@@ -22,12 +22,10 @@ package org.apache.druid.data.input.opentelemetry.protobuf;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.IntDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.InputRowListPlusRawValues;
@@ -42,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 {
@@ -88,46 +87,20 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 
   private List<InputRow> parseMetricsData(final MetricsData metricsData)
   {
-    List<InputRow> rows = new ArrayList<>(getRowCount(metricsData));
-    metricsData.getResourceMetricsList().forEach(rm -> {
-      Map<String, Object> resourceAttributes = Maps.newHashMapWithExpectedSize(rm.getResource().getAttributesCount());
-      rm.getResource()
-          .getAttributesList()
-          .forEach(kv -> resourceAttributes.put(resourceAttributePrefix + kv.getKey(), kv.getValue().getStringValue()));
-      rm.getInstrumentationLibraryMetricsList()
-          .forEach(ilm -> ilm.getMetricsList().forEach(metric -> rows.addAll(parseMetric(metric, resourceAttributes))));
-    });
-    return rows;
-  }
-
-  private int getRowCount(MetricsData metricsData)
-  {
-    int rowCount = 0;
-    for (ResourceMetrics rm : metricsData.getResourceMetricsList()) {
-      for (InstrumentationLibraryMetrics ilm : rm.getInstrumentationLibraryMetricsList()) {
-        for (Metric metric : ilm.getMetricsList()) {
-          switch (metric.getDataCase()) {
-            case INT_SUM: {
-              rowCount += metric.getIntSum().getDataPointsCount();
-              break;
-            }
-            case INT_GAUGE: {
-              rowCount += metric.getIntGauge().getDataPointsCount();
-              break;
-            }
-            case SUM: {
-              rowCount += metric.getSum().getDataPointsCount();
-              break;
-            }
-            case GAUGE: {
-              rowCount += metric.getGauge().getDataPointsCount();
-              break;
-            }
-          }
-        }
-      }
-    }
-    return rowCount;
+    return metricsData.getResourceMetricsList()
+        .stream()
+        .flatMap(resourceMetrics -> {
+          Map<String, Object> resourceAttributes = resourceMetrics.getResource()
+              .getAttributesList()
+              .stream()
+              .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(), kv -> kv.getValue().getStringValue()));
+          return resourceMetrics.getInstrumentationLibraryMetricsList()
+              .stream()
+              .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
+                  .stream()
+                  .flatMap(metric -> parseMetric(metric, resourceAttributes).stream()));
+        })
+        .collect(Collectors.toList());
   }
 
   private List<InputRow> parseMetric(Metric metric, Map<String, Object> resourceAttributes)
@@ -160,7 +133,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         inputRows = new ArrayList<>(metric.getGauge().getDataPointsCount());
         metric.getGauge()
             .getDataPointsList()
-            .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metric.getName())));
+            .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
         break;
       }
       // TODO Support and SUMMARY metrics

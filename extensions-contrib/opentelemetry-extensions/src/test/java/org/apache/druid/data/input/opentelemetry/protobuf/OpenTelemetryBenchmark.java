@@ -36,6 +36,10 @@ import org.apache.druid.data.input.impl.StringDimensionSchema;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
@@ -44,13 +48,23 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @Fork(1)
+@State(Scope.Benchmark)
 public class OpenTelemetryBenchmark
 {
 
-  private static final ByteBuffer SIMPLE_BUFFER = createMetricBuffer(1, 1, 1, 1);
-  private static final ByteBuffer MULTI_DATAPOINT_BUFFER = createMetricBuffer(1, 1, 1, 10);
-  private static final ByteBuffer MULTI_METRIC_BUFFER = createMetricBuffer(1, 1, 10, 1);
-  private static final ByteBuffer MULTI_RESOURCE_BUFFER = createMetricBuffer(5, 1, 1, 1);
+  private static ByteBuffer BUFFER;
+
+  @Param(value = {"1", "2", "4", "8" })
+  private int resourceMetricCount = 1;
+
+  @Param(value = {"1"})
+  private int instrumentationLibraryCount = 1;
+
+  @Param(value = {"1", "2", "4", "8" })
+  private int metricsCount = 1;
+
+  @Param(value = {"1", "2", "4", "8" })
+  private int dataPointCount;
 
   private static final long TIMESTAMP = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z").toEpochMilli());
 
@@ -68,10 +82,7 @@ public class OpenTelemetryBenchmark
           "",
           "resource.");
 
-  private static ByteBuffer createMetricBuffer(Integer resourceMetricCount,
-                                               Integer instrumentationLibraryCount,
-                                               Integer metricsCount,
-                                               Integer dataPointCount)
+  private ByteBuffer createMetricBuffer()
   {
     MetricsData.Builder metricsData = MetricsData.newBuilder();
     for (int i = 0; i < resourceMetricCount; i++) {
@@ -108,37 +119,16 @@ public class OpenTelemetryBenchmark
     return ByteBuffer.wrap(metricsData.build().toByteArray());
   }
 
+  @Setup
+  public void init()
+  {
+    BUFFER = createMetricBuffer();
+  }
+
   @Benchmark()
   public void measureSerde(Blackhole blackhole) throws IOException
   {
-    for (CloseableIterator<InputRow> it = INPUT_FORMAT.createReader(ROW_SCHEMA, new ByteEntity(SIMPLE_BUFFER), null).read(); it.hasNext(); ) {
-      InputRow row = it.next();
-      blackhole.consume(row);
-    }
-  }
-
-  @Benchmark()
-  public void measureSerde_multiDataPoint(Blackhole blackhole) throws IOException
-  {
-    for (CloseableIterator<InputRow> it = INPUT_FORMAT.createReader(ROW_SCHEMA, new ByteEntity(MULTI_DATAPOINT_BUFFER), null).read(); it.hasNext(); ) {
-      InputRow row = it.next();
-      blackhole.consume(row);
-    }
-  }
-
-  @Benchmark()
-  public void measureSerde_multiMetric(Blackhole blackhole) throws IOException
-  {
-    for (CloseableIterator<InputRow> it = INPUT_FORMAT.createReader(ROW_SCHEMA, new ByteEntity(MULTI_METRIC_BUFFER), null).read(); it.hasNext(); ) {
-      InputRow row = it.next();
-      blackhole.consume(row);
-    }
-  }
-
-  @Benchmark()
-  public void measureSerde_multiResource(Blackhole blackhole) throws IOException
-  {
-    for (CloseableIterator<InputRow> it = INPUT_FORMAT.createReader(ROW_SCHEMA, new ByteEntity(MULTI_RESOURCE_BUFFER), null).read(); it.hasNext(); ) {
+    for (CloseableIterator<InputRow> it = INPUT_FORMAT.createReader(ROW_SCHEMA, new ByteEntity(BUFFER), null).read(); it.hasNext(); ) {
       InputRow row = it.next();
       blackhole.consume(row);
     }
