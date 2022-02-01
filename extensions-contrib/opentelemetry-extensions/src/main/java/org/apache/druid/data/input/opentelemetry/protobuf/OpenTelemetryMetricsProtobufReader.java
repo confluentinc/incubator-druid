@@ -22,7 +22,6 @@ package org.apache.druid.data.input.opentelemetry.protobuf;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.opentelemetry.proto.metrics.v1.IntDataPoint;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
@@ -105,23 +104,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 
   private List<InputRow> parseMetric(Metric metric, Map<String, Object> resourceAttributes)
   {
-    List<InputRow> inputRows;
+    final List<InputRow> inputRows;
     String metricName = metric.getName();
     switch (metric.getDataCase()) {
-      case INT_SUM: {
-        inputRows = new ArrayList<>(metric.getIntSum().getDataPointsCount());
-        metric.getIntSum()
-            .getDataPointsList()
-            .forEach(dataPoint -> inputRows.add(parseIntDataPoint(dataPoint, resourceAttributes, metricName)));
-        break;
-      }
-      case INT_GAUGE: {
-        inputRows = new ArrayList<>(metric.getIntGauge().getDataPointsCount());
-        metric.getIntGauge()
-            .getDataPointsList()
-            .forEach(dataPoint -> inputRows.add(parseIntDataPoint(dataPoint, resourceAttributes, metricName)));
-        break;
-      }
       case SUM: {
         inputRows = new ArrayList<>(metric.getSum().getDataPointsCount());
         metric.getSum()
@@ -136,22 +121,11 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
             .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
         break;
       }
-      // TODO Support and SUMMARY metrics
+      // TODO Support HISTOGRAM and SUMMARY metrics
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
     return inputRows;
-  }
-
-  private InputRow parseIntDataPoint(IntDataPoint dataPoint, Map<String, Object> resourceAttributes, String metricName)
-  {
-    int capacity = resourceAttributes.size() + dataPoint.getLabelsCount() + 2;
-    Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-    event.put(metricDimension, metricName);
-    event.put(valueDimension, dataPoint.getValue());
-    event.putAll(resourceAttributes);
-    dataPoint.getLabelsList().forEach(label -> event.put(metricAttributePrefix + label.getKey(), label.getValue()));
-    return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
   private InputRow parseNumberDataPoint(NumberDataPoint dataPoint,
@@ -160,10 +134,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   {
 
     int capacity = resourceAttributes.size()
-            + (dataPoint.getAttributesList().isEmpty() ? dataPoint.getLabelsCount() : dataPoint.getAttributesCount())
+            + dataPoint.getAttributesCount()
             + 2; // metric name + value columns
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-
     event.put(metricDimension, metricName);
 
     if (dataPoint.hasAsInt()) {
@@ -175,20 +148,15 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     }
 
     event.putAll(resourceAttributes);
-
-    if (!dataPoint.getAttributesList().isEmpty()) {
-      dataPoint.getAttributesList()
-          .forEach(att -> event.put(metricAttributePrefix + att.getKey(), att.getValue().getStringValue()));
-    } else {
-      dataPoint.getLabelsList().forEach(label -> event.put(metricAttributePrefix + label.getKey(), label.getValue()));
-    }
+    dataPoint.getAttributesList().forEach(att -> event.put(metricAttributePrefix + att.getKey(),
+        att.getValue().getStringValue()));
 
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
   InputRow createRow(long timeUnixMilli, Map<String, Object> event)
   {
-    List<String> dimensions;
+    final List<String> dimensions;
     if (!dimensionsSpec.getDimensionNames().isEmpty()) {
       dimensions = dimensionsSpec.getDimensionNames();
     } else {

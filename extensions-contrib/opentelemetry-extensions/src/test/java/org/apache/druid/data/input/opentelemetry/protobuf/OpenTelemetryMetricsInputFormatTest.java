@@ -46,8 +46,8 @@ public class OpenTelemetryMetricsInputFormatTest
     Assert.assertEquals(inputFormat, actual);
     Assert.assertEquals("metric.name", actual.getMetricDimension());
     Assert.assertEquals("raw.value", actual.getValueDimension());
-    Assert.assertEquals("descriptor.", actual.getMetricLabelPrefix());
-    Assert.assertEquals("custom.", actual.getResourceLabelPrefix());
+    Assert.assertEquals("descriptor.", actual.getMetricAttributePrefix());
+    Assert.assertEquals("custom.", actual.getResourceAttributePrefix());
   }
 
   @Test
@@ -62,7 +62,7 @@ public class OpenTelemetryMetricsInputFormatTest
 
     Assert.assertEquals("metric", inputFormat.getMetricDimension());
     Assert.assertEquals("value", inputFormat.getValueDimension());
-    Assert.assertEquals("", inputFormat.getMetricLabelPrefix());
-    Assert.assertEquals("resource.", inputFormat.getResourceLabelPrefix());
+    Assert.assertEquals("", inputFormat.getMetricAttributePrefix());
+    Assert.assertEquals("resource.", inputFormat.getResourceAttributePrefix());
   }
 }

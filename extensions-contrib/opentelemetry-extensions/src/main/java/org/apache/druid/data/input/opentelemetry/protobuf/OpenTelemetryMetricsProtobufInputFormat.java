@@ -86,13 +86,13 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
   }
 
   @JsonProperty
-  public String getMetricLabelPrefix()
+  public String getMetricAttributePrefix()
   {
     return metricAttributePrefix;
   }
 
   @JsonProperty
-  public String getResourceLabelPrefix()
+  public String getResourceAttributePrefix()
   {
     return resourceAttributePrefix;
   }
