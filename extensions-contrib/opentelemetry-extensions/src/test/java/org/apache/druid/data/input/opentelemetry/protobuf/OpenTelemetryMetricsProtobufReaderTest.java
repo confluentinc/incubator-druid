@@ -112,7 +112,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
-            null,
+            "raw.value",
             "descriptor.",
             "custom."
     ).read();
@@ -126,6 +126,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
     assertDimensionEquals(row, "metric.name", "example_sum");
     assertDimensionEquals(row, "custom.country", "usa");
     assertDimensionEquals(row, "descriptor.color", "red");
+    assertDimensionEquals(row, "raw.value", "6");
   }
 
   @Test
@@ -146,7 +147,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
-            null,
+            "raw.value",
             "descriptor.",
             "custom."
     ).read();
@@ -158,6 +159,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
     assertDimensionEquals(row, "metric.name", "example_gauge");
     assertDimensionEquals(row, "custom.country", "usa");
     assertDimensionEquals(row, "descriptor.color", "red");
+    assertDimensionEquals(row, "raw.value", "6");
   }
 
   @Test
@@ -193,7 +195,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
     gaugeMetricBuilder.setName("example_gauge")
             .getGaugeBuilder()
             .addDataPointsBuilder()
-            .setAsInt(6)
+            .setAsInt(8)
             .setTimeUnixNano(TIMESTAMP)
             .addAttributesBuilder() // test sum with attributes
             .setKey(METRIC_ATTRIBUTE_FOO_KEY)
@@ -205,7 +207,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpec,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
-            null,
+            "raw.value",
             "descriptor.",
             "custom."
     ).read();
@@ -217,6 +219,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
     assertDimensionEquals(row, "metric.name", "example_sum");
     assertDimensionEquals(row, "custom.country", "usa");
     assertDimensionEquals(row, "descriptor.color", "red");
+    assertDimensionEquals(row, "raw.value", "6");
 
     Assert.assertTrue(rows.hasNext());
     row = rows.next();
@@ -224,6 +227,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
     assertDimensionEquals(row, "metric.name", "example_gauge");
     assertDimensionEquals(row, "custom.env", "devel");
     assertDimensionEquals(row, "descriptor.foo_key", "foo_value");
+    assertDimensionEquals(row, "raw.value", "8");
 
   }
 
@@ -251,7 +255,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
             dimensionsSpecWithExclusions,
             new ByteEntity(metricsData.toByteArray()),
             "metric.name",
-            null,
+            "raw.value",
             "descriptor.",
             "custom."
     ).read();
@@ -261,7 +265,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
 
     Assert.assertEquals(2, row.getDimensions().size());
     assertDimensionEquals(row, "metric.name", "example_gauge");
-
+    assertDimensionEquals(row, "raw.value", "6");
     Assert.assertFalse(row.getDimensions().contains("custom.country"));
     Assert.assertFalse(row.getDimensions().contains("descriptor.color"));
   }

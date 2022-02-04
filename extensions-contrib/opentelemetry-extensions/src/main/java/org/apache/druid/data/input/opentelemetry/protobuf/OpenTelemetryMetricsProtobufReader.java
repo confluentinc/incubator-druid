@@ -22,6 +22,7 @@ package org.apache.druid.data.input.opentelemetry.protobuf;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
@@ -92,7 +93,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
           Map<String, Object> resourceAttributes = resourceMetrics.getResource()
               .getAttributesList()
               .stream()
-              .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(), kv -> kv.getValue().getStringValue()));
+              .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(),
+                  kv -> getStringValue(kv.getValue())));
           return resourceMetrics.getInstrumentationLibraryMetricsList()
               .stream()
               .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
@@ -149,9 +151,16 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 
     event.putAll(resourceAttributes);
     dataPoint.getAttributesList().forEach(att -> event.put(metricAttributePrefix + att.getKey(),
-        att.getValue().getStringValue()));
+        getStringValue(att.getValue())));
 
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
+  }
+
+  private static String getStringValue(AnyValue value){
+    if (value.getValueCase() == AnyValue.ValueCase.STRING_VALUE) {
+      return value.getStringValue();
+    }
+    throw new IllegalStateException("Unexpected value: " + value.getValueCase());
   }
 
   InputRow createRow(long timeUnixMilli, Map<String, Object> event)
