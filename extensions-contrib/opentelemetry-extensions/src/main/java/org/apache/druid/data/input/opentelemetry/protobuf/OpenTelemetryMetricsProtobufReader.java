@@ -156,7 +156,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
-  private static String getStringValue(AnyValue value){
+  private static String getStringValue(AnyValue value)
+  {
     if (value.getValueCase() == AnyValue.ValueCase.STRING_VALUE) {
       return value.getStringValue();
     }
