@@ -61,14 +61,14 @@ public class OpenTelemetryMetricsProtobufReaderTest
   private final MetricsData.Builder metricsDataBuilder = MetricsData.newBuilder();
 
   private final Metric.Builder metricBuilder = metricsDataBuilder.addResourceMetricsBuilder()
-          .addInstrumentationLibraryMetricsBuilder()
-          .addMetricsBuilder();
+      .addInstrumentationLibraryMetricsBuilder()
+      .addMetricsBuilder();
 
   private final DimensionsSpec dimensionsSpec = new DimensionsSpec(ImmutableList.of(
-          new StringDimensionSchema("descriptor." + METRIC_ATTRIBUTE_COLOR),
-          new StringDimensionSchema("descriptor." + METRIC_ATTRIBUTE_FOO_KEY),
-          new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_ENV),
-          new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
+      new StringDimensionSchema("descriptor." + METRIC_ATTRIBUTE_COLOR),
+      new StringDimensionSchema("descriptor." + METRIC_ATTRIBUTE_FOO_KEY),
+      new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_ENV),
+      new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
 
   @Rule
@@ -78,18 +78,18 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public void setUp()
   {
     metricsDataBuilder
-            .getResourceMetricsBuilder(0)
-            .getResourceBuilder()
-            .addAttributes(KeyValue.newBuilder()
-                    .setKey(RESOURCE_ATTRIBUTE_COUNTRY)
-                    .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_USA)));
+        .getResourceMetricsBuilder(0)
+        .getResourceBuilder()
+        .addAttributes(KeyValue.newBuilder()
+            .setKey(RESOURCE_ATTRIBUTE_COUNTRY)
+            .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_USA)));
 
     metricsDataBuilder
-            .getResourceMetricsBuilder(0)
-            .getInstrumentationLibraryMetricsBuilder(0)
-            .getInstrumentationLibraryBuilder()
-            .setName(INSTRUMENTATION_LIBRARY_NAME)
-            .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
+        .getResourceMetricsBuilder(0)
+        .getInstrumentationLibraryMetricsBuilder(0)
+        .getInstrumentationLibraryBuilder()
+        .setName(INSTRUMENTATION_LIBRARY_NAME)
+        .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
 
   }
 
@@ -97,24 +97,24 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public void testSumWithAttributes()
   {
     metricBuilder
-            .setName("example_sum")
-            .getSumBuilder()
-            .addDataPointsBuilder()
-            .setAsInt(6)
-            .setTimeUnixNano(TIMESTAMP)
-            .addAttributesBuilder() // test sum with attributes
-            .setKey(METRIC_ATTRIBUTE_COLOR)
-            .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
+        .setName("example_sum")
+        .getSumBuilder()
+        .addDataPointsBuilder()
+        .setAsInt(6)
+        .setTimeUnixNano(TIMESTAMP)
+        .addAttributesBuilder() // test sum with attributes
+        .setKey(METRIC_ATTRIBUTE_COLOR)
+        .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
     MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
-            dimensionsSpec,
-            new ByteEntity(metricsData.toByteArray()),
-            "metric.name",
-            "raw.value",
-            "descriptor.",
-            "custom."
+        dimensionsSpec,
+        new ByteEntity(metricsData.toByteArray()),
+        "metric.name",
+        "raw.value",
+        "descriptor.",
+        "custom."
     ).read();
 
     List<InputRow> rowList = new ArrayList<>();
@@ -133,23 +133,23 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public void testGaugeWithAttributes()
   {
     metricBuilder.setName("example_gauge")
-            .getGaugeBuilder()
-            .addDataPointsBuilder()
-            .setAsInt(6)
-            .setTimeUnixNano(TIMESTAMP)
-            .addAttributesBuilder() // test sum with attributes
-            .setKey(METRIC_ATTRIBUTE_COLOR)
-            .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
+        .getGaugeBuilder()
+        .addDataPointsBuilder()
+        .setAsInt(6)
+        .setTimeUnixNano(TIMESTAMP)
+        .addAttributesBuilder() // test sum with attributes
+        .setKey(METRIC_ATTRIBUTE_COLOR)
+        .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
     MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
-            dimensionsSpec,
-            new ByteEntity(metricsData.toByteArray()),
-            "metric.name",
-            "raw.value",
-            "descriptor.",
-            "custom."
+        dimensionsSpec,
+        new ByteEntity(metricsData.toByteArray()),
+        "metric.name",
+        "raw.value",
+        "descriptor.",
+        "custom."
     ).read();
 
     Assert.assertTrue(rows.hasNext());
@@ -166,50 +166,50 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public void testBatchedMetricParse()
   {
     metricBuilder.setName("example_sum")
-            .getSumBuilder()
-            .addDataPointsBuilder()
-            .setAsInt(6)
-            .setTimeUnixNano(TIMESTAMP)
-            .addAttributesBuilder() // test sum with attributes
-            .setKey(METRIC_ATTRIBUTE_COLOR)
-            .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
+        .getSumBuilder()
+        .addDataPointsBuilder()
+        .setAsInt(6)
+        .setTimeUnixNano(TIMESTAMP)
+        .addAttributesBuilder() // test sum with attributes
+        .setKey(METRIC_ATTRIBUTE_COLOR)
+        .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
     // Create Second Metric
     Metric.Builder gaugeMetricBuilder = metricsDataBuilder.addResourceMetricsBuilder()
-            .addInstrumentationLibraryMetricsBuilder()
-            .addMetricsBuilder();
+        .addInstrumentationLibraryMetricsBuilder()
+        .addMetricsBuilder();
 
     metricsDataBuilder.getResourceMetricsBuilder(1)
-            .getResourceBuilder()
-            .addAttributes(KeyValue.newBuilder()
-                            .setKey(RESOURCE_ATTRIBUTE_ENV)
-                            .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_DEVEL))
-                            .build());
+        .getResourceBuilder()
+        .addAttributes(KeyValue.newBuilder()
+            .setKey(RESOURCE_ATTRIBUTE_ENV)
+            .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_DEVEL))
+            .build());
 
     metricsDataBuilder.getResourceMetricsBuilder(1)
-            .getInstrumentationLibraryMetricsBuilder(0)
-            .getInstrumentationLibraryBuilder()
-            .setName(INSTRUMENTATION_LIBRARY_NAME)
-            .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
+        .getInstrumentationLibraryMetricsBuilder(0)
+        .getInstrumentationLibraryBuilder()
+        .setName(INSTRUMENTATION_LIBRARY_NAME)
+        .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
 
     gaugeMetricBuilder.setName("example_gauge")
-            .getGaugeBuilder()
-            .addDataPointsBuilder()
-            .setAsInt(8)
-            .setTimeUnixNano(TIMESTAMP)
-            .addAttributesBuilder() // test sum with attributes
-            .setKey(METRIC_ATTRIBUTE_FOO_KEY)
-            .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_FOO_VAL).build());
+        .getGaugeBuilder()
+        .addDataPointsBuilder()
+        .setAsInt(8)
+        .setTimeUnixNano(TIMESTAMP)
+        .addAttributesBuilder() // test sum with attributes
+        .setKey(METRIC_ATTRIBUTE_FOO_KEY)
+        .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_FOO_VAL).build());
 
     MetricsData metricsData = metricsDataBuilder.build();
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
-            dimensionsSpec,
-            new ByteEntity(metricsData.toByteArray()),
-            "metric.name",
-            "raw.value",
-            "descriptor.",
-            "custom."
+        dimensionsSpec,
+        new ByteEntity(metricsData.toByteArray()),
+        "metric.name",
+        "raw.value",
+        "descriptor.",
+        "custom."
     ).read();
 
     Assert.assertTrue(rows.hasNext());
@@ -234,38 +234,50 @@ public class OpenTelemetryMetricsProtobufReaderTest
   @Test
   public void testDimensionSpecExclusions()
   {
+    metricsDataBuilder.getResourceMetricsBuilder(0)
+        .getResourceBuilder()
+        .addAttributesBuilder()
+        .setKey(RESOURCE_ATTRIBUTE_ENV)
+        .setValue(AnyValue.newBuilder().setStringValue(RESOURCE_ATTRIBUTE_VALUE_DEVEL).build());
+
     metricBuilder.setName("example_gauge")
-            .getGaugeBuilder()
-            .addDataPointsBuilder()
-            .setAsInt(6)
-            .setTimeUnixNano(TIMESTAMP)
-            .addAttributesBuilder() // test sum with attributes
-            .setKey(METRIC_ATTRIBUTE_COLOR)
-            .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
+        .getGaugeBuilder()
+        .addDataPointsBuilder()
+        .setAsInt(6)
+        .setTimeUnixNano(TIMESTAMP)
+        .addAllAttributes(ImmutableList.of(
+            KeyValue.newBuilder()
+                .setKey(METRIC_ATTRIBUTE_COLOR)
+                .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build()).build(),
+            KeyValue.newBuilder()
+                .setKey(METRIC_ATTRIBUTE_FOO_KEY)
+                .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_FOO_VAL).build()).build()));
 
     MetricsData metricsData = metricsDataBuilder.build();
 
     DimensionsSpec dimensionsSpecWithExclusions = new DimensionsSpec(null,
-            ImmutableList.of(
-                    "descriptor." + METRIC_ATTRIBUTE_COLOR,
-                    "custom." + RESOURCE_ATTRIBUTE_COUNTRY
-            ), null);
+        ImmutableList.of(
+            "descriptor." + METRIC_ATTRIBUTE_COLOR,
+            "custom." + RESOURCE_ATTRIBUTE_COUNTRY
+        ), null);
 
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
-            dimensionsSpecWithExclusions,
-            new ByteEntity(metricsData.toByteArray()),
-            "metric.name",
-            "raw.value",
-            "descriptor.",
-            "custom."
+        dimensionsSpecWithExclusions,
+        new ByteEntity(metricsData.toByteArray()),
+        "metric.name",
+        "raw.value",
+        "descriptor.",
+        "custom."
     ).read();
 
     Assert.assertTrue(rows.hasNext());
     InputRow row = rows.next();
 
-    Assert.assertEquals(2, row.getDimensions().size());
+    Assert.assertEquals(4, row.getDimensions().size());
     assertDimensionEquals(row, "metric.name", "example_gauge");
     assertDimensionEquals(row, "raw.value", "6");
+    assertDimensionEquals(row, "custom.env", "devel");
+    assertDimensionEquals(row, "descriptor.foo_key", "foo_value");
     Assert.assertFalse(row.getDimensions().contains("custom.country"));
     Assert.assertFalse(row.getDimensions().contains("descriptor.color"));
   }
