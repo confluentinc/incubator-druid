@@ -124,6 +124,11 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         break;
       }
       // TODO Support HISTOGRAM and SUMMARY metrics
+      case HISTOGRAM:
+      case SUMMARY: {
+        inputRows = new ArrayList<>();
+        break;
+      }
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
