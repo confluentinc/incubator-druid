@@ -29,9 +29,12 @@ import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.TimestampSpec;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.java.util.common.DateTimes;
+import org.apache.druid.java.util.common.Pair;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public class KafkaInputFormat implements InputFormat
@@ -46,28 +49,43 @@ public class KafkaInputFormat implements InputFormat
   // to avoid unnecessary parser barf out. Users in such situations can use the inputFormat's kafka record timestamp as its primary timestamp.
   private final TimestampSpec dummyTimestampSpec = new TimestampSpec(DEFAULT_AUTO_TIMESTAMP_STRING, "auto", DateTimes.EPOCH);
 
+  public static final Boolean DEFAULT_USE_HYBRID_FORMATS = Boolean.FALSE;
+  public static final KafkaHybridFormatsRule[] DEFAULT_KAFKA_HYBRID_FORMATS_RULES = null;
+
   private final KafkaHeaderFormat headerFormat;
-  private final InputFormat valueFormat;
+  private final InputFormat defaultValueFormat;
   private final InputFormat keyFormat;
   private final String headerColumnPrefix;
   private final String keyColumnName;
   private final String timestampColumnName;
+  private final Boolean usehybridFromats;
+  private final KafkaHybridFormatsRule[] kafkaHybridFormatsRules;
 
   public KafkaInputFormat(
       @JsonProperty("headerFormat") @Nullable KafkaHeaderFormat headerFormat,
       @JsonProperty("keyFormat") @Nullable InputFormat keyFormat,
-      @JsonProperty("valueFormat") InputFormat valueFormat,
+      @JsonProperty("valueFormat") InputFormat defaultValueFormat,
       @JsonProperty("headerColumnPrefix") @Nullable String headerColumnPrefix,
       @JsonProperty("keyColumnName") @Nullable String keyColumnName,
-      @JsonProperty("timestampColumnName") @Nullable String timestampColumnName
+      @JsonProperty("timestampColumnName") @Nullable String timestampColumnName,
+      @JsonProperty("useHybridFormats") @Nullable Boolean useHybridFromats,
+      @JsonProperty("HybridRules") @Nullable KafkaHybridFormatsRule[] kafkaHybridFormatsRules
   )
   {
     this.headerFormat = headerFormat;
     this.keyFormat = keyFormat;
-    this.valueFormat = Preconditions.checkNotNull(valueFormat, "valueFormat must not be null");
+    this.defaultValueFormat = Preconditions.checkNotNull(defaultValueFormat, "valueFormat must not be null");
     this.headerColumnPrefix = headerColumnPrefix != null ? headerColumnPrefix : DEFAULT_HEADER_COLUMN_PREFIX;
     this.keyColumnName = keyColumnName != null ? keyColumnName : DEFAULT_KEY_COLUMN_NAME;
     this.timestampColumnName = timestampColumnName != null ? timestampColumnName : DEFAULT_TIMESTAMP_COLUMN_NAME;
+    this.usehybridFromats = useHybridFromats != null ? useHybridFromats :
+      DEFAULT_USE_HYBRID_FORMATS;
+    if (this.usehybridFromats != null && this.usehybridFromats.booleanValue()) {
+      this.kafkaHybridFormatsRules = Preconditions.checkNotNull(kafkaHybridFormatsRules,
+        "kafkaHybridFormatsRules must not be null when useHybridFromats is true");
+    } else {
+      this.kafkaHybridFormatsRules = DEFAULT_KAFKA_HYBRID_FORMATS_RULES;
+    }
   }
 
   @Override
@@ -81,28 +99,59 @@ public class KafkaInputFormat implements InputFormat
   {
     KafkaRecordEntity record = (KafkaRecordEntity) source;
     InputRowSchema newInputRowSchema = new InputRowSchema(dummyTimestampSpec, inputRowSchema.getDimensionsSpec(), inputRowSchema.getMetricNames());
+    if (this.usehybridFromats && this.headerFormat != null && record.getRecord().value() != null) {
+      KafkaHeaderReader headerFormatReader = this.headerFormat.createReader(record.getRecord().headers(),
+          this.headerColumnPrefix);
+
+      List<Pair<String, Object>> headers = headerFormatReader.read();
+
+      for (KafkaHybridFormatsRule kafkaHybridFormatRule : kafkaHybridFormatsRules) {
+        if (kafkaHybridFormatRule.match(headers)) {
+          return new KafkaInputReader(
+            inputRowSchema,
+            record,
+            headerFormatReader,
+            (keyFormat == null || record.getRecord().key() == null) ?
+              null :
+              keyFormat.createReader(
+                newInputRowSchema,
+                new ByteEntity(record.getRecord().key()),
+                temporaryDirectory
+              ),
+              kafkaHybridFormatRule.getValueFormat().createReader(
+                newInputRowSchema,
+                source,
+                temporaryDirectory
+              ),
+            keyColumnName,
+            timestampColumnName
+          );
+        }
+      }
+    }
+
     return new KafkaInputReader(
-        inputRowSchema,
-        record,
-        (headerFormat == null) ?
-          null :
-          headerFormat.createReader(record.getRecord().headers(), headerColumnPrefix),
-        (keyFormat == null || record.getRecord().key() == null) ?
-          null :
-          keyFormat.createReader(
-                  newInputRowSchema,
-                  new ByteEntity(record.getRecord().key()),
-                  temporaryDirectory
-          ),
-        (record.getRecord().value() == null) ?
-          null :
-          valueFormat.createReader(
-                  newInputRowSchema,
-                  source,
-                  temporaryDirectory
-          ),
-        keyColumnName,
-        timestampColumnName
+      inputRowSchema,
+      record,
+      (headerFormat == null) ?
+        null :
+        headerFormat.createReader(record.getRecord().headers(), headerColumnPrefix),
+      (keyFormat == null || record.getRecord().key() == null) ?
+        null :
+        keyFormat.createReader(
+          newInputRowSchema,
+          new ByteEntity(record.getRecord().key()),
+          temporaryDirectory
+        ),
+      (record.getRecord().value() == null) ?
+        null :
+        defaultValueFormat.createReader(
+          newInputRowSchema,
+          source,
+          temporaryDirectory
+        ),
+      keyColumnName,
+      timestampColumnName
     );
   }
 
@@ -116,7 +165,7 @@ public class KafkaInputFormat implements InputFormat
   @JsonProperty
   public InputFormat getValueFormat()
   {
-    return valueFormat;
+    return defaultValueFormat;
   }
 
   @Nullable
@@ -158,18 +207,21 @@ public class KafkaInputFormat implements InputFormat
     }
     KafkaInputFormat that = (KafkaInputFormat) o;
     return Objects.equals(headerFormat, that.headerFormat)
-           && Objects.equals(valueFormat, that.valueFormat)
+           && Objects.equals(defaultValueFormat, that.defaultValueFormat)
            && Objects.equals(keyFormat, that.keyFormat)
            && Objects.equals(headerColumnPrefix, that.headerColumnPrefix)
            && Objects.equals(keyColumnName, that.keyColumnName)
-           && Objects.equals(timestampColumnName, that.timestampColumnName);
+           && Objects.equals(timestampColumnName, that.timestampColumnName)
+           && Objects.equals(usehybridFromats, that.usehybridFromats)
+           && Arrays.equals(kafkaHybridFormatsRules, that.kafkaHybridFormatsRules);
   }
 
   @Override
   public int hashCode()
   {
-    return Objects.hash(headerFormat, valueFormat, keyFormat,
-                        headerColumnPrefix, keyColumnName, timestampColumnName
+    return Objects.hash(headerFormat, defaultValueFormat, keyFormat,
+                        headerColumnPrefix, keyColumnName, timestampColumnName,
+                        usehybridFromats, kafkaHybridFormatsRules
     );
   }
 }
