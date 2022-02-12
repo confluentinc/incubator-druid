@@ -25,15 +25,26 @@ import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.impl.ByteEntity;
+import org.apache.druid.data.input.kafka.KafkaRecordEntity;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
 import org.apache.druid.java.util.common.StringUtils;
+import org.apache.druid.java.util.common.logger.Logger;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class OpenCensusProtobufInputFormat implements InputFormat
 {
   private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
+  private static final String DEFAULT_VALUE_DIMENSION = "value";
+
+  private static final byte[] V1 = "01".getBytes(StandardCharsets.UTF_8);
+  private static final Header HEADER_V1 = new RecordHeader("v", V1);
 
   private final String metricDimension;
   private final String metricLabelPrefix;
@@ -59,6 +70,17 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    KafkaRecordEntity kafkaInputEntity = (KafkaRecordEntity) source;
+    if (Arrays.asList(kafkaInputEntity.getRecord().headers().toArray()).contains(HEADER_V1)) {
+      return new OpenTelemetryMetricsProtobufReader(
+        inputRowSchema.getDimensionsSpec(),
+        (ByteEntity) source,
+        metricDimension,
+        DEFAULT_VALUE_DIMENSION,
+        metricLabelPrefix,
+        resourceLabelPrefix
+      );
+    }
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         (ByteEntity) source,
