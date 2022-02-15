@@ -35,6 +35,10 @@
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
+  <properties>
+    <opentelemetry.proto.version>0.11.0-alpha</opentelemetry.proto.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.opencensus</groupId>
@@ -74,6 +78,12 @@
           <artifactId>lz4</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry.proto</groupId>
+      <artifactId>opentelemetry-proto</artifactId>
+      <version>${opentelemetry.proto.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.druid.extensions.contrib</groupId>
