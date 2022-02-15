@@ -76,6 +76,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>io.opentelemetry.proto</groupId>
+      <artifactId>opentelemetry-proto</artifactId>
+      <version>${opentelemetry.proto.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.druid.extensions.contrib</groupId>
       <artifactId>druid-opentelemetry-extensions</artifactId>
       <version>${project.parent.version}</version>
