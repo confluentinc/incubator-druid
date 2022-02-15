@@ -44,7 +44,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,7 +88,11 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public static final long OFFSET = 13095752723L;
   public static final long TS = 1643974867555L;
   public static final TimestampType TSTYPE = TimestampType.CREATE_TIME;
-  private static final Header HEADERV1 = new RecordHeader("v", "01".getBytes(StandardCharsets.UTF_8));
+  public static final byte[] V0_HEADER_BYTES = ByteBuffer.allocate(Integer.BYTES)
+    .order(ByteOrder.LITTLE_ENDIAN)
+    .putInt(1)
+    .array();
+  private static final Header HEADERV1 = new RecordHeader("v", V0_HEADER_BYTES);
   private static final Headers HEADERS = new RecordHeaders(new Header[]{HEADERV1});
 
 

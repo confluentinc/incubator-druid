@@ -69,12 +69,12 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
-    try{
+    try {
       KafkaRecordEntity kafkaInputEntity = (KafkaRecordEntity) source;
       Header versionHeader = kafkaInputEntity.getRecord().headers().lastHeader(VERSION_HEADER_KEY);
       int version = 0;
       if (versionHeader != null) {
-        version =  ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        version = ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
       }
 
       if (version == 1) {
@@ -87,7 +87,8 @@ public class OpenCensusProtobufInputFormat implements InputFormat
           resourceLabelPrefix
         );
       }
-    } catch (ClassCastException e){
+    }
+    catch (ClassCastException e) {
       return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         (ByteEntity) source,
