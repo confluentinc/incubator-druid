@@ -25,15 +25,22 @@ import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.impl.ByteEntity;
+import org.apache.druid.data.input.kafka.KafkaRecordEntity;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
 import org.apache.druid.java.util.common.StringUtils;
+import org.apache.kafka.common.header.Header;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Objects;
 
 public class OpenCensusProtobufInputFormat implements InputFormat
 {
   private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
+  private static final String DEFAULT_VALUE_DIMENSION = "value";
+  private static final String VERSION_HEADER_KEY = "v";
 
   private final String metricDimension;
   private final String metricLabelPrefix;
@@ -59,6 +66,25 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    if (source instanceof KafkaRecordEntity) {
+      KafkaRecordEntity kafkaInputEntity = (KafkaRecordEntity) source;
+      Header versionHeader = kafkaInputEntity.getRecord().headers().lastHeader(VERSION_HEADER_KEY);
+      if (versionHeader != null) {
+        int version =
+          ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        if (version == 1) {
+          return new OpenTelemetryMetricsProtobufReader(
+            inputRowSchema.getDimensionsSpec(),
+            kafkaInputEntity,
+            metricDimension,
+            DEFAULT_VALUE_DIMENSION,
+            metricLabelPrefix,
+            resourceLabelPrefix
+          );
+        }
+      }
+    }
+
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         (ByteEntity) source,
