@@ -1272,7 +1272,6 @@
                 <groupId>io.opentelemetry.proto</groupId>
                 <artifactId>opentelemetry-proto</artifactId>
                 <version>${opentelemetry.proto.version}</version>
-                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

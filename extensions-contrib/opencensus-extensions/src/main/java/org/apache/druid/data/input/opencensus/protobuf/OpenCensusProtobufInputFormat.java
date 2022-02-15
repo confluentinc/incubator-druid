@@ -41,6 +41,7 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
   private static final String DEFAULT_VALUE_DIMENSION = "value";
   private static final String VERSION_HEADER_KEY = "v";
+  private static final int OPENTELEMETRY_FORMAT_VERSION = 1;
 
   private final String metricDimension;
   private final String metricLabelPrefix;
@@ -72,7 +73,7 @@ public class OpenCensusProtobufInputFormat implements InputFormat
       if (versionHeader != null) {
         int version =
           ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
-        if (version == 1) {
+        if (version == OPENTELEMETRY_FORMAT_VERSION) {
           return new OpenTelemetryMetricsProtobufReader(
             inputRowSchema.getDimensionsSpec(),
             kafkaInputEntity,
