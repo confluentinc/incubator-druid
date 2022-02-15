@@ -40,9 +40,6 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
   private static final String DEFAULT_VALUE_DIMENSION = "value";
-
-  // should be consistent with KafkaExporter.VERSION_HEADER_KEY
-  // https://github.com/confluentinc/ce-kafka/blob/248fc370221932ffbb1fd1ea3a19cf4425176277/ce-metrics/src/main/java/io/confluent/telemetry/exporter/kafka/KafkaExporter.java#L54
   private static final String VERSION_HEADER_KEY = "v";
 
   private final String metricDimension;
@@ -69,33 +66,23 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
-    try {
+    if (source instanceof KafkaRecordEntity) {
       KafkaRecordEntity kafkaInputEntity = (KafkaRecordEntity) source;
       Header versionHeader = kafkaInputEntity.getRecord().headers().lastHeader(VERSION_HEADER_KEY);
-      int version = 0;
       if (versionHeader != null) {
-        version = ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        int version =
+          ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        if (version == 1) {
+          return new OpenTelemetryMetricsProtobufReader(
+            inputRowSchema.getDimensionsSpec(),
+            kafkaInputEntity,
+            metricDimension,
+            DEFAULT_VALUE_DIMENSION,
+            metricLabelPrefix,
+            resourceLabelPrefix
+          );
+        }
       }
-
-      if (version == 1) {
-        return new OpenTelemetryMetricsProtobufReader(
-          inputRowSchema.getDimensionsSpec(),
-          (ByteEntity) source,
-          metricDimension,
-          DEFAULT_VALUE_DIMENSION,
-          metricLabelPrefix,
-          resourceLabelPrefix
-        );
-      }
-    }
-    catch (ClassCastException e) {
-      return new OpenCensusProtobufReader(
-        inputRowSchema.getDimensionsSpec(),
-        (ByteEntity) source,
-        metricDimension,
-        metricLabelPrefix,
-        resourceLabelPrefix
-      );
     }
 
     return new OpenCensusProtobufReader(
