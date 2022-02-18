@@ -30,6 +30,7 @@ import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsPr
 import org.apache.druid.java.util.common.StringUtils;
 import org.apache.kafka.common.header.Header;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -44,16 +45,19 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   private static final int OPENTELEMETRY_FORMAT_VERSION = 1;
 
   private final String metricDimension;
+  private final String valueDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
   public OpenCensusProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
+      @JsonProperty("valueDimension") @Nullable String valueDimension,
       @JsonProperty("metricLabelPrefix") String metricLabelPrefix,
       @JsonProperty("resourceLabelPrefix") String resourceLabelPrefix
   )
   {
     this.metricDimension = metricDimension != null ? metricDimension : DEFAULT_METRIC_DIMENSION;
+    this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
     this.metricLabelPrefix = StringUtils.nullToEmptyNonDruidDataString(metricLabelPrefix);
     this.resourceLabelPrefix = resourceLabelPrefix != null ? resourceLabelPrefix : DEFAULT_RESOURCE_PREFIX;
   }
@@ -72,13 +76,13 @@ public class OpenCensusProtobufInputFormat implements InputFormat
       Header versionHeader = kafkaInputEntity.getRecord().headers().lastHeader(VERSION_HEADER_KEY);
       if (versionHeader != null) {
         int version =
-          ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+            ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
           return new OpenTelemetryMetricsProtobufReader(
             inputRowSchema.getDimensionsSpec(),
             kafkaInputEntity,
             metricDimension,
-            DEFAULT_VALUE_DIMENSION,
+            valueDimension,
             metricLabelPrefix,
             resourceLabelPrefix
           );
