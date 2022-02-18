@@ -137,6 +137,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
          -1L, -1, -1, null, metricsData.toByteArray(), HEADERS);
     KafkaRecordEntity kafkaRecordEntity = new KafkaRecordEntity(consumerRecord);
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
+        null,
         "descriptor.",
         "custom.");
 
@@ -175,6 +176,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
         -1L, -1, -1, null, metricsData.toByteArray(), HEADERS);
     KafkaRecordEntity kafkaRecordEntity = new KafkaRecordEntity(consumerRecord);
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
+        null,
         "descriptor.",
         "custom.");
     CloseableIterator<InputRow> rows = inputFormat.createReader(new InputRowSchema(
@@ -237,6 +239,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
         -1L, -1, -1, null, metricsData.toByteArray(), HEADERS);
     KafkaRecordEntity kafkaRecordEntity = new KafkaRecordEntity(consumerRecord);
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
+        null,
          "descriptor.",
         "custom.");
 
@@ -299,6 +302,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
         -1L, -1, -1, null, metricsData.toByteArray(), HEADERS);
     KafkaRecordEntity kafkaRecordEntity = new KafkaRecordEntity(consumerRecord);
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
+        null,
         "descriptor.",
         "custom.");
 
