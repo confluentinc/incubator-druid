@@ -25,27 +25,39 @@ import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.impl.ByteEntity;
+import org.apache.druid.data.input.kafka.KafkaRecordEntity;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
 import org.apache.druid.java.util.common.StringUtils;
+import org.apache.kafka.common.header.Header;
 
+import javax.annotation.Nullable;
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Objects;
 
 public class OpenCensusProtobufInputFormat implements InputFormat
 {
   private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
+  private static final String DEFAULT_VALUE_DIMENSION = "value";
+  private static final String VERSION_HEADER_KEY = "v";
+  private static final int OPENTELEMETRY_FORMAT_VERSION = 1;
 
   private final String metricDimension;
+  private final String valueDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
   public OpenCensusProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
+      @JsonProperty("valueDimension") @Nullable String valueDimension,
       @JsonProperty("metricLabelPrefix") String metricLabelPrefix,
       @JsonProperty("resourceLabelPrefix") String resourceLabelPrefix
   )
   {
     this.metricDimension = metricDimension != null ? metricDimension : DEFAULT_METRIC_DIMENSION;
+    this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
     this.metricLabelPrefix = StringUtils.nullToEmptyNonDruidDataString(metricLabelPrefix);
     this.resourceLabelPrefix = resourceLabelPrefix != null ? resourceLabelPrefix : DEFAULT_RESOURCE_PREFIX;
   }
@@ -59,6 +71,25 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    if (source instanceof KafkaRecordEntity) {
+      KafkaRecordEntity kafkaInputEntity = (KafkaRecordEntity) source;
+      Header versionHeader = kafkaInputEntity.getRecord().headers().lastHeader(VERSION_HEADER_KEY);
+      if (versionHeader != null) {
+        int version =
+            ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        if (version == OPENTELEMETRY_FORMAT_VERSION) {
+          return new OpenTelemetryMetricsProtobufReader(
+            inputRowSchema.getDimensionsSpec(),
+            kafkaInputEntity,
+            metricDimension,
+            valueDimension,
+            metricLabelPrefix,
+            resourceLabelPrefix
+          );
+        }
+      }
+    }
+
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         (ByteEntity) source,
