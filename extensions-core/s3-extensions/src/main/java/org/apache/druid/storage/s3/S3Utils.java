@@ -66,6 +66,9 @@ public class S3Utils
         return false;
       } else if (e instanceof IOException) {
         return true;
+      } else if (e instanceof InterruptedException) {
+        Thread.interrupted(); // Clear interrupted state and not retry
+        return false;
       } else if (e instanceof AmazonClientException) {
         return AWSClientUtil.isClientExceptionRecoverable((AmazonClientException) e);
       } else {
@@ -267,7 +270,7 @@ public class S3Utils
       String bucket,
       String key,
       File file
-  )
+  ) throws InterruptedException
   {
     final PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, key, file);
 
@@ -275,6 +278,6 @@ public class S3Utils
       putObjectRequest.setAccessControlList(S3Utils.grantFullControlToBucketOwner(service, bucket));
     }
     log.info("Pushing [%s] to bucket[%s] and key[%s].", file, bucket, key);
-    service.putObject(putObjectRequest);
+    service.upload(putObjectRequest);
   }
 }
