@@ -34,6 +34,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
 import org.apache.druid.java.util.common.ISE;
 import org.apache.druid.java.util.common.StringUtils;
 
@@ -58,11 +61,21 @@ public class ServerSideEncryptingAmazonS3
 
   private final AmazonS3 amazonS3;
   private final ServerSideEncryption serverSideEncryption;
+  private final TransferManager transferManager;
 
-  public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption)
+  public ServerSideEncryptingAmazonS3(AmazonS3 amazonS3, ServerSideEncryption serverSideEncryption, S3TransferConfig transferConfig)
   {
     this.amazonS3 = amazonS3;
     this.serverSideEncryption = serverSideEncryption;
+    if (transferConfig.isUseTransferManager()) {
+      this.transferManager = TransferManagerBuilder.standard()
+          .withS3Client(amazonS3)
+          .withMinimumUploadPartSize(transferConfig.getMinimumUploadPartSize())
+          .withMultipartUploadThreshold(transferConfig.getMultipartUploadThreshold())
+          .build();
+    } else {
+      this.transferManager = null;
+    }
   }
 
   public boolean doesObjectExist(String bucket, String objectName)
@@ -134,10 +147,20 @@ public class ServerSideEncryptingAmazonS3
     amazonS3.deleteObjects(request);
   }
 
+  public void upload(PutObjectRequest request) throws InterruptedException
+  {
+    if (transferManager == null) {
+      putObject(request);
+    } else {
+      Upload transfer = transferManager.upload(serverSideEncryption.decorate(request));
+      transfer.waitForCompletion();
+    }
+  }
+
   public static class Builder
   {
     private AmazonS3ClientBuilder amazonS3ClientBuilder = AmazonS3Client.builder();
-    private S3StorageConfig s3StorageConfig = new S3StorageConfig(new NoopServerSideEncryption());
+    private S3StorageConfig s3StorageConfig = new S3StorageConfig(new NoopServerSideEncryption(), null);
 
     public Builder setAmazonS3ClientBuilder(AmazonS3ClientBuilder amazonS3ClientBuilder)
     {
@@ -170,7 +193,7 @@ public class ServerSideEncryptingAmazonS3
         throw new ISE("S3StorageConfig cannot be null!");
       }
 
-      return new ServerSideEncryptingAmazonS3(amazonS3ClientBuilder.build(), s3StorageConfig.getServerSideEncryption());
+      return new ServerSideEncryptingAmazonS3(amazonS3ClientBuilder.build(), s3StorageConfig.getServerSideEncryption(), s3StorageConfig.getS3TransferConfig());
     }
   }
 }
