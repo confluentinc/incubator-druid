@@ -96,13 +96,13 @@
         <jersey.version>1.19.3</jersey.version>
         <jackson.version>2.10.5.20201202</jackson.version>
         <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
-        <log4j.version>2.15.0</log4j.version>
+        <log4j.version>2.16.0</log4j.version>
         <mysql.version>5.1.48</mysql.version>
         <mariadb.version>2.7.3</mariadb.version>
         <netty3.version>3.10.6.Final</netty3.version>
         <netty4.version>4.1.68.Final</netty4.version>
         <postgresql.version>42.2.14</postgresql.version>
-        <protobuf.version>3.11.0</protobuf.version>
+        <protobuf.version>3.19.2</protobuf.version>
         <resilience4j.version>1.3.1</resilience4j.version>
         <slf4j.version>1.7.12</slf4j.version>
         <!-- If compiling with different hadoop version also modify default hadoop coordinates in TaskConfig.java -->
@@ -196,6 +196,10 @@
         <module>extensions-contrib/gce-extensions</module>
         <module>extensions-contrib/aliyun-oss-extensions</module>
         <module>extensions-contrib/prometheus-emitter</module>
+        <module>extensions-contrib/opencensus-extensions</module>
+        <module>extensions-contrib/confluent-extensions</module>
+        <module>extensions-contrib/opentelemetry-emitter</module>
+        <module>extensions-contrib/opentelemetry-extensions</module>
         <!-- distribution packaging -->
         <module>distribution</module>
     </modules>
@@ -1584,7 +1588,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>2.2</version>
+                    <version>3.2.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
