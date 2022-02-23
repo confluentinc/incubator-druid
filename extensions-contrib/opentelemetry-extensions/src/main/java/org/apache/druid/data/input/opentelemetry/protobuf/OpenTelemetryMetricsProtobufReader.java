@@ -37,6 +37,7 @@ import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -124,6 +125,11 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         break;
       }
       // TODO Support HISTOGRAM and SUMMARY metrics
+      case HISTOGRAM:
+      case SUMMARY: {
+        inputRows = Collections.emptyList();
+        break;
+      }
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
