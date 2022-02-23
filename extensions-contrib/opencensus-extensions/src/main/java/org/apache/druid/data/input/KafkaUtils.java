@@ -27,12 +27,12 @@ import java.util.Objects;
 public class KafkaUtils
 {
   /**
-   * Creates a MethodHandle that – when invoked on a KafkaInputEntity - returns the given header value
+   * Creates a MethodHandle that – when invoked on a KafkaRecordEntity - returns the given header value
    * for the underlying KafkaRecordEntity
    *
    * The method handle is roughly equivalent to the following function
    *
-   * (KafkaInputEntity input) -> {
+   * (KafkaRecordEntity input) -> {
    *   Header h = input.getRecord().headers().lastHeader(header)
    *   if (h != null) {
    *     return h.value();
