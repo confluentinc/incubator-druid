@@ -430,6 +430,12 @@
                                         <argument>org.apache.druid.extensions.contrib:gce-extensions</argument>
                                         <argument>-c</argument>
                                         <argument>org.apache.druid.extensions.contrib:aliyun-oss-extensions</argument>
+                                        <argument>-c</argument>
+                                        <argument>org.apache.druid.extensions.contrib:druid-opencensus-extensions</argument>
+                                        <argument>-c</argument>
+                                        <argument>io.confluent.druid.extensions:confluent-extensions</argument>
+                                        <argument>-c</argument>
+                                        <argument>org.apache.druid.extensions.contrib:opentelemetry-emitter</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -437,6 +443,73 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+          <id>docker</id>
+          <build>
+            <plugins>
+              <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>1.4.10</version>
+                <executions>
+                  <execution>
+                    <id>tag-latest</id>
+                    <goals>
+                      <goal>build</goal>
+                      <goal>tag</goal>
+                    </goals>
+                    <configuration>
+                      <repository>docker.io/apache/druid</repository>
+                      <tag>latest</tag>
+                      <dockerfile>docker/Dockerfile</dockerfile>
+                    </configuration>
+                  </execution>
+                  <execution>
+                    <id>tag-version</id>
+                    <goals>
+                      <goal>build</goal>
+                      <goal>tag</goal>
+                    </goals>
+                    <configuration>
+                      <repository>docker.io/apache/druid</repository>
+                      <tag>${project.version}</tag>
+                      <dockerfile>docker/Dockerfile</dockerfile>
+                    </configuration>
+                  </execution>
+                  <execution>
+                    <id>tag-latest-jdk11</id>
+                    <goals>
+                      <goal>build</goal>
+                      <goal>tag</goal>
+                    </goals>
+                    <configuration>
+                      <repository>docker.io/apache/druid</repository>
+                      <tag>latest-jdk11</tag>
+                      <dockerfile>docker/Dockerfile.java11</dockerfile>
+                    </configuration>
+                  </execution>
+                  <execution>
+                    <id>tag-version-jdk11</id>
+                    <goals>
+                      <goal>build</goal>
+                      <goal>tag</goal>
+                    </goals>
+                    <configuration>
+                      <repository>docker.io/apache/druid</repository>
+                      <tag>${project.version}-jdk11</tag>
+                      <dockerfile>docker/Dockerfile.java11</dockerfile>
+                    </configuration>
+                  </execution>
+                </executions>
+                <configuration>
+                  <buildArgs>
+                    <VERSION>${project.version}</VERSION>
+                  </buildArgs>
+                </configuration>
+              </plugin>
+            </plugins>
+          </build>
         </profile>
     </profiles>
 </project>
