@@ -24,14 +24,14 @@ import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
+import org.apache.druid.data.input.KafkaUtils;
 import org.apache.druid.data.input.impl.ByteEntity;
-import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
 import org.apache.druid.java.util.common.StringUtils;
-import org.apache.kafka.common.header.Header;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Objects;
@@ -48,6 +48,8 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   private final String valueDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
+
+  private volatile MethodHandle getHeaderMethod = null;
 
   public OpenCensusProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
@@ -71,24 +73,36 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
-    if (source instanceof KafkaRecordEntity) {
-      KafkaRecordEntity kafkaInputEntity = (KafkaRecordEntity) source;
-      Header versionHeader = kafkaInputEntity.getRecord().headers().lastHeader(VERSION_HEADER_KEY);
+    // assume InputEntity is always defined in a single classloader (the kafka-indexing-service classloader)
+    // so we only have to look it up once. To be completely correct we should cache the method based on classloader
+    if (getHeaderMethod == null) {
+      getHeaderMethod = KafkaUtils.lookupGetHeaderMethod(
+          source.getClass().getClassLoader(),
+          OpenCensusProtobufInputFormat.VERSION_HEADER_KEY
+      );
+    }
+
+    try {
+      byte[] versionHeader = (byte[]) getHeaderMethod.invoke(source);
       if (versionHeader != null) {
         int version =
-            ByteBuffer.wrap(versionHeader.value()).order(ByteOrder.LITTLE_ENDIAN).getInt();
+            ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
           return new OpenTelemetryMetricsProtobufReader(
-            inputRowSchema.getDimensionsSpec(),
-            kafkaInputEntity,
-            metricDimension,
-            valueDimension,
-            metricLabelPrefix,
-            resourceLabelPrefix
+              inputRowSchema.getDimensionsSpec(),
+              (ByteEntity) source,
+              metricDimension,
+              valueDimension,
+              metricLabelPrefix,
+              resourceLabelPrefix
           );
         }
       }
     }
+    catch (Throwable t) {
+      // assume input is opencensus if something went wrong
+    }
+
 
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
