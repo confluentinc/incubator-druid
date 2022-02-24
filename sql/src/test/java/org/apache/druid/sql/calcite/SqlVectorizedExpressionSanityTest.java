@@ -90,7 +90,7 @@ public class SqlVectorizedExpressionSanityTest extends InitializedNullHandlingTe
       "SELECT CONCAT(string1, '-', string2, '-', long1, '-', double1, '-', float1) FROM foo GROUP BY 1"
   );
 
-  private static final int ROWS_PER_SEGMENT = 100_000;
+  private static final int ROWS_PER_SEGMENT = 10_000;
 
   private static QueryableIndex INDEX;
   private static Closer CLOSER;
