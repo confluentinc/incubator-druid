@@ -17,6 +17,7 @@
 # under the License.
 #
 
+ARG JDK_VERSION=11
 FROM alpine as extractor
 
 ARG VERSION=
