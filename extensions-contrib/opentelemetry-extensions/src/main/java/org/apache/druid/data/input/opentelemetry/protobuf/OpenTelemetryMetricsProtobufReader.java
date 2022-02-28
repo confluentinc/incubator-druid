@@ -97,7 +97,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
               .getAttributesList()
               .stream()
               .collect(HashMap::new,
-                  (m, kv)->m.put(resourceAttributePrefix + kv.getKey(), parseAnyValue(kv.getValue())),
+                  (m, kv) -> m.put(resourceAttributePrefix + kv.getKey(), parseAnyValue(kv.getValue())),
                   HashMap::putAll);
           return resourceMetrics.getInstrumentationLibraryMetricsList()
               .stream()
@@ -145,8 +145,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   {
 
     int capacity = resourceAttributes.size()
-            + dataPoint.getAttributesCount()
-            + 2; // metric name + value columns
+        + dataPoint.getAttributesCount()
+        + 2; // metric name + value columns
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
     event.put(metricDimension, metricName);
 
