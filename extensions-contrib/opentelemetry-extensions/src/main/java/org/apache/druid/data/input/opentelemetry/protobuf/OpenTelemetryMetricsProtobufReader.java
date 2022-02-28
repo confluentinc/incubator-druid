@@ -36,8 +36,10 @@ import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -94,8 +96,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
           Map<String, Object> resourceAttributes = resourceMetrics.getResource()
               .getAttributesList()
               .stream()
-              .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(),
-                  kv -> parseAnyValue(kv.getValue())));
+              .collect(HashMap::new,
+                  (m, kv) -> m.put(resourceAttributePrefix + kv.getKey(), parseAnyValue(kv.getValue())),
+                  HashMap::putAll);
           return resourceMetrics.getInstrumentationLibraryMetricsList()
               .stream()
               .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
@@ -142,8 +145,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   {
 
     int capacity = resourceAttributes.size()
-            + dataPoint.getAttributesCount()
-            + 2; // metric name + value columns
+        + dataPoint.getAttributesCount()
+        + 2; // metric name + value columns
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
     event.put(metricDimension, metricName);
 
@@ -160,6 +163,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
+  @Nullable
   private static Object parseAnyValue(AnyValue value)
   {
     switch (value.getValueCase()) {
@@ -167,19 +171,15 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         return value.getIntValue();
       case BOOL_VALUE:
         return value.getBoolValue();
-      case ARRAY_VALUE:
-        return value.getArrayValue();
-      case BYTES_VALUE:
-        return value.getBytesValue();
       case DOUBLE_VALUE:
         return value.getDoubleValue();
-      case KVLIST_VALUE:
-        return value.getKvlistValue();
       case STRING_VALUE:
         return value.getStringValue();
+
+      // TODO: Support KVLIST_VALUE, ARRAY_VALUE and BYTES_VALUE
       default:
         // VALUE_NOT_SET:
-        return "";
+        return null;
     }
   }
 
