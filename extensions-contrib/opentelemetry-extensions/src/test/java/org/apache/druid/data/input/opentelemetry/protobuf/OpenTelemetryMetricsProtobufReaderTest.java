@@ -311,8 +311,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
                 .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build()).build(),
             KeyValue.newBuilder()
                 .setKey(METRIC_ATTRIBUTE_FOO_KEY)
-                .setValue(AnyValue.newBuilder().setKvlistValue(kvList).build()).build())
-        );
+                .setValue(AnyValue.newBuilder().setKvlistValue(kvList).build()).build()));
 
     MetricsData metricsData = metricsDataBuilder.build();
 
