@@ -36,7 +36,10 @@ import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -93,8 +96,14 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
           Map<String, Object> resourceAttributes = resourceMetrics.getResource()
               .getAttributesList()
               .stream()
-              .collect(Collectors.toMap(kv -> resourceAttributePrefix + kv.getKey(),
-                  kv -> getStringValue(kv.getValue())));
+              .collect(HashMap::new,
+                  (m, kv) -> {
+                    Object value = parseAnyValue(kv.getValue());
+                    if (value != null) {
+                      m.put(resourceAttributePrefix + kv.getKey(), value);
+                    }
+                  },
+                  HashMap::putAll);
           return resourceMetrics.getInstrumentationLibraryMetricsList()
               .stream()
               .flatMap(libraryMetrics -> libraryMetrics.getMetricsList()
@@ -124,6 +133,11 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         break;
       }
       // TODO Support HISTOGRAM and SUMMARY metrics
+      case HISTOGRAM:
+      case SUMMARY: {
+        inputRows = Collections.emptyList();
+        break;
+      }
       default:
         throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
     }
@@ -136,32 +150,47 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   {
 
     int capacity = resourceAttributes.size()
-            + dataPoint.getAttributesCount()
-            + 2; // metric name + value columns
+          + dataPoint.getAttributesCount()
+          + 2; // metric name + value columns
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
     event.put(metricDimension, metricName);
 
     if (dataPoint.hasAsInt()) {
       event.put(valueDimension, dataPoint.getAsInt());
-    } else if (dataPoint.hasAsDouble()) {
-      event.put(valueDimension, dataPoint.getAsDouble());
     } else {
-      throw new IllegalStateException("Unexpected dataPoint value type. Expected Int or Double");
+      event.put(valueDimension, dataPoint.getAsDouble());
     }
 
     event.putAll(resourceAttributes);
-    dataPoint.getAttributesList().forEach(att -> event.put(metricAttributePrefix + att.getKey(),
-        getStringValue(att.getValue())));
+    dataPoint.getAttributesList().forEach(att -> {
+      Object value = parseAnyValue(att.getValue());
+      if (value != null) {
+        event.put(metricAttributePrefix + att.getKey(), value);
+      }
+    });
 
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
-  private static String getStringValue(AnyValue value)
+  @Nullable
+  private static Object parseAnyValue(AnyValue value)
   {
-    if (value.getValueCase() == AnyValue.ValueCase.STRING_VALUE) {
-      return value.getStringValue();
+    switch (value.getValueCase()) {
+      case INT_VALUE:
+        return value.getIntValue();
+      case BOOL_VALUE:
+        return value.getBoolValue();
+      case DOUBLE_VALUE:
+        return value.getDoubleValue();
+      case STRING_VALUE:
+        return value.getStringValue();
+
+      // TODO: Support KVLIST_VALUE, ARRAY_VALUE and BYTES_VALUE
+
+      default:
+        // VALUE_NOT_SET
+        return null;
     }
-    throw new IllegalStateException("Unexpected value: " + value.getValueCase());
   }
 
   InputRow createRow(long timeUnixMilli, Map<String, Object> event)
