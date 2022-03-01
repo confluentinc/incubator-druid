@@ -97,7 +97,12 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
               .getAttributesList()
               .stream()
               .collect(HashMap::new,
-                  (m, kv) -> m.put(resourceAttributePrefix + kv.getKey(), parseAnyValue(kv.getValue())),
+                  (m, kv) -> {
+                    Object value = parseAnyValue(kv.getValue());
+                    if (value != null) {
+                      m.put(resourceAttributePrefix + kv.getKey(), value);
+                    }
+                  },
                   HashMap::putAll);
           return resourceMetrics.getInstrumentationLibraryMetricsList()
               .stream()
@@ -145,8 +150,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   {
 
     int capacity = resourceAttributes.size()
-        + dataPoint.getAttributesCount()
-        + 2; // metric name + value columns
+          + dataPoint.getAttributesCount()
+          + 2; // metric name + value columns
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
     event.put(metricDimension, metricName);
 
@@ -157,8 +162,12 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     }
 
     event.putAll(resourceAttributes);
-    dataPoint.getAttributesList().forEach(att -> event.put(metricAttributePrefix + att.getKey(),
-        parseAnyValue(att.getValue())));
+    dataPoint.getAttributesList().forEach(att -> {
+      Object value = parseAnyValue(att.getValue());
+      if (value != null) {
+        event.put(metricAttributePrefix + att.getKey(), value);
+      }
+    });
 
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
@@ -177,8 +186,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         return value.getStringValue();
 
       // TODO: Support KVLIST_VALUE, ARRAY_VALUE and BYTES_VALUE
+
       default:
-        // VALUE_NOT_SET:
+        // VALUE_NOT_SET
         return null;
     }
   }
