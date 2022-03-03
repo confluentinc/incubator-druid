@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { Alert, Button, ButtonGroup, Intent, Label, MenuItem } from '@blueprintjs/core';
+import { Alert, Button, ButtonGroup, Intent, Label, MenuItem, Switch } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 import React from 'react';
 import SplitterLayout from 'react-splitter-layout';
@@ -143,6 +143,8 @@ export interface IngestionViewState {
   supervisorTableActionDialogActions: BasicAction[];
   hiddenTaskColumns: LocalStorageBackedArray<string>;
   hiddenSupervisorColumns: LocalStorageBackedArray<string>;
+
+  shouldOptimizeQuery: boolean;
 }
 
 function statusToColor(status: string): string {
@@ -242,6 +244,8 @@ ORDER BY "rank" DESC, "created_time" DESC`;
       hiddenSupervisorColumns: new LocalStorageBackedArray<string>(
         LocalStorageKeys.SUPERVISOR_TABLE_COLUMN_SELECTION,
       ),
+
+      shouldOptimizeQuery: true,
     };
 
     this.supervisorQueryManager = new QueryManager({
@@ -278,24 +282,30 @@ ORDER BY "rank" DESC, "created_time" DESC`;
     });
 
     this.taskQueryManager = new QueryManager({
-      processQuery: async capabilities => {
-        if (capabilities.hasSql()) {
-          return await queryDruidSql({
-            query: IngestionView.TASK_SQL,
+        processQuery: async capabilities => {
+          if (this.state.shouldOptimizeQuery) {
+            if (capabilities.hasOverlordAccess()) {
+              const resp = await Api.instance.get(`/druid/indexer/v1/tasks`);
+              return IngestionView.parseTasks(resp.data);
+            } else {
+              throw new Error(`must have SQL or overlord access`);
+            }
+          } else {
+            if (capabilities.hasSql()) {
+              return await queryDruidSql({
+                query: IngestionView.TASK_SQL,
+              });
+            } else {
+              throw new Error(`must have SQL or overlord access`);
+            }
+          }
+        },
+        onStateChange: tasksState => {
+          this.setState({
+            tasksState,
           });
-        } else if (capabilities.hasOverlordAccess()) {
-          const resp = await Api.instance.get(`/druid/indexer/v1/tasks`);
-          return IngestionView.parseTasks(resp.data);
-        } else {
-          throw new Error(`must have SQL or overlord access`);
-        }
-      },
-      onStateChange: tasksState => {
-        this.setState({
-          tasksState,
-        });
-      },
-    });
+        },
+     });
   }
 
   static parseTasks = (data: any[]): TaskQueryResultRow[] => {
@@ -333,6 +343,13 @@ ORDER BY "rank" DESC, "created_time" DESC`;
     this.supervisorQueryManager.terminate();
     this.taskQueryManager.terminate();
   }
+
+  private handleOptimizeQuerySwitchChange = () => {
+      this.setState(state => ({
+        ...state,
+        shouldOptimizeQuery: !state.shouldOptimizeQuery,
+      }));
+    };
 
   private readonly closeSpecDialogs = () => {
     this.setState({
@@ -1137,6 +1154,12 @@ ORDER BY "rank" DESC, "created_time" DESC`;
               <RefreshButton
                 localStorageKey={LocalStorageKeys.TASKS_REFRESH_RATE}
                 onRefresh={auto => this.taskQueryManager.rerunLastQuery(auto)}
+              />
+              {/* Toggle switch to query overload or RDS(RDS network throughput increases 3X on firing the UI) */}
+              <Switch
+                label="Query(Overlord/RDS)"
+                checked={this.state.shouldOptimizeQuery}
+                onChange={this.handleOptimizeQuerySwitchChange}
               />
               {this.renderBulkTasksActions()}
               <TableColumnSelector
