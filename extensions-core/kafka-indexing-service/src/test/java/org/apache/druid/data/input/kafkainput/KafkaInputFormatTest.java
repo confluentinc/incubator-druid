@@ -24,9 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.druid.data.input.InputEntityReader;
+import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.MapBasedInputRow;
+import org.apache.druid.data.input.impl.CsvInputFormat;
 import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.JsonInputFormat;
 import org.apache.druid.data.input.impl.TimestampSpec;
@@ -78,34 +80,82 @@ public class KafkaInputFormatTest
         return "pkc-bar".getBytes(StandardCharsets.UTF_8);
       }
     });
+  private static final Iterable<Header> HEADER_V0 = ImmutableList.of(new Header() {
+      @Override
+      public String key()
+      {
+        return "v";
+      }
+      @Override
+      public byte[] value()
+      {
+        return "\u0000\u0000\u0000\u0000".getBytes(StandardCharsets.UTF_8);
+      }
+      });
+  private static final Iterable<Header> HEADER_V1 = ImmutableList.of(new Header() {
+    @Override
+    public String key()
+    {
+      return "v";
+    }
+    @Override
+    public byte[] value()
+    {
+      return "\u0000\u0000\u0000\u0000".getBytes(StandardCharsets.UTF_8);
+    }
+  });
   private KafkaInputFormat format;
+  private InputFormat simpleJsonInputFormat;
+  private InputFormat jsonInputFormat;
+  private InputFormat csvInputFormat;
+  private KafkaInputFormat hybridFormat;
+  private KafkaHybridFormatsRule rule1;
+  private KafkaHybridFormatsRule rule2;
+  private KafkaHybridFormatsRule[] rules;
 
   @Before
   public void setUp()
   {
+    simpleJsonInputFormat = new JsonInputFormat(
+      new JSONPathSpec(true, ImmutableList.of()),
+      null, null, false //make sure JsonReader is used,
+    );
+    jsonInputFormat = new JsonInputFormat(
+      new JSONPathSpec(
+        true,
+        ImmutableList.of(
+          new JSONPathFieldSpec(JSONPathFieldType.ROOT, "root_baz", "baz"),
+          new JSONPathFieldSpec(JSONPathFieldType.ROOT, "root_baz2", "baz2"),
+          new JSONPathFieldSpec(JSONPathFieldType.PATH, "path_omg", "$.o.mg"),
+          new JSONPathFieldSpec(JSONPathFieldType.PATH, "path_omg2", "$.o.mg2"),
+          new JSONPathFieldSpec(JSONPathFieldType.JQ, "jq_omg", ".o.mg"),
+          new JSONPathFieldSpec(JSONPathFieldType.JQ, "jq_omg2", ".o.mg2")
+        )
+      ),
+      null, null, false //make sure JsonReader is used
+    );
+    csvInputFormat = new CsvInputFormat(ImmutableList.of("t", "dim1", "dim2", "met1"), null, true,
+      false, 0);
     format = new KafkaInputFormat(
-        new KafkaStringHeaderFormat(null),
-        // Key Format
-        new JsonInputFormat(
-            new JSONPathSpec(true, ImmutableList.of()),
-            null, null, false //make sure JsonReader is used
-        ),
-        // Value Format
-        new JsonInputFormat(
-            new JSONPathSpec(
-                true,
-                ImmutableList.of(
-                    new JSONPathFieldSpec(JSONPathFieldType.ROOT, "root_baz", "baz"),
-                    new JSONPathFieldSpec(JSONPathFieldType.ROOT, "root_baz2", "baz2"),
-                    new JSONPathFieldSpec(JSONPathFieldType.PATH, "path_omg", "$.o.mg"),
-                    new JSONPathFieldSpec(JSONPathFieldType.PATH, "path_omg2", "$.o.mg2"),
-                    new JSONPathFieldSpec(JSONPathFieldType.JQ, "jq_omg", ".o.mg"),
-                    new JSONPathFieldSpec(JSONPathFieldType.JQ, "jq_omg2", ".o.mg2")
-                )
-            ),
-            null, null, false //make sure JsonReader is used
-        ),
-        "kafka.newheader.", "kafka.newkey.key", "kafka.newts.timestamp"
+      new KafkaStringHeaderFormat(null),
+      // Key Format
+      simpleJsonInputFormat,
+      // Value Format
+      jsonInputFormat,
+      "kafka.newheader.", "kafka.newkey.key", "kafka.newts.timestamp",
+      null, null
+    );
+    rule1 = new KafkaHybridFormatsRule("^([\\\\u00]+)$", csvInputFormat);
+    rule2 = new KafkaHybridFormatsRule("^([\\\\u01]+)$", jsonInputFormat);
+    rules = new KafkaHybridFormatsRule[]{rule1, rule2};
+    hybridFormat = new KafkaInputFormat(
+      new KafkaStringHeaderFormat(null),
+      // Key Format
+      simpleJsonInputFormat,
+      // Value Format
+      jsonInputFormat,
+      "kafka.newheader.", "kafka.newkey.key", "kafka.newts.timestamp",
+      Boolean.TRUE, rules
     );
   }
 
@@ -135,7 +185,7 @@ public class KafkaInputFormatTest
             ),
             null, null, false //make sure JsonReader is used
         ),
-        "kafka.newheader.", "kafka.newkey.key", "kafka.newts.timestamp"
+        "kafka.newheader.", "kafka.newkey.key", "kafka.newts.timestamp", null, null
     );
     Assert.assertEquals(format, kif);
 
@@ -406,7 +456,7 @@ public class KafkaInputFormatTest
             ),
             null, null, false //make sure JsonReader is used
         ),
-        "kafka.newheader.", "kafka.newkey.", "kafka.newts."
+        "kafka.newheader.", "kafka.newkey.", "kafka.newts.", null, null
     );
 
     final InputEntityReader reader = localFormat.createReader(
@@ -420,6 +470,83 @@ public class KafkaInputFormatTest
         ),
         inputEntity,
         null
+    );
+
+    final int numExpectedIterations = 1;
+    try (CloseableIterator<InputRow> iterator = reader.read()) {
+      int numActualIterations = 0;
+      while (iterator.hasNext()) {
+
+        final InputRow row = iterator.next();
+
+        // Key verification
+        Assert.assertTrue(row.getDimension("kafka.newkey.key").isEmpty());
+        Assert.assertEquals("x", Iterables.getOnlyElement(row.getDimension("foo")));
+        Assert.assertEquals("4", Iterables.getOnlyElement(row.getDimension("baz")));
+        Assert.assertEquals("4", Iterables.getOnlyElement(row.getDimension("root_baz")));
+        Assert.assertEquals("1", Iterables.getOnlyElement(row.getDimension("path_omg")));
+        Assert.assertEquals("1", Iterables.getOnlyElement(row.getDimension("jq_omg")));
+        numActualIterations++;
+      }
+
+      Assert.assertEquals(numExpectedIterations, numActualIterations);
+    }
+
+  }
+
+  @Test
+  public void testWithKakfaHybridFormatsRules() throws IOException
+  {
+    final byte[] payload = StringUtils.toUtf8(
+      "{\n"
+        + "    \"timestamp\": \"2021-06-24\",\n"
+        + "    \"bar\": null,\n"
+        + "    \"foo\": \"x\",\n"
+        + "    \"baz\": 4,\n"
+        + "    \"o\": {\n"
+        + "        \"mg\": 1\n"
+        + "    }\n"
+        + "}");
+
+    Headers headers = new RecordHeaders(HEADER_V1);
+    inputEntity = new KafkaRecordEntity(new ConsumerRecord<byte[], byte[]>(
+      "sample", 0, 0, timestamp,
+      null, null, 0, 0,
+      null, payload, headers));
+
+    KafkaInputFormat localFormat = new KafkaInputFormat(
+      null,
+      null,
+      // Value Format
+      new JsonInputFormat(
+        new JSONPathSpec(
+          true,
+          ImmutableList.of(
+            new JSONPathFieldSpec(JSONPathFieldType.ROOT, "root_baz", "baz"),
+            new JSONPathFieldSpec(JSONPathFieldType.ROOT, "root_baz2", "baz2"),
+            new JSONPathFieldSpec(JSONPathFieldType.PATH, "path_omg", "$.o.mg"),
+            new JSONPathFieldSpec(JSONPathFieldType.PATH, "path_omg2", "$.o.mg2"),
+            new JSONPathFieldSpec(JSONPathFieldType.JQ, "jq_omg", ".o.mg"),
+            new JSONPathFieldSpec(JSONPathFieldType.JQ, "jq_omg2", ".o.mg2")
+          )
+        ),
+        null, null, false //make sure JsonReader is used
+      ),
+      "kafka.newheader.", "kafka.newkey.", "kafka.newts.",
+      true, rules
+    );
+
+    final InputEntityReader reader = localFormat.createReader(
+      new InputRowSchema(
+        new TimestampSpec("timestamp", "iso", null),
+        new DimensionsSpec(DimensionsSpec.getDefaultSchemas(ImmutableList.of(
+          "bar", "foo",
+          "kafka.newts.timestamp"
+        ))),
+        Collections.emptyList()
+      ),
+      inputEntity,
+      null
     );
 
     final int numExpectedIterations = 1;
