@@ -75,6 +75,10 @@
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-context</artifactId>
     </dependency>
     <dependency>
@@ -161,6 +165,7 @@
         <configuration>
           <ignoredUnusedDeclaredDependencies>
             <!-- Transitive dependencies from opentelemetry but explicitly added to be shadowed -->
+            <ignoredUnusedDeclaredDependency>io.opentelemetry:opentelemetry-exporter-otlp</ignoredUnusedDeclaredDependency>
             <ignoredUnusedDeclaredDependency>io.grpc:grpc-netty-shaded</ignoredUnusedDeclaredDependency>
             <ignoredUnusedDeclaredDependency>com.google.guava:guava</ignoredUnusedDeclaredDependency>
           </ignoredUnusedDeclaredDependencies>
