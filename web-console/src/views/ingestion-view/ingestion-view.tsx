@@ -1136,6 +1136,7 @@ ORDER BY "rank" DESC, "created_time" DESC`;
               </ButtonGroup>
               <RefreshButton
                 localStorageKey={LocalStorageKeys.TASKS_REFRESH_RATE}
+                defaultDelay={0}
                 onRefresh={auto => this.taskQueryManager.rerunLastQuery(auto)}
               />
               {this.renderBulkTasksActions()}

@@ -34,14 +34,15 @@ const DELAYS: DelayLabel[] = [
 export interface RefreshButtonProps {
   onRefresh: (auto: boolean) => void;
   localStorageKey?: LocalStorageKeys;
+  defaultDelay?: number;
 }
 
 export const RefreshButton = React.memo(function RefreshButton(props: RefreshButtonProps) {
-  const { onRefresh, localStorageKey } = props;
+  const { onRefresh, localStorageKey, defaultDelay = 30000 } = props;
 
   return (
     <TimedButton
-      defaultDelay={30000}
+      defaultDelay={defaultDelay}
       label="Auto refresh every"
       delays={DELAYS}
       icon={IconNames.REFRESH}
