@@ -342,6 +342,7 @@ public class StreamAppenderatorDriver extends BaseAppenderatorDriver
             Execs.directExecutor(),
             () -> {
               log.debug("Segment[%s] successfully handed off, dropping.", segmentIdentifier);
+              log.info("LOKI: Segment[%s] successfully handed off, dropping.", segmentIdentifier);
               metrics.incrementHandOffCount();
 
               final ListenableFuture<?> dropFuture = appenderator.drop(segmentIdentifier);

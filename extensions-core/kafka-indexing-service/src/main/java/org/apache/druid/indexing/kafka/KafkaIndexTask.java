@@ -25,27 +25,36 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.indexing.common.task.TaskResource;
 import org.apache.druid.indexing.seekablestream.SeekableStreamIndexTask;
 import org.apache.druid.indexing.seekablestream.SeekableStreamIndexTaskRunner;
 import org.apache.druid.segment.indexing.DataSchema;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import org.joda.time.Interval;
 
 public class KafkaIndexTask extends SeekableStreamIndexTask<Integer, Long, KafkaRecordEntity>
 {
   private static final String TYPE = "index_kafka";
+  private static final Random RANDOM = ThreadLocalRandom.current();
 
   private final KafkaIndexTaskIOConfig ioConfig;
   private final ObjectMapper configMapper;
+  private final KafkaProducer<byte[], byte[]> segmentEmitter;
 
   // This value can be tuned in some tests
   private long pollRetryMs = 30000;
@@ -77,6 +86,15 @@ public class KafkaIndexTask extends SeekableStreamIndexTask<Integer, Long, Kafka
         ioConfig.getStartSequenceNumbers().getExclusivePartitions().isEmpty(),
         "All startSequenceNumbers must be inclusive"
     );
+
+    final Map<String, Object> props = new HashMap<>();
+    props.put("bootstrap.servers", this.ioConfig.getConsumerProperties().get("bootstrap.servers"));
+    props.put("key.serializer", ByteArraySerializer.class.getName());
+    props.put("value.serializer", ByteArraySerializer.class.getName());
+    props.put("acks", "all");
+    props.put("enable.idempotence", "true");
+    props.put("transactional.id", String.valueOf(RANDOM.nextInt()));
+    segmentEmitter = new KafkaProducer<>(props);
   }
 
   long getPollRetryMs()
@@ -182,5 +200,34 @@ public class KafkaIndexTask extends SeekableStreamIndexTask<Integer, Long, Kafka
   public boolean supportsQueries()
   {
     return true;
+  }
+
+  private static byte[] jb(String datasource, String interval, String partitionNumber, String version)
+  {
+    try {
+      return new ObjectMapper().writeValueAsBytes(
+          ImmutableMap.builder()
+                      .put("datasource", datasource)
+                      .put("interval", interval)
+                      .put("partitionNumber", partitionNumber)
+                      .put("version", version)
+                      .build()
+      );
+    }
+    catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private KafkaProducer<byte[], byte[]> getSegmentEmitter()
+  {
+    return segmentEmitter;
+  }
+
+  public void publishSegmentMetadata(String datasource, Interval interval, int partitionNumber, String version)
+  {
+    KafkaProducer<byte[], byte[]> producer = getSegmentEmitter();
+    ProducerRecord<byte[], byte[]> record = new ProducerRecord<>("test_topic", 0, null, jb(datasource, interval.toString(), String.valueOf(partitionNumber), version));
+    producer.send(record);
   }
 }
