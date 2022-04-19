@@ -80,7 +80,7 @@
             <artifactId>validation-api</artifactId>
         </dependency>
 
-        <!-- runtime -->
+        <!-- WebIdentityTokenProvider requires runtime dependency on aws-java-sdk-sts -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-sts</artifactId>
