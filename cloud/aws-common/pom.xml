@@ -80,6 +80,13 @@
             <artifactId>validation-api</artifactId>
         </dependency>
 
+        <!-- runtime -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sts</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>junit</groupId>
