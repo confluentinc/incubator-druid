@@ -34,8 +34,8 @@ import org.apache.druid.data.input.InputRowListPlusRawValues;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
+import org.apache.druid.java.util.common.parsers.ParseException;
 import org.apache.druid.utils.CollectionUtils;
 
 import java.time.Instant;
@@ -48,7 +48,6 @@ import java.util.Set;
 
 public class OpenCensusProtobufReader implements InputEntityReader
 {
-  private static final Logger log = new Logger(OpenCensusProtobufReader.class);
   private static final String SEPARATOR = "-";
   private static final String VALUE_COLUMN = "value";
 
@@ -124,8 +123,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
       return parseMetric(Metric.parseFrom(source.getBuffer()));
     }
     catch (InvalidProtocolBufferException e) {
-      log.error("Protobuf message could not be parsed. Skipping the message.");
-      return new ArrayList<>();
+      throw new ParseException(e, "Protobuf message could not be parsed");
     }
   }
 

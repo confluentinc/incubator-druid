@@ -32,8 +32,8 @@ import org.apache.druid.data.input.InputRowListPlusRawValues;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
+import org.apache.druid.java.util.common.parsers.ParseException;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 
 public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 {
-  private static final Logger log = new Logger(OpenTelemetryMetricsProtobufReader.class);
   private final ByteEntity source;
   private final String metricDimension;
   private final String valueDimension;
@@ -118,8 +117,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       return parseMetricsData(MetricsData.parseFrom(source.getBuffer()));
     }
     catch (InvalidProtocolBufferException e) {
-      log.error("Protobuf message could not be parsed. Skipping the message.");
-      return new ArrayList<>();
+      throw new ParseException(e, "Protobuf message could not be parsed");
     }
   }
 
