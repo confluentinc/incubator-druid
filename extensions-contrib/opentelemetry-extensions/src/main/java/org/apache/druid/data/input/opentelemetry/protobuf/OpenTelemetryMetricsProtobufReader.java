@@ -32,7 +32,6 @@ import org.apache.druid.data.input.InputRowListPlusRawValues;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 
@@ -40,6 +39,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -75,7 +75,41 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read()
   {
-    return CloseableIterators.withEmptyBaggage(readAsList().iterator());
+    return new CloseableIterator<InputRow>()
+    {
+      private boolean closed;
+      private Iterator<InputRow> metricIterator = null;
+
+      @Override
+      public boolean hasNext()
+      {
+        if (closed) {
+          return false;
+        }
+        if (metricIterator == null) {
+          readAsList().iterator();
+        }
+
+        return metricIterator.hasNext();
+      }
+
+      @Override
+      public InputRow next()
+      {
+        if (metricIterator == null) {
+          readAsList().iterator();
+        }
+        return metricIterator.next();
+      }
+
+      @Override
+      public void close()
+      {
+        if (!closed) {
+          closed = true;
+        }
+      }
+    };
   }
 
   List<InputRow> readAsList()
