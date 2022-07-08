@@ -73,7 +73,6 @@ public class OpenTelemetryMetricsProtobufReaderTest
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
 
-
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 

@@ -85,7 +85,6 @@ public class OpenCensusProtobufReaderTest
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
 
-
   public static final String TOPIC = "telemetry.metrics.otel";
   public static final int PARTITION = 2;
   public static final long OFFSET = 13095752723L;
