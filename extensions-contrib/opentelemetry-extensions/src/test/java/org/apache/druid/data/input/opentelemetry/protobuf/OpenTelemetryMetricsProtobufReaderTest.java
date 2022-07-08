@@ -36,7 +36,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -74,7 +73,6 @@ public class OpenTelemetryMetricsProtobufReaderTest
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
 
-  private OpenTelemetryMetricsProtobufReader reader;
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -349,12 +347,17 @@ public class OpenTelemetryMetricsProtobufReaderTest
 
   @Test
   public void testInvalidProtobuf() {
-    reader = Mockito.mock(OpenTelemetryMetricsProtobufReader.class);
-    Mockito.when(reader.readAsList()).thenThrow(new ParseException("Protobuf message could not be parsed"));
-    Mockito.when(reader.read()).thenCallRealMethod();
-
-    Assert.assertTrue(reader.read() instanceof CloseableIterator);
-    Assert.assertThrows(ParseException.class, () -> reader.read().hasNext());
+    byte[] invalidProtobuf = new byte[] { 0x00, 0x01 };
+    CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
+        dimensionsSpec,
+        new ByteEntity(invalidProtobuf),
+        "metric.name",
+        "raw.value",
+        "descriptor.",
+        "custom."
+    ).read();
+    Assert.assertThrows(ParseException.class, () -> rows.hasNext());
+    Assert.assertThrows(ParseException.class, () -> rows.next());
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)

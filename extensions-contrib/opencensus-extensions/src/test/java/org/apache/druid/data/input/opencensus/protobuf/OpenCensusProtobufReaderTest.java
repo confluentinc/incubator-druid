@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
 
 
 import java.io.IOException;
@@ -86,7 +85,6 @@ public class OpenCensusProtobufReaderTest
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
 
-  private OpenCensusProtobufReader reader;
 
   public static final String TOPIC = "telemetry.metrics.otel";
   public static final int PARTITION = 2;
@@ -331,13 +329,24 @@ public class OpenCensusProtobufReaderTest
   }
 
   @Test
-  public void testInvalidProtobuf() {
-    reader = Mockito.mock(OpenCensusProtobufReader.class);
-    Mockito.when(reader.readAsList()).thenThrow(new ParseException("Protobuf message could not be parsed"));
-    Mockito.when(reader.read()).thenCallRealMethod();
+  public void testInvalidProtobuf() throws IOException {
+    byte[] invalidProtobuf = new byte[] { 0x00, 0x01 };
+    ConsumerRecord consumerRecord = new ConsumerRecord(TOPIC, PARTITION, OFFSET, TS, TSTYPE,
+        -1L, -1, -1, null, invalidProtobuf, HEADERS);
+    KafkaRecordEntity kafkaRecordEntity = new KafkaRecordEntity(consumerRecord);
+    OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
+        null,
+         "descriptor.",
+        "custom.");
 
-    Assert.assertTrue(reader.read() instanceof CloseableIterator);
-    Assert.assertThrows(ParseException.class, () -> reader.read().hasNext());
+    CloseableIterator<InputRow> rows = inputFormat.createReader(new InputRowSchema(
+        new TimestampSpec("timestamp", "iso", null),
+        dimensionsSpec,
+        ColumnsFilter.all()
+    ), kafkaRecordEntity, null).read();
+
+    Assert.assertThrows(ParseException.class, () -> rows.hasNext());
+    Assert.assertThrows(ParseException.class, () -> rows.next());
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)

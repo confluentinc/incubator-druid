@@ -19,6 +19,8 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -32,6 +34,7 @@ import org.apache.druid.data.input.InputRowListPlusRawValues;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
+import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
@@ -74,41 +77,17 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read()
   {
-    return new CloseableIterator<InputRow>()
-    {
-      private boolean closed;
-      private Iterator<InputRow> metricIterator = null;
-
+    Supplier<Iterator<InputRow>> supplier = Suppliers.memoize(() -> readAsList().iterator());
+    return CloseableIterators.withEmptyBaggage(new Iterator<InputRow>() {
       @Override
-      public boolean hasNext() throws ParseException
-      {
-        if (closed) {
-          return false;
-        }
-        if (metricIterator == null) {
-          metricIterator = readAsList().iterator();
-        }
-
-        return metricIterator.hasNext();
+      public boolean hasNext() {
+        return supplier.get().hasNext();
       }
-
       @Override
-      public InputRow next() throws ParseException
-      {
-        if (metricIterator == null) {
-          metricIterator = readAsList().iterator();
-        }
-        return metricIterator.next();
+      public InputRow next() {
+        return supplier.get().next();
       }
-
-      @Override
-      public void close()
-      {
-        if (!closed) {
-          closed = true;
-        }
-      }
-    };
+    });
   }
 
   List<InputRow> readAsList()
