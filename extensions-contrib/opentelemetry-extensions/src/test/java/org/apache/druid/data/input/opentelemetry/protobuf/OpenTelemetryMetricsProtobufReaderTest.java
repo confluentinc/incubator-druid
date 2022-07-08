@@ -30,11 +30,13 @@ import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.StringDimensionSchema;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
+import org.apache.druid.java.util.common.parsers.ParseException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -71,6 +73,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_ENV),
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
+
+  private OpenTelemetryMetricsProtobufReader reader;
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -341,6 +345,16 @@ public class OpenTelemetryMetricsProtobufReaderTest
     Assert.assertEquals(0, row.getDimension("descriptor.foo_key").size());
 
     assertDimensionEquals(row, "raw.value", "6");
+  }
+
+  @Test
+  public void testInvalidProtobuf() {
+    reader = Mockito.mock(OpenTelemetryMetricsProtobufReader.class);
+    Mockito.when(reader.readAsList()).thenThrow(new ParseException("Protobuf message could not be parsed"));
+    Mockito.when(reader.read()).thenCallRealMethod();
+
+    Assert.assertTrue(reader.read() instanceof CloseableIterator);
+    Assert.assertThrows(ParseException.class, () -> reader.read().hasNext());
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)

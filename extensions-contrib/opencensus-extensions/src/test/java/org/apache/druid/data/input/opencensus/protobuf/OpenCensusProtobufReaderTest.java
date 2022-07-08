@@ -32,6 +32,7 @@ import org.apache.druid.data.input.impl.StringDimensionSchema;
 import org.apache.druid.data.input.impl.TimestampSpec;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
+import org.apache.druid.java.util.common.parsers.ParseException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
@@ -43,6 +44,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
+
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -52,7 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class OpenTelemetryMetricsProtobufReaderTest
+public class OpenCensusProtobufReaderTest
 {
   private static final long TIMESTAMP = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z").toEpochMilli());
   public static final String RESOURCE_ATTRIBUTE_COUNTRY = "country";
@@ -82,6 +85,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_ENV),
       new StringDimensionSchema("custom." + RESOURCE_ATTRIBUTE_COUNTRY)
   ), null, null);
+
+  private OpenCensusProtobufReader reader;
 
   public static final String TOPIC = "telemetry.metrics.otel";
   public static final int PARTITION = 2;
@@ -323,6 +328,16 @@ public class OpenTelemetryMetricsProtobufReaderTest
     assertDimensionEquals(row, "descriptor.foo_key", "foo_value");
     Assert.assertFalse(row.getDimensions().contains("custom.country"));
     Assert.assertFalse(row.getDimensions().contains("descriptor.color"));
+  }
+
+  @Test
+  public void testInvalidProtobuf() {
+    reader = Mockito.mock(OpenCensusProtobufReader.class);
+    Mockito.when(reader.readAsList()).thenThrow(new ParseException("Protobuf message could not be parsed"));
+    Mockito.when(reader.read()).thenCallRealMethod();
+
+    Assert.assertTrue(reader.read() instanceof CloseableIterator);
+    Assert.assertThrows(ParseException.class, () -> reader.read().hasNext());
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)

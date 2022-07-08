@@ -80,23 +80,23 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       private Iterator<InputRow> metricIterator = null;
 
       @Override
-      public boolean hasNext()
+      public boolean hasNext() throws ParseException
       {
         if (closed) {
           return false;
         }
         if (metricIterator == null) {
-          readAsList().iterator();
+          metricIterator = readAsList().iterator();
         }
 
         return metricIterator.hasNext();
       }
 
       @Override
-      public InputRow next()
+      public InputRow next() throws ParseException
       {
         if (metricIterator == null) {
-          readAsList().iterator();
+          metricIterator = readAsList().iterator();
         }
         return metricIterator.next();
       }
