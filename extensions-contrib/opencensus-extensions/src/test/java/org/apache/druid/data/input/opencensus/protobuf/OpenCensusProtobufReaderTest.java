@@ -334,7 +334,7 @@ public class OpenCensusProtobufReaderTest
     KafkaRecordEntity kafkaRecordEntity = new KafkaRecordEntity(consumerRecord);
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
         null,
-         "descriptor.",
+        "descriptor.",
         "custom.");
 
     CloseableIterator<InputRow> rows = inputFormat.createReader(new InputRowSchema(
