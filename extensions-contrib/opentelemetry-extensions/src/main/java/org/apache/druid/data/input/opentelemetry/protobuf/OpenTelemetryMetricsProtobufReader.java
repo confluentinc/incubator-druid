@@ -95,7 +95,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     try {
       return parseMetricsData(MetricsData.parseFrom(source.getBuffer()));
     }
-    catch (InvalidProtocolBufferException e) {
+    catch (InvalidProtocolBufferException | IllegalStateException e) {
       throw new ParseException(e, "Protobuf message could not be parsed");
     }
   }
