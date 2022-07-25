@@ -358,7 +358,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
     Assert.assertThrows(ParseException.class, () -> rows.hasNext());
     Assert.assertThrows(ParseException.class, () -> rows.next());
   }
-
+  
   @Test
   public void testInvalidMetricType() {
     metricBuilder
