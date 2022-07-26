@@ -378,8 +378,9 @@ public class OpenTelemetryMetricsProtobufReaderTest
         "custom."
     ).read();
 
-    Assert.assertThrows(ParseException.class, () -> rows.hasNext());
-    Assert.assertThrows(ParseException.class, () -> rows.next());
+    List<InputRow> rowList = new ArrayList<>();
+    rows.forEachRemaining(rowList::add);
+    Assert.assertEquals(0, rowList.size());
   }
 
   private void assertDimensionEquals(InputRow row, String dimension, Object expected)

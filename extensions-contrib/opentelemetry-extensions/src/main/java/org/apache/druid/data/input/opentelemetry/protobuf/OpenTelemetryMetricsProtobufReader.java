@@ -95,9 +95,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
     try {
       return parseMetricsData(MetricsData.parseFrom(source.getBuffer()));
     }
-    // Catch InvalidProtocolBufferException when probuf is not valid
-    // Catch IllegalStateException when protobuf is valid but metric type is invalid
-    catch (InvalidProtocolBufferException | IllegalStateException e) {
+    catch (InvalidProtocolBufferException e) {
       throw new ParseException(e, "Protobuf message could not be parsed");
     }
   }
@@ -148,12 +146,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       }
       // TODO Support HISTOGRAM and SUMMARY metrics
       case HISTOGRAM:
-      case SUMMARY: {
-        inputRows = Collections.emptyList();
-        break;
-      }
+      case SUMMARY:
       default:
-        throw new IllegalStateException("Unexpected value: " + metric.getDataCase());
+        inputRows = Collections.emptyList();
     }
     return inputRows;
   }
