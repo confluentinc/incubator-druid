@@ -406,7 +406,7 @@
                                         <argument>-c</argument>
                                         <argument>org.apache.druid.extensions.contrib:kafka-emitter</argument>
                                         <argument>-c</argument>
-                                        <argument>org.apache.druid.extensions.contrib:druid-kubernetes-middlemanager-extensions</argument>
+                                        <argument>org.apache.druid.extensions.contrib:druid-k8s-middlemanager-extension</argument>
                                         <argument>-c</argument>
                                         <argument>org.apache.druid.extensions.contrib:materialized-view-maintenance</argument>
                                         <argument>-c</argument>

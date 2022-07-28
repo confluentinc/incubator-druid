@@ -94,7 +94,7 @@ public class K8sForkingTaskRunnerTest extends EasyMockSupport
     ForkingTaskRunnerConfig forkingTaskRunnerConfig = jsonMapper.convertValue(ImmutableMap.of(
             "javaOpts", "a \"\"b",
             "classpath", "/aaa"), ForkingTaskRunnerConfig.class);
-    TaskConfig taskConfig = new TaskConfig("src/test/resources", "src/test/resources", null, null, null, false, null, null, null);
+    TaskConfig taskConfig = new TaskConfig("src/test/resources", "src/test/resources", null, null, null, false, null, null, null, false, false, TaskConfig.BATCH_PROCESSING_MODE_DEFAULT.name());
     WorkerConfig workerConfig = new WorkerConfig();
     Properties properties = new Properties();
     properties.putAll(ImmutableMap.of(

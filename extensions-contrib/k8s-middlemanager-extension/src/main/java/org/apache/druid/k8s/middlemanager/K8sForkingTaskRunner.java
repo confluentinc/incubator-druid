@@ -106,6 +106,7 @@ public class K8sForkingTaskRunner
   private static final String DRUID_INDEXER_DEFAULT_POD_MEMORY = "druid.indexer.default.pod.memory";
   private static final String DRUID_INDEXER_RUNNER_HOST_PATH = "druid.indexer.runner.hostPath";
   private static final String DRUID_INDEXER_RUNNER_MOUNT_PATH = "druid.indexer.runner.mountPath";
+  private static final String DRUID_PEON_POD_SPECIFICATIONS_FILE_PATH = "druid.peon.podspec.filePath";
   private static final String DRUID_PEON_JAVA_OPTS = "druid.peon.javaOpts";
   private static final String DRUID_PEON_POD_MEMORY = "druid.peon.pod.memory";
   private static final String DRUID_PEON_POD_CPU = "druid.peon.pod.cpu";
@@ -294,6 +295,9 @@ public class K8sForkingTaskRunner
                         String hostPath = props.getProperty(DRUID_INDEXER_RUNNER_HOST_PATH, "");
                         String mountPath = props.getProperty(DRUID_INDEXER_RUNNER_MOUNT_PATH, "");
 
+                        //pod spec path
+                        String podSpecPath = props.getProperty(DRUID_PEON_POD_SPECIFICATIONS_FILE_PATH, "");
+
                         for (String propName : props.stringPropertyNames()) {
                           for (String allowedPrefix : config.getAllowedPrefixes()) {
                             // See https://github.com/apache/druid/issues/1841
@@ -471,6 +475,7 @@ public class K8sForkingTaskRunner
                                 "Never",
                                 hostPath,
                                 mountPath,
+                                podSpecPath,
                                 serviceAccountName);
                         LOGGER.info("PeonPod created %s/%s", peonPod.getMetadata().getNamespace(), peonPod.getMetadata().getName());
 
@@ -542,7 +547,7 @@ public class K8sForkingTaskRunner
                         }
                       } else {
                         // Process exited unsuccessfully
-                        status = TaskStatus.failure(task.getId());
+                        status = TaskStatus.failure(task.getId(), "Task execution process exited unsuccessfully. See middleManager logs for more details.");
                       }
                       LOGGER.info("Current Task Status [%s]", status);
 
@@ -801,6 +806,8 @@ public class K8sForkingTaskRunner
     }).iterator();
     return Joiner.on(" ").join(maskedIterator);
   }
+
+
 
   @Override
   public long getTotalTaskSlotCount()

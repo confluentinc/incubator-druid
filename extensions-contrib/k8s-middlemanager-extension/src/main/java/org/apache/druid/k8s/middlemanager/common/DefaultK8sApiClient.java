@@ -27,21 +27,7 @@ import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1ConfigMap;
-import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
-import io.kubernetes.client.openapi.models.V1ConfigMapList;
-import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
-import io.kubernetes.client.openapi.models.V1ContainerPort;
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1EnvVarBuilder;
-import io.kubernetes.client.openapi.models.V1ObjectFieldSelector;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1OwnerReference;
-import io.kubernetes.client.openapi.models.V1OwnerReferenceBuilder;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.openapi.models.V1PodBuilder;
-import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Yaml;
 import io.kubernetes.client.util.generic.GenericKubernetesApi;
 import org.apache.druid.guice.annotations.Json;
@@ -125,7 +111,7 @@ public class DefaultK8sApiClient implements K8sApiClient
    * @return peon pod created. could be null is pod creation failed.
    */
   @Override
-  public V1Pod createPod(String taskID, String image, String namespace, Map<String, String> labels, Map<String, Quantity> resourceLimit, File taskDir, List<String> args, int childPort, int tlsChildPort, String tempLoc, String peonPodRestartPolicy, String hostPath, String mountPath, String serviceAccountName)
+  public V1Pod createPod(String taskID, String image, String namespace, Map<String, String> labels, Map<String, Quantity> resourceLimit, File taskDir, List<String> args, int childPort, int tlsChildPort, String tempLoc, String peonPodRestartPolicy, String hostPath, String mountPath, String podSpecPath, String serviceAccountName)
   {
     try {
       final String configMapVolumeName = "task-json-vol-tmp";
@@ -190,6 +176,15 @@ public class DefaultK8sApiClient implements K8sApiClient
               .withNewValue(tempLoc + "/task.json").build();
 
       V1Pod pod;
+      V1PodSpec v1PodSpec = new V1PodSpec();
+
+      if (!podSpecPath.isEmpty()) {
+        try {
+          v1PodSpec = Yaml.loadAs(new File(podSpecPath), V1PodSpec.class);
+        } catch (IOException e) {
+          LOGGER.error("Error in parsing pod spec file: [%s], error: [%s]", podSpecPath, e.getMessage());
+        }
+      }
 
       if (!mountPath.isEmpty() && !hostPath.isEmpty()) {
 
@@ -204,12 +199,12 @@ public class DefaultK8sApiClient implements K8sApiClient
                 .withName(taskID)
                 .withLabels(labels)
                 .endMetadata()
-                .withNewSpec()
-                .withNewSecurityContext()
-                .withFsGroup(0L)
-                .withRunAsGroup(0L)
-                .withRunAsUser(0L)
-                .endSecurityContext()
+                .withNewSpecLike(v1PodSpec)
+//                .withNewSecurityContext()
+//                .withFsGroup(0L)
+//                .withRunAsGroup(0L)
+//                .withRunAsUser(0L)
+//                .endSecurityContext()
                 .addNewVolume()
                 .withNewName(configMapVolumeName)
                 .withConfigMap(configMapVolume)
@@ -249,12 +244,12 @@ public class DefaultK8sApiClient implements K8sApiClient
                 .withName(taskID)
                 .withLabels(labels)
                 .endMetadata()
-                .withNewSpec()
-                .withNewSecurityContext()
-                .withFsGroup(0L)
-                .withRunAsGroup(0L)
-                .withRunAsUser(0L)
-                .endSecurityContext()
+                .withNewSpecLike(v1PodSpec)
+//                .withNewSecurityContext()
+//                .withFsGroup(0L)
+//                .withRunAsGroup(0L)
+//                .withRunAsUser(0L)
+//                .endSecurityContext()
                 .addNewVolume()
                 .withNewName(configMapVolumeName)
                 .withConfigMap(configMapVolume)
@@ -323,14 +318,14 @@ public class DefaultK8sApiClient implements K8sApiClient
     }
 
     String javaCommands = builder.toString().substring(0, builder.toString().length() - 1);
-    String reportFile = args.get(args.size() - 1);
-    String statusFile = args.get(args.size() - 2);
+    String reportFile = args.get(args.size() - 3);
+    String statusFile = args.get(args.size() - 4);
     final String postAction = ";cd `dirname " + reportFile
             + "`;kubectl cp report.json $MM_NAMESPACE/$MM_POD_NAME:" + reportFile
             + ";kubectl cp status.json $MM_NAMESPACE/$MM_POD_NAME:" + statusFile + ";";
 
     // prepare necessary files based on /druid.sh in dockerImage
-    final String prepareTaskFiles = "mkdir -p /tmp/conf/;test -d /tmp/conf/druid && rm -r /tmp/conf/druid;cp -r /opt/druid/conf/druid /tmp/conf/druid;mkdir -p $TASK_DIR; cp $TASK_JSON_TMP_LOCATION $TASK_DIR;";
+    final String prepareTaskFiles = "mkdir -p var/tmp var/druid/segments var/druid/indexing-logs var/druid/task var/druid/hadoop-tmp var/druid/segment-cache /tmp/conf/;test -d /tmp/conf/druid && rm -r /tmp/conf/druid;cp -r /opt/druid/conf/druid /tmp/conf/druid;mkdir -p $TASK_DIR; cp $TASK_JSON_TMP_LOCATION $TASK_DIR;";
     return prepareTaskFiles + javaCommands + postAction;
   }
 

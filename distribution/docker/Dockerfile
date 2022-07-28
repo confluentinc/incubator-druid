@@ -18,15 +18,30 @@
 #
 
 ARG JDK_VERSION=8
-FROM alpine as extractor
+FROM maven:3.8.1-jdk-11-slim as builder
+# Rebuild from source in this stage
+# This can be unset if the tarball was already built outside of Docker
+ARG BUILD_FROM_SOURCE="true"
 
-ARG VERSION=
+RUN export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -qq update \
+    && apt-get -qq -y install --no-install-recommends python3 python3-yaml
 
+COPY . /src
 WORKDIR /src
-COPY ./target/apache-druid-${VERSION}-bin.tar.gz .
+RUN if [ "$BUILD_FROM_SOURCE" = "true" ]; then \
+      mvn -B -ff -q dependency:go-offline \
+      install \
+      -Pdist,bundle-contrib-exts \
+      -Pskip-static-checks,skip-tests \
+      -Dmaven.javadoc.skip=true \
+      ; fi
 
-RUN tar -zxf /src/apache-druid-${VERSION}-bin.tar.gz -C /opt \
- && ln -s /opt/apache-druid-${VERSION} /opt/druid
+RUN VERSION=$(mvn -B -q org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate \
+      -Dexpression=project.version -DforceStdout=true \
+    ) \
+ && tar -zxf ./distribution/target/apache-druid-${VERSION}-bin.tar.gz -C /opt \
+ && mv /opt/apache-druid-${VERSION} /opt/druid
 
 FROM amd64/busybox:1.30.0-glibc as busybox
 
@@ -39,15 +54,16 @@ RUN ["/busybox/busybox", "--install", "/bin"]
 RUN addgroup -S -g 1000 druid \
  && adduser -S -u 1000 -D -H -h /opt/druid -s /bin/sh -g '' -G druid druid
 
-COPY --chown=druid:druid --from=extractor /opt /opt
-COPY ./docker/druid.sh /druid.sh
+COPY --chown=druid:druid --from=builder /opt /opt
+COPY distribution/docker/druid.sh /druid.sh
 
 # create necessary directories which could be mounted as volume
 #   /opt/druid/var is used to keep individual files(e.g. log) of each Druid service
 #   /opt/shared is used to keep segments and task logs shared among Druid services
 RUN mkdir /opt/druid/var /opt/shared \
  && chown druid:druid /opt/druid/var /opt/shared \
- && chmod 775 /opt/druid/var /opt/shared
+ && chmod 775 /opt/druid/var /opt/shared \
+ && wget -P /usr/bin https://storage.googleapis.com/kubernetes-release/release/v1.18.1/bin/linux/amd64/kubectl && chmod +x /usr/bin/kubectl
 
 USER druid
 VOLUME /opt/druid/var
