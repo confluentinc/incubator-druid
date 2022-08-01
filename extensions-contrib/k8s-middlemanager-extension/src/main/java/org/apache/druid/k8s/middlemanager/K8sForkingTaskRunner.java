@@ -299,9 +299,6 @@ public class K8sForkingTaskRunner
                         String hostPath = props.getProperty(DRUID_INDEXER_RUNNER_HOST_PATH, "");
                         String mountPath = props.getProperty(DRUID_INDEXER_RUNNER_MOUNT_PATH, "");
 
-                        //pod spec path
-//                        String podSpecPath = props.getProperty(DRUID_PEON_POD_SPECIFICATIONS_FILE_PATH, "");
-
                         for (String propName : props.stringPropertyNames()) {
                           for (String allowedPrefix : config.getAllowedPrefixes()) {
                             // See https://github.com/apache/druid/issues/1841
