@@ -22,6 +22,7 @@ package org.apache.druid.k8s.middlemanager.common;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodSpec;
 
 import java.io.File;
 import java.io.InputStream;
@@ -46,7 +47,7 @@ public interface K8sApiClient
                   String peonPodRestartPolicy,
                   String hostPath,
                   String mountPath,
-                  String podSpecPath,
+                  V1PodSpec podSpec,
                   String serviceAccountName);
   V1ConfigMap createConfigMap(String namespace, String configmapName, Map<String, String> labels, Map<String, String> data);
   Boolean configMapIsExist(String namespace, String labels);

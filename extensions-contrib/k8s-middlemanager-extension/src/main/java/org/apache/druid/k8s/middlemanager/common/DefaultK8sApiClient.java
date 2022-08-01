@@ -21,11 +21,13 @@ package org.apache.druid.k8s.middlemanager.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import io.kubernetes.client.PodLogs;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.JSON;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Yaml;
@@ -51,6 +53,8 @@ public class DefaultK8sApiClient implements K8sApiClient
   private final ApiClient realK8sClient;
   private CoreV1Api coreV1Api;
   private final ObjectMapper jsonMapper;
+
+  private final Gson gson;
   private GenericKubernetesApi<V1Pod, V1PodList> podClient;
   private PodLogs logs;
   private String podName;
@@ -64,6 +68,7 @@ public class DefaultK8sApiClient implements K8sApiClient
     this.jsonMapper = jsonMapper;
     this.podClient = new GenericKubernetesApi<>(V1Pod.class, V1PodList.class, "", "v1", "pods", realK8sClient);
     this.logs = new PodLogs(realK8sClient);
+    this.gson = new Gson();
     this.podName = System.getenv("POD_NAME");
     this.podUID = System.getenv("POD_UID");
   }
@@ -111,7 +116,7 @@ public class DefaultK8sApiClient implements K8sApiClient
    * @return peon pod created. could be null is pod creation failed.
    */
   @Override
-  public V1Pod createPod(String taskID, String image, String namespace, Map<String, String> labels, Map<String, Quantity> resourceLimit, File taskDir, List<String> args, int childPort, int tlsChildPort, String tempLoc, String peonPodRestartPolicy, String hostPath, String mountPath, String podSpecPath, String serviceAccountName)
+  public V1Pod createPod(String taskID, String image, String namespace, Map<String, String> labels, Map<String, Quantity> resourceLimit, File taskDir, List<String> args, int childPort, int tlsChildPort, String tempLoc, String peonPodRestartPolicy, String hostPath, String mountPath, V1PodSpec podSpec, String serviceAccountName)
   {
     try {
       final String configMapVolumeName = "task-json-vol-tmp";
@@ -176,15 +181,6 @@ public class DefaultK8sApiClient implements K8sApiClient
               .withNewValue(tempLoc + "/task.json").build();
 
       V1Pod pod;
-      V1PodSpec v1PodSpec = new V1PodSpec();
-
-      if (!podSpecPath.isEmpty()) {
-        try {
-          v1PodSpec = Yaml.loadAs(new File(podSpecPath), V1PodSpec.class);
-        } catch (IOException e) {
-          LOGGER.error("Error in parsing pod spec file: [%s], error: [%s]", podSpecPath, e.getMessage());
-        }
-      }
 
       if (!mountPath.isEmpty() && !hostPath.isEmpty()) {
 
@@ -199,12 +195,7 @@ public class DefaultK8sApiClient implements K8sApiClient
                 .withName(taskID)
                 .withLabels(labels)
                 .endMetadata()
-                .withNewSpecLike(v1PodSpec)
-//                .withNewSecurityContext()
-//                .withFsGroup(0L)
-//                .withRunAsGroup(0L)
-//                .withRunAsUser(0L)
-//                .endSecurityContext()
+                .withNewSpecLike(podSpec)
                 .addNewVolume()
                 .withNewName(configMapVolumeName)
                 .withConfigMap(configMapVolume)
@@ -244,12 +235,7 @@ public class DefaultK8sApiClient implements K8sApiClient
                 .withName(taskID)
                 .withLabels(labels)
                 .endMetadata()
-                .withNewSpecLike(v1PodSpec)
-//                .withNewSecurityContext()
-//                .withFsGroup(0L)
-//                .withRunAsGroup(0L)
-//                .withRunAsUser(0L)
-//                .endSecurityContext()
+                .withNewSpecLike(podSpec)
                 .addNewVolume()
                 .withNewName(configMapVolumeName)
                 .withConfigMap(configMapVolume)

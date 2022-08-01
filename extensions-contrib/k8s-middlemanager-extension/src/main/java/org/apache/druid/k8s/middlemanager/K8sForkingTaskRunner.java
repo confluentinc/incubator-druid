@@ -40,6 +40,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodSpec;
 import org.apache.druid.guice.annotations.Self;
 import org.apache.druid.indexer.RunnerTaskState;
 import org.apache.druid.indexer.TaskLocation;
@@ -106,10 +107,10 @@ public class K8sForkingTaskRunner
   private static final String DRUID_INDEXER_DEFAULT_POD_MEMORY = "druid.indexer.default.pod.memory";
   private static final String DRUID_INDEXER_RUNNER_HOST_PATH = "druid.indexer.runner.hostPath";
   private static final String DRUID_INDEXER_RUNNER_MOUNT_PATH = "druid.indexer.runner.mountPath";
-  private static final String DRUID_PEON_POD_SPECIFICATIONS_FILE_PATH = "druid.peon.podspec.filePath";
   private static final String DRUID_PEON_JAVA_OPTS = "druid.peon.javaOpts";
   private static final String DRUID_PEON_POD_MEMORY = "druid.peon.pod.memory";
   private static final String DRUID_PEON_POD_CPU = "druid.peon.pod.cpu";
+  private static final String DRUID_PEON_POD_SPEC = "druid.peon.pod.spec";
   private static final String LABEL_KEY = "druid.ingest.task.id";
   private final ForkingTaskRunnerConfig config;
   private final Properties props;
@@ -126,6 +127,8 @@ public class K8sForkingTaskRunner
   private final String defaultPodCPU;
   private final String defaultPodMemory;
   private final String serviceAccountName;
+
+  private final ObjectMapper objectMapper;
 
   @Inject
   public K8sForkingTaskRunner(
@@ -156,6 +159,7 @@ public class K8sForkingTaskRunner
     this.serviceAccountName = props.getProperty(DRUID_INDEXER_SERVICE_ACCOUNT_NAME, "default");
     this.defaultPodCPU = props.getProperty(DRUID_INDEXER_DEFAULT_POD_CPU, "1");
     this.defaultPodMemory = props.getProperty(DRUID_INDEXER_DEFAULT_POD_MEMORY, "2G");
+    this.objectMapper = new ObjectMapper();
 
     assert image != null;
   }
@@ -296,7 +300,7 @@ public class K8sForkingTaskRunner
                         String mountPath = props.getProperty(DRUID_INDEXER_RUNNER_MOUNT_PATH, "");
 
                         //pod spec path
-                        String podSpecPath = props.getProperty(DRUID_PEON_POD_SPECIFICATIONS_FILE_PATH, "");
+//                        String podSpecPath = props.getProperty(DRUID_PEON_POD_SPECIFICATIONS_FILE_PATH, "");
 
                         for (String propName : props.stringPropertyNames()) {
                           for (String allowedPrefix : config.getAllowedPrefixes()) {
@@ -452,8 +456,21 @@ public class K8sForkingTaskRunner
 
                         String cpu = defaultPodCPU;
                         String memory = defaultPodMemory;
+                        V1PodSpec v1PodSpec;
                         String cpuFromContext = task.getContextValue(DRUID_PEON_POD_CPU, "");
                         String memoryFromContext = task.getContextValue(DRUID_PEON_POD_MEMORY, "");
+                        if(task.getContextValue(DRUID_PEON_POD_SPEC) != null) {
+                          try {
+                            v1PodSpec = objectMapper.convertValue(task.getContextValue(DRUID_PEON_POD_SPEC), V1PodSpec.class);
+                          }
+                          catch (Exception e) {
+                            v1PodSpec = new V1PodSpec();
+                            LOGGER.error("Error in parsing pod spec : %s", e.getMessage());
+                          }
+                        }
+                        else {
+                          v1PodSpec = new V1PodSpec();
+                        }
 
                         if (!cpuFromContext.isEmpty()) {
                           cpu = cpuFromContext;
@@ -475,7 +492,7 @@ public class K8sForkingTaskRunner
                                 "Never",
                                 hostPath,
                                 mountPath,
-                                podSpecPath,
+                                v1PodSpec,
                                 serviceAccountName);
                         LOGGER.info("PeonPod created %s/%s", peonPod.getMetadata().getNamespace(), peonPod.getMetadata().getName());
 
