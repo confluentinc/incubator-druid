@@ -88,7 +88,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
         return supplier.get().hasNext();
       }
       @Override
-      public InputRow next() {
+      public InputRow next()
+      {
         return supplier.get().next();
       }
     });

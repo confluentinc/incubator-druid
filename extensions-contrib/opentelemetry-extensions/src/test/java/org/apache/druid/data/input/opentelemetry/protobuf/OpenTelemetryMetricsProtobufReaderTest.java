@@ -347,7 +347,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
   @Test
   public void testInvalidProtobuf()
   {
-    byte[] invalidProtobuf = new byte[] { 0x00, 0x01 };
+    byte[] invalidProtobuf = new byte[] {0x00, 0x01};
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
         dimensionsSpec,
         new ByteEntity(invalidProtobuf),

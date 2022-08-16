@@ -456,7 +456,7 @@ public class K8sForkingTaskRunner
                         V1PodSpec v1PodSpec;
                         String cpuFromContext = task.getContextValue(DRUID_PEON_POD_CPU, "");
                         String memoryFromContext = task.getContextValue(DRUID_PEON_POD_MEMORY, "");
-                        if(task.getContextValue(DRUID_PEON_POD_SPEC) != null) {
+                        if (task.getContextValue(DRUID_PEON_POD_SPEC) != null) {
                           try {
                             v1PodSpec = objectMapper.convertValue(task.getContextValue(DRUID_PEON_POD_SPEC), V1PodSpec.class);
                           }
@@ -464,8 +464,7 @@ public class K8sForkingTaskRunner
                             v1PodSpec = new V1PodSpec();
                             LOGGER.error("Error in parsing pod spec : %s", e.getMessage());
                           }
-                        }
-                        else {
+                        } else {
                           v1PodSpec = new V1PodSpec();
                         }
 
