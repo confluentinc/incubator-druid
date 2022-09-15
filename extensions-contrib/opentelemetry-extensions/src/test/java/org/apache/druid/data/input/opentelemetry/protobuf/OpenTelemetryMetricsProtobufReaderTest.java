@@ -345,8 +345,9 @@ public class OpenTelemetryMetricsProtobufReaderTest
   }
 
   @Test
-  public void testInvalidProtobuf() {
-    byte[] invalidProtobuf = new byte[] { 0x00, 0x01 };
+  public void testInvalidProtobuf()
+  {
+    byte[] invalidProtobuf = new byte[] {0x00, 0x01};
     CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
         dimensionsSpec,
         new ByteEntity(invalidProtobuf),
@@ -360,7 +361,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
   }
   
   @Test
-  public void testInvalidMetricType() {
+  public void testInvalidMetricType()
+  {
     metricBuilder
         .setName("deprecated_intsum")
         .getIntSumBuilder()
