@@ -74,25 +74,26 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    SettableByteEntity<? extends ByteEntity> settableByteEntitySource = (SettableByteEntity<? extends ByteEntity>) source;
+    ByteEntity byteEntitySource = settableByteEntitySource.getEntity();
     // assume InputEntity is always defined in a single classloader (the kafka-indexing-service classloader)
     // so we only have to look it up once. To be completely correct we should cache the method based on classloader
     if (getHeaderMethod == null) {
       getHeaderMethod = KafkaUtils.lookupGetHeaderMethod(
-          source.getClass().getClassLoader(),
+          byteEntitySource.getClass().getClassLoader(),
           OpenCensusProtobufInputFormat.VERSION_HEADER_KEY
       );
     }
 
     try {
-      byte[] versionHeader = (byte[]) getHeaderMethod.invoke(source);
+      byte[] versionHeader = (byte[]) getHeaderMethod.invoke(byteEntitySource);
       if (versionHeader != null) {
         int version =
             ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
           return new OpenTelemetryMetricsProtobufReader(
               inputRowSchema.getDimensionsSpec(),
-              // TODO: adjust argument in OpenTelemetryMetricsProtobufReader
-              ((SettableByteEntity<?>) source).getEntity(),
+              byteEntitySource,
               metricDimension,
               valueDimension,
               metricLabelPrefix,
@@ -105,10 +106,9 @@ public class OpenCensusProtobufInputFormat implements InputFormat
       // assume input is opencensus if something went wrong
     }
 
-
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
-        (SettableByteEntity<ByteEntity>) source,
+        byteEntitySource,
         metricDimension,
         metricLabelPrefix,
         resourceLabelPrefix

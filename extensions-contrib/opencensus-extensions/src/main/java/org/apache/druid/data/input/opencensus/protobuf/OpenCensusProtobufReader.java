@@ -56,14 +56,14 @@ public class OpenCensusProtobufReader implements InputEntityReader
   private static final String VALUE_COLUMN = "value";
 
   private final DimensionsSpec dimensionsSpec;
-  private final SettableByteEntity<ByteEntity> source;
+  private final ByteEntity source;
   private final String metricDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
   public OpenCensusProtobufReader(
       DimensionsSpec dimensionsSpec,
-      SettableByteEntity<ByteEntity> source,
+      ByteEntity source,
       String metricDimension,
       String metricLabelPrefix,
       String resourceLabelPrefix
@@ -102,7 +102,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
   List<InputRow> readAsList()
   {
     try {
-      return parseMetric(Metric.parseFrom(source.getEntity().getBuffer()));
+      return parseMetric(Metric.parseFrom(source.getBuffer()));
     }
     catch (InvalidProtocolBufferException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");
