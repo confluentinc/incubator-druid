@@ -27,6 +27,7 @@ import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.KafkaUtils;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
+import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.StringUtils;
 
 import javax.annotation.Nullable;
@@ -73,24 +74,26 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    SettableByteEntity<? extends ByteEntity> settableByteEntitySource = (SettableByteEntity<? extends ByteEntity>) source;
+    ByteEntity byteEntitySource = settableByteEntitySource.getEntity();
     // assume InputEntity is always defined in a single classloader (the kafka-indexing-service classloader)
     // so we only have to look it up once. To be completely correct we should cache the method based on classloader
     if (getHeaderMethod == null) {
       getHeaderMethod = KafkaUtils.lookupGetHeaderMethod(
-          source.getClass().getClassLoader(),
+          byteEntitySource.getClass().getClassLoader(),
           OpenCensusProtobufInputFormat.VERSION_HEADER_KEY
       );
     }
 
     try {
-      byte[] versionHeader = (byte[]) getHeaderMethod.invoke(source);
+      byte[] versionHeader = (byte[]) getHeaderMethod.invoke(byteEntitySource);
       if (versionHeader != null) {
         int version =
             ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
           return new OpenTelemetryMetricsProtobufReader(
               inputRowSchema.getDimensionsSpec(),
-              (ByteEntity) source,
+              byteEntitySource,
               metricDimension,
               valueDimension,
               metricLabelPrefix,
@@ -103,10 +106,9 @@ public class OpenCensusProtobufInputFormat implements InputFormat
       // assume input is opencensus if something went wrong
     }
 
-
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
-        (ByteEntity) source,
+        byteEntitySource,
         metricDimension,
         metricLabelPrefix,
         resourceLabelPrefix
