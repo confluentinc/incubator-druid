@@ -27,6 +27,7 @@ import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.KafkaUtils;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
+import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.StringUtils;
 
 import javax.annotation.Nullable;
@@ -90,7 +91,8 @@ public class OpenCensusProtobufInputFormat implements InputFormat
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
           return new OpenTelemetryMetricsProtobufReader(
               inputRowSchema.getDimensionsSpec(),
-              (ByteEntity) source,
+              // TODO: adjust argument in OpenTelemetryMetricsProtobufReader
+              ((SettableByteEntity<?>) source).getEntity(),
               metricDimension,
               valueDimension,
               metricLabelPrefix,
@@ -106,7 +108,7 @@ public class OpenCensusProtobufInputFormat implements InputFormat
 
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
-        (ByteEntity) source,
+        (SettableByteEntity<ByteEntity>) source,
         metricDimension,
         metricLabelPrefix,
         resourceLabelPrefix

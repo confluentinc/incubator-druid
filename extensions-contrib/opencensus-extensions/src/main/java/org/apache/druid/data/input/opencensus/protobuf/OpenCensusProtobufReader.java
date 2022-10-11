@@ -36,6 +36,7 @@ import org.apache.druid.data.input.InputRowListPlusRawValues;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
+import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
@@ -55,14 +56,14 @@ public class OpenCensusProtobufReader implements InputEntityReader
   private static final String VALUE_COLUMN = "value";
 
   private final DimensionsSpec dimensionsSpec;
-  private final ByteEntity source;
+  private final SettableByteEntity<ByteEntity> source;
   private final String metricDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
   public OpenCensusProtobufReader(
       DimensionsSpec dimensionsSpec,
-      ByteEntity source,
+      SettableByteEntity<ByteEntity> source,
       String metricDimension,
       String metricLabelPrefix,
       String resourceLabelPrefix
@@ -101,7 +102,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
   List<InputRow> readAsList()
   {
     try {
-      return parseMetric(Metric.parseFrom(source.getBuffer()));
+      return parseMetric(Metric.parseFrom(source.getEntity().getBuffer()));
     }
     catch (InvalidProtocolBufferException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");

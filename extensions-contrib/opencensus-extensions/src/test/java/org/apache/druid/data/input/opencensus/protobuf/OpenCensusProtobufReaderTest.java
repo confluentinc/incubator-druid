@@ -31,6 +31,7 @@ import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.StringDimensionSchema;
 import org.apache.druid.data.input.impl.TimestampSpec;
 import org.apache.druid.data.input.kafka.KafkaRecordEntity;
+import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -51,6 +52,7 @@ import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class OpenCensusProtobufReaderTest
@@ -118,6 +120,51 @@ public class OpenCensusProtobufReaderTest
       .setName(INSTRUMENTATION_LIBRARY_NAME)
       .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
 
+  }
+
+  @Test
+  public void testSumWithAttributesInSettableByteEntity() throws IOException
+  {
+    metricBuilder
+        .setName("example_sum")
+        .getSumBuilder()
+        .addDataPointsBuilder()
+        .setAsInt(6)
+        .setTimeUnixNano(TIMESTAMP)
+        .addAttributesBuilder() // test sum with attributes
+        .setKey(METRIC_ATTRIBUTE_COLOR)
+        .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
+
+
+    MetricsData metricsData = metricsDataBuilder.build();
+    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+                                                                         null, metricsData.toByteArray(), HEADERS, Optional.empty());
+    SettableByteEntity<KafkaRecordEntity> kafkaRecordEntity = new SettableByteEntity<>();
+    kafkaRecordEntity.setEntity(new KafkaRecordEntity(consumerRecord));
+
+    OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat(
+        "metric.name",
+        null,
+        "descriptor.",
+        "custom."
+    );
+
+    try (CloseableIterator<InputRow> rows = inputFormat.createReader(new InputRowSchema(
+        new TimestampSpec("timestamp", "iso", null),
+        dimensionsSpec,
+        ColumnsFilter.all()
+    ), kafkaRecordEntity, null).read()) {
+      List<InputRow> rowList = new ArrayList<>();
+      rows.forEachRemaining(rowList::add);
+      Assert.assertEquals(1, rowList.size());
+
+      InputRow row = rowList.get(0);
+      Assert.assertEquals(4, row.getDimensions().size());
+      assertDimensionEquals(row, "metric.name", "example_sum");
+      assertDimensionEquals(row, "custom.country", "usa");
+      assertDimensionEquals(row, "descriptor.color", "red");
+      assertDimensionEquals(row, "value", "6");
+    }
   }
 
   @Test
