@@ -24,7 +24,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 import io.opencensus.proto.metrics.v1.LabelKey;
 import io.opencensus.proto.metrics.v1.Metric;
