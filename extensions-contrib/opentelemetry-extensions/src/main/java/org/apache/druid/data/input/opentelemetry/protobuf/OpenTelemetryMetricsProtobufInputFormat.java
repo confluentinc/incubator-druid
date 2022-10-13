@@ -25,6 +25,7 @@ import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.impl.ByteEntity;
+import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.StringUtils;
 
 import java.io.File;
@@ -65,7 +66,7 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
   {
     return new OpenTelemetryMetricsProtobufReader(
             inputRowSchema.getDimensionsSpec(),
-            (ByteEntity) source,
+            (SettableByteEntity<? extends ByteEntity>) source,
             metricDimension,
             valueDimension,
             metricAttributePrefix,
