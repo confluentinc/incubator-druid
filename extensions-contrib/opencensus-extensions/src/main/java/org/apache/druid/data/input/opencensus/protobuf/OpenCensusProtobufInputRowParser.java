@@ -104,10 +104,13 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   @Override
   public List<InputRow> parseBatch(ByteBuffer input)
   {
+    SettableByteEntity<ByteEntity> settableByteEntity = new SettableByteEntity<>();
+    settableByteEntity.setEntity(new ByteEntity(input));
     return new OpenCensusProtobufReader(
         parseSpec.getDimensionsSpec(),
-        new ByteEntity(input),
+        settableByteEntity,
         metricDimension,
+        null,
         metricLabelPrefix,
         resourceLabelPrefix
     ).readAsList();

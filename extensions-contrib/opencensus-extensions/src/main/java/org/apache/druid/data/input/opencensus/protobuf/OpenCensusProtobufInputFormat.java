@@ -74,42 +74,11 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
-    SettableByteEntity<? extends ByteEntity> settableByteEntitySource = (SettableByteEntity<? extends ByteEntity>) source;
-    ByteEntity byteEntitySource = settableByteEntitySource.getEntity();
-    // assume InputEntity is always defined in a single classloader (the kafka-indexing-service classloader)
-    // so we only have to look it up once. To be completely correct we should cache the method based on classloader
-    if (getHeaderMethod == null) {
-      getHeaderMethod = KafkaUtils.lookupGetHeaderMethod(
-          byteEntitySource.getClass().getClassLoader(),
-          OpenCensusProtobufInputFormat.VERSION_HEADER_KEY
-      );
-    }
-
-    try {
-      byte[] versionHeader = (byte[]) getHeaderMethod.invoke(byteEntitySource);
-      if (versionHeader != null) {
-        int version =
-            ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
-        if (version == OPENTELEMETRY_FORMAT_VERSION) {
-          return new OpenTelemetryMetricsProtobufReader(
-              inputRowSchema.getDimensionsSpec(),
-              byteEntitySource,
-              metricDimension,
-              valueDimension,
-              metricLabelPrefix,
-              resourceLabelPrefix
-          );
-        }
-      }
-    }
-    catch (Throwable t) {
-      // assume input is opencensus if something went wrong
-    }
-
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
-        byteEntitySource,
+        (SettableByteEntity<? extends ByteEntity>) source,
         metricDimension,
+        valueDimension,
         metricLabelPrefix,
         resourceLabelPrefix
     );
