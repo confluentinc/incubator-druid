@@ -42,8 +42,8 @@ public class KafkaEmitterConfigTest
   @Test
   public void testSerDeserKafkaEmitterConfig() throws IOException
   {
-    KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", "metricTest",
-        "alertTest", "requestTest",
+    KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", null, "metricTest",
+        "alertTest", "requestTest", "metadataTest", null,
         "clusterNameTest", ImmutableMap.<String, String>builder()
         .put("testKey", "testValue").build()
     );
@@ -56,8 +56,8 @@ public class KafkaEmitterConfigTest
   @Test
   public void testSerDeserKafkaEmitterConfigNullRequestTopic() throws IOException
   {
-    KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", "metricTest",
-        "alertTest", null,
+    KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", null, "metricTest",
+        "alertTest", null, "metadataTest", null,
         "clusterNameTest", ImmutableMap.<String, String>builder()
         .put("testKey", "testValue").build()
     );
@@ -70,8 +70,8 @@ public class KafkaEmitterConfigTest
   @Test
   public void testSerDeNotRequiredKafkaProducerConfig()
   {
-    KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("localhost:9092", "metricTest",
-        "alertTest", null,
+    KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("localhost:9092", null, "metricTest",
+        "alertTest", null, "metadataTest", null,
         "clusterNameTest", null
     );
     try {
