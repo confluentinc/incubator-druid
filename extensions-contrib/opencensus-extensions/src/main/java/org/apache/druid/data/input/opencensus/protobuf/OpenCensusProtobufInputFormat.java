@@ -74,9 +74,18 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    SettableByteEntity<? extends ByteEntity> settableEntity;
+    if (source instanceof SettableByteEntity) {
+      settableEntity = (SettableByteEntity<? extends ByteEntity>) source;
+    }
+    else {
+      SettableByteEntity<ByteEntity> wrapper = new SettableByteEntity<>();
+      wrapper.setEntity((ByteEntity) source);
+      settableEntity = wrapper;
+    }
     return new OpenCensusProtobufReader(
         inputRowSchema.getDimensionsSpec(),
-        (SettableByteEntity<? extends ByteEntity>) source,
+        settableEntity,
         metricDimension,
         valueDimension,
         metricLabelPrefix,

@@ -55,6 +55,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.druid.data.input.opencensus.protobuf.OpenCensusProtobufReader.ProtobufReader.OPEN_CENSUS;
+import static org.apache.druid.data.input.opencensus.protobuf.OpenCensusProtobufReader.ProtobufReader.OPEN_TELEMETRY;
+
 public class OpenCensusProtobufReader implements InputEntityReader
 {
   private static final String SEPARATOR = "-";
@@ -69,7 +72,13 @@ public class OpenCensusProtobufReader implements InputEntityReader
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
 
-  Supplier<InputEntityReader> readerSupplier = Suppliers.memoize(this::newReader);
+  enum ProtobufReader {
+    OPEN_CENSUS,
+    OPEN_TELEMETRY
+  }
+
+  InputEntityReader openCensusReader = newReader(OPEN_CENSUS);
+  InputEntityReader openTelemetryReader = newReader(OPEN_TELEMETRY);
 
   public OpenCensusProtobufReader(
       DimensionsSpec dimensionsSpec,
@@ -96,7 +105,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read() throws IOException
   {
-    return readerSupplier.get().read();
+    return whichReader() == OPEN_TELEMETRY ? openTelemetryReader.read() : openCensusReader.read();
   }
 
   class OpenCensusProtobufReaderInternal implements InputEntityReader
@@ -126,10 +135,28 @@ public class OpenCensusProtobufReader implements InputEntityReader
     }
   }
 
-  public InputEntityReader newReader() {
+  public InputEntityReader newReader(ProtobufReader which)
+  {
+    switch(which) {
+      case OPEN_TELEMETRY:
+        return new OpenTelemetryMetricsProtobufReader(
+            dimensionsSpec,
+            source,
+            metricDimension,
+            valueDimension,
+            metricLabelPrefix,
+            resourceLabelPrefix
+        );
+      case OPEN_CENSUS:
+      default:
+        return new OpenCensusProtobufReaderInternal();
+    }
+  }
+
+  public ProtobufReader whichReader()
+  {
     // assume InputEntity is always defined in a single classloader (the kafka-indexing-service classloader)
     // so we only have to look it up once. To be completely correct we should cache the method based on classloader
-
     MethodHandle getHeaderMethod = KafkaUtils.lookupGetHeaderMethod(
         source.getEntity().getClass().getClassLoader(),
         VERSION_HEADER_KEY
@@ -141,30 +168,22 @@ public class OpenCensusProtobufReader implements InputEntityReader
         int version =
             ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
-          return new OpenTelemetryMetricsProtobufReader(
-              dimensionsSpec,
-              source,
-              metricDimension,
-              valueDimension,
-              metricLabelPrefix,
-              resourceLabelPrefix
-          );
+          return ProtobufReader.OPEN_TELEMETRY;
         }
       }
     }
     catch (Throwable t) {
       // assume input is opencensus if something went wrong
     }
-
-    return new OpenCensusProtobufReaderInternal();
+    return OPEN_CENSUS;
   }
 
   List<InputRow> readAsList()
   {
     try {
-      return parseMetric(Metric.parseFrom(source.getEntity().getBuffer()));
+      return parseMetric(Metric.parseFrom(source.open()));
     }
-    catch (InvalidProtocolBufferException e) {
+    catch (IOException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");
     }
   }

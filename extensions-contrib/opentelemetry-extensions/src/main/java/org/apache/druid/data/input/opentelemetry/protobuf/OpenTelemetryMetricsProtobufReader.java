@@ -41,6 +41,7 @@ import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -99,9 +100,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   List<InputRow> readAsList()
   {
     try {
-      return parseMetricsData(MetricsData.parseFrom(source.getEntity().getBuffer()));
+      return parseMetricsData(MetricsData.parseFrom(source.open()));
     }
-    catch (InvalidProtocolBufferException e) {
+    catch (IOException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");
     }
   }
