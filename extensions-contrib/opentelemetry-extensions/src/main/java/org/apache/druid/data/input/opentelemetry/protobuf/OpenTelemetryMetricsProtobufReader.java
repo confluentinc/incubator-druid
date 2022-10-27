@@ -82,19 +82,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read()
   {
-    Supplier<Iterator<InputRow>> supplier = Suppliers.memoize(() -> readAsList().iterator());
-    return CloseableIterators.withEmptyBaggage(new Iterator<InputRow>() {
-      @Override
-      public boolean hasNext()
-      {
-        return supplier.get().hasNext();
-      }
-      @Override
-      public InputRow next()
-      {
-        return supplier.get().next();
-      }
-    });
+    return CloseableIterators.withEmptyBaggage(readAsList().iterator());
   }
 
   List<InputRow> readAsList()

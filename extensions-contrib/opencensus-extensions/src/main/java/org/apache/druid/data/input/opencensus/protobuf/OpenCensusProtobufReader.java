@@ -77,9 +77,6 @@ public class OpenCensusProtobufReader implements InputEntityReader
     OPEN_TELEMETRY
   }
 
-  InputEntityReader openCensusReader = newReader(OPEN_CENSUS);
-  InputEntityReader openTelemetryReader = newReader(OPEN_TELEMETRY);
-
   public OpenCensusProtobufReader(
       DimensionsSpec dimensionsSpec,
       SettableByteEntity<? extends ByteEntity> source,
@@ -105,7 +102,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read() throws IOException
   {
-    return whichReader() == OPEN_TELEMETRY ? openTelemetryReader.read() : openCensusReader.read();
+    return newReader(whichReader()).read();
   }
 
   class OpenCensusProtobufReaderInternal implements InputEntityReader
@@ -113,19 +110,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
     @Override
     public CloseableIterator<InputRow> read()
     {
-      Supplier<Iterator<InputRow>> supplier = Suppliers.memoize(() -> readAsList().iterator());
-      return CloseableIterators.withEmptyBaggage(new Iterator<InputRow>() {
-        @Override
-        public boolean hasNext()
-        {
-          return supplier.get().hasNext();
-        }
-        @Override
-        public InputRow next()
-        {
-          return supplier.get().next();
-        }
-      });
+      return CloseableIterators.withEmptyBaggage(readAsList().iterator());
     }
 
     @Override
@@ -168,7 +153,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
         int version =
             ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
-          return ProtobufReader.OPEN_TELEMETRY;
+          return OPEN_TELEMETRY;
         }
       }
     }
