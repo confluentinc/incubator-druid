@@ -168,6 +168,7 @@ public class KafkaEmitter implements Emitter
   @Override
   public void emit(final Event event)
   {
+    // Dummy change
     if (event != null) {
       try {
         EventMap map = event.toMap();
