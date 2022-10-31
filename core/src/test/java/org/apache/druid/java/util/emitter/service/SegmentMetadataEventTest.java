@@ -20,7 +20,7 @@
 package org.apache.druid.java.util.emitter.service;
 
 import com.google.common.collect.ImmutableMap;
-import org.joda.time.DateTime;
+import org.apache.druid.java.util.common.DateTimes;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,9 +31,9 @@ public class SegmentMetadataEventTest
   {
     SegmentMetadataEvent event = new SegmentMetadataEvent(
         "dummy_datasource",
-        DateTime.parse("2001-01-01T00:00:00.000Z"),
-        DateTime.parse("2001-01-02T00:00:00.000Z"),
-        DateTime.parse("2001-01-03T00:00:00.000Z"),
+        DateTimes.of("2001-01-01T00:00:00.000Z"),
+        DateTimes.of("2001-01-02T00:00:00.000Z"),
+        DateTimes.of("2001-01-03T00:00:00.000Z"),
         "dummy_version",
         true
     );
@@ -42,9 +42,9 @@ public class SegmentMetadataEventTest
         ImmutableMap.<String, Object>builder()
             .put(SegmentMetadataEvent.FEED, "segment_metadata")
             .put(SegmentMetadataEvent.DATASOURCE, "dummy_datasource")
-            .put(SegmentMetadataEvent.CREATED_TIME, DateTime.parse("2001-01-01T00:00:00.000Z"))
-            .put(SegmentMetadataEvent.START_TIME, DateTime.parse("2001-01-02T00:00:00.000Z"))
-            .put(SegmentMetadataEvent.END_TIME, DateTime.parse("2001-01-03T00:00:00.000Z"))
+            .put(SegmentMetadataEvent.CREATED_TIME, DateTimes.of("2001-01-01T00:00:00.000Z"))
+            .put(SegmentMetadataEvent.START_TIME, DateTimes.of("2001-01-02T00:00:00.000Z"))
+            .put(SegmentMetadataEvent.END_TIME, DateTimes.of("2001-01-03T00:00:00.000Z"))
             .put(SegmentMetadataEvent.VERSION, "dummy_version")
             .put(SegmentMetadataEvent.IS_COMPACTED, true)
             .build(),
