@@ -20,12 +20,9 @@
 package org.apache.druid.java.util.emitter.service;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableMap;
 import org.apache.druid.java.util.emitter.core.Event;
 import org.apache.druid.java.util.emitter.core.EventMap;
 import org.joda.time.DateTime;
-
-import java.util.Map;
 
 public class SegmentMetadataEvent implements Event
 {

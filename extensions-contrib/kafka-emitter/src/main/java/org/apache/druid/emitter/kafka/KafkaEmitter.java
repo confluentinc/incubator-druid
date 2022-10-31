@@ -218,7 +218,7 @@ public class KafkaEmitter implements Emitter
             requestLost.incrementAndGet();
           }
         } else if (event instanceof SegmentMetadataEvent) {
-          if (!eventTypes.contains(EventType.SEGMENTMETADATA) ) {
+          if (!eventTypes.contains(EventType.SEGMENTMETADATA)) {
             segmentMetadataLost.incrementAndGet();
           } else {
             switch (config.getSegmentMetadataTopicFormat()) {
