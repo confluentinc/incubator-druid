@@ -29,7 +29,6 @@ import org.apache.druid.java.util.common.StringUtils;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +40,7 @@ public class KafkaEmitterConfig
     METRICS,
     ALERTS,
     REQUESTS,
-    SEGMENTMETADATA{
+    SEGMENTMETADATA {
       @Override
       public String toString()
       {
