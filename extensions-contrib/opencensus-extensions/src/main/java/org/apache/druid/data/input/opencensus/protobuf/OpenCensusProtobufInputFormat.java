@@ -74,6 +74,8 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
+    // Sampler passes a KafkaRecordEntity directly, while the normal code path wraps the same entity in a
+    // SettableByteEntity
     SettableByteEntity<? extends ByteEntity> settableEntity;
     if (source instanceof SettableByteEntity) {
       settableEntity = (SettableByteEntity<? extends ByteEntity>) source;

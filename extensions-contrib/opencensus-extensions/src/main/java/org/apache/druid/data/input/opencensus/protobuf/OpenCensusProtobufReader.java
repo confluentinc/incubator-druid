@@ -19,8 +19,6 @@
 
 package org.apache.druid.data.input.opencensus.protobuf;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -50,7 +48,6 @@ import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
