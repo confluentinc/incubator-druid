@@ -8,7 +8,7 @@ github:
 semaphore:
   enable: true
   pipeline_enable: false
-  branches: []
-  triggers:
-  - branches
-  - tags
+  branches:
+  - master
+  - /^.*-confluent$/
+  - /^.*\..*\..*$/
