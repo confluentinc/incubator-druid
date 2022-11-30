@@ -11,4 +11,3 @@ semaphore:
   branches:
   - master
   - /^.*-confluent$/
-  - /^.*\..*\..*$/
