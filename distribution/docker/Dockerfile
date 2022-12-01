@@ -47,7 +47,8 @@ COPY ./docker/druid.sh /druid.sh
 #   /opt/shared is used to keep segments and task logs shared among Druid services
 RUN mkdir /opt/druid/var /opt/shared \
  && chown druid:druid /opt/druid/var /opt/shared \
- && chmod 775 /opt/druid/var /opt/shared
+ && chmod 775 /opt/druid/var /opt/shared \
+ && wget -P /usr/bin https://storage.googleapis.com/kubernetes-release/release/v1.18.1/bin/linux/amd64/kubectl && chmod +x /usr/bin/kubectl
 
 USER druid
 VOLUME /opt/druid/var
