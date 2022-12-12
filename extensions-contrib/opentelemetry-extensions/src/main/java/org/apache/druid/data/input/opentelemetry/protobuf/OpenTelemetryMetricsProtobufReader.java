@@ -19,6 +19,8 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.opentelemetry.proto.common.v1.AnyValue;
@@ -42,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -78,7 +81,19 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRow> read()
   {
-    return CloseableIterators.withEmptyBaggage(readAsList().iterator());
+    Supplier<Iterator<InputRow>> supplier = Suppliers.memoize(() -> readAsList().iterator());
+    return CloseableIterators.withEmptyBaggage(new Iterator<InputRow>() {
+      @Override
+      public boolean hasNext()
+      {
+        return supplier.get().hasNext();
+      }
+      @Override
+      public InputRow next()
+      {
+        return supplier.get().next();
+      }
+    });
   }
 
   List<InputRow> readAsList()
@@ -207,8 +222,10 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   }
 
   @Override
-  public CloseableIterator<InputRowListPlusRawValues> sample()
+  public CloseableIterator<InputRowListPlusRawValues> sample() throws IOException
   {
-    return read().map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
+    try (CloseableIterator<InputRow> iterator = read()) {
+      return iterator.map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
+    }
   }
 }

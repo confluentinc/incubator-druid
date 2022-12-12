@@ -24,17 +24,12 @@ import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
-import org.apache.druid.data.input.KafkaUtils;
 import org.apache.druid.data.input.impl.ByteEntity;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryMetricsProtobufReader;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.lang.invoke.MethodHandle;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Objects;
 
 public class OpenCensusProtobufInputFormat implements InputFormat
@@ -49,8 +44,6 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   private final String valueDimension;
   private final String metricLabelPrefix;
   private final String resourceLabelPrefix;
-
-  private volatile MethodHandle getHeaderMethod = null;
 
   public OpenCensusProtobufInputFormat(
       @JsonProperty("metricDimension") String metricDimension,
@@ -85,7 +78,7 @@ public class OpenCensusProtobufInputFormat implements InputFormat
       wrapper.setEntity((ByteEntity) source);
       settableEntity = wrapper;
     }
-    return new OpenCensusProtobufReader(
+    return new HybridProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         settableEntity,
         metricDimension,

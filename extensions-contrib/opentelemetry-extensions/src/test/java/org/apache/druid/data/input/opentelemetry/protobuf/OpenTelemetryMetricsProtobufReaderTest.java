@@ -38,6 +38,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -360,18 +361,24 @@ public class OpenTelemetryMetricsProtobufReaderTest
     byte[] invalidProtobuf = new byte[] {0x00, 0x01};
     SettableByteEntity<ByteEntity> settableByteEntity = new SettableByteEntity<>();
     settableByteEntity.setEntity(new ByteEntity(invalidProtobuf));
-    CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
+    try (CloseableIterator<InputRow> rows = new OpenTelemetryMetricsProtobufReader(
         dimensionsSpec,
         settableByteEntity,
         "metric.name",
         "raw.value",
         "descriptor.",
         "custom."
-    ).read();
-    Assert.assertThrows(ParseException.class, () -> rows.hasNext());
-    Assert.assertThrows(ParseException.class, () -> rows.next());
+    ).read()) {
+      Assert.assertThrows(ParseException.class, () -> rows.hasNext());
+      // Can't re-use the entity after the exception above is thrown because {@link SettableByteEntity#open()} can't be
+      // called twice on the same input stream.
+      settableByteEntity.setEntity(new ByteEntity(invalidProtobuf));
+      Assert.assertThrows(ParseException.class, () -> rows.next());
+    } catch (IOException e) {
+      // Comes from the implicit call to close. Ignore
+    }
   }
-  
+
   @Test
   public void testInvalidMetricType()
   {

@@ -110,7 +110,6 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         parseSpec.getDimensionsSpec(),
         settableByteEntity,
         metricDimension,
-        null,
         metricLabelPrefix,
         resourceLabelPrefix
     ).readAsList();
