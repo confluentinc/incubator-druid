@@ -37,8 +37,6 @@ public class OpenCensusProtobufInputFormat implements InputFormat
   private static final String DEFAULT_METRIC_DIMENSION = "name";
   private static final String DEFAULT_RESOURCE_PREFIX = "resource.";
   private static final String DEFAULT_VALUE_DIMENSION = "value";
-  private static final String VERSION_HEADER_KEY = "v";
-  private static final int OPENTELEMETRY_FORMAT_VERSION = 1;
 
   private final String metricDimension;
   private final String valueDimension;
