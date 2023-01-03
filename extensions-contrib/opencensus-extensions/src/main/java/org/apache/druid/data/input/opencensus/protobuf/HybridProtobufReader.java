@@ -35,9 +35,6 @@ import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static org.apache.druid.data.input.opencensus.protobuf.HybridProtobufReader.ProtobufReader.OPENCENSUS;
-import static org.apache.druid.data.input.opencensus.protobuf.HybridProtobufReader.ProtobufReader.OPENTELEMETRY;
-
 public class HybridProtobufReader implements InputEntityReader
 {
   private static final String VERSION_HEADER_KEY = "v";
@@ -52,7 +49,8 @@ public class HybridProtobufReader implements InputEntityReader
 
   private volatile MethodHandle getHeaderMethod = null;
 
-  enum ProtobufReader {
+  enum ProtobufReader
+  {
     OPENCENSUS,
     OPENTELEMETRY
   }
@@ -82,7 +80,7 @@ public class HybridProtobufReader implements InputEntityReader
 
   public InputEntityReader newReader(ProtobufReader which)
   {
-    switch(which) {
+    switch (which) {
       case OPENTELEMETRY:
         return new OpenTelemetryMetricsProtobufReader(
             dimensionsSpec,
@@ -121,14 +119,14 @@ public class HybridProtobufReader implements InputEntityReader
         int version =
             ByteBuffer.wrap(versionHeader).order(ByteOrder.LITTLE_ENDIAN).getInt();
         if (version == OPENTELEMETRY_FORMAT_VERSION) {
-          return OPENTELEMETRY;
+          return ProtobufReader.OPENTELEMETRY;
         }
       }
     }
     catch (Throwable t) {
       // assume input is opencensus if something went wrong
     }
-    return OPENCENSUS;
+    return ProtobufReader.OPENCENSUS;
   }
 
   @Override

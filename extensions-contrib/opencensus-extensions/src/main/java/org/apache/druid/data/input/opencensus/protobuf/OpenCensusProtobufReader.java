@@ -81,6 +81,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
   {
     void addRow(long millis, String metricName, Object value);
   }
+
   @Override
   public CloseableIterator<InputRow> read()
   {

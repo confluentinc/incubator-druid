@@ -69,8 +69,7 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
     SettableByteEntity<? extends ByteEntity> settableEntity;
     if (source instanceof SettableByteEntity) {
       settableEntity = (SettableByteEntity<? extends ByteEntity>) source;
-    }
-    else {
+    } else {
       SettableByteEntity<ByteEntity> wrapper = new SettableByteEntity<>();
       wrapper.setEntity((ByteEntity) source);
       settableEntity = wrapper;

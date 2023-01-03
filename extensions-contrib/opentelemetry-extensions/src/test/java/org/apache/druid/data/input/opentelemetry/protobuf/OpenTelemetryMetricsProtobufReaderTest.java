@@ -371,7 +371,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
     ).read()) {
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
       Assert.assertThrows(ParseException.class, () -> rows.next());
-    } catch (IOException e) {
+    }
+    catch (IOException e) {
       // Comes from the implicit call to close. Ignore
     }
   }

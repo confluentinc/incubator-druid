@@ -43,9 +43,7 @@ import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.record.TimestampType;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -99,11 +97,6 @@ public class OpenCensusProtobufReaderTest
   private static final Header HEADERV1 = new RecordHeader("v", V0_HEADER_BYTES);
   private static final Headers HEADERS = new RecordHeaders(new Header[]{HEADERV1});
 
-
-
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
   @Before
   public void setUp()
   {
@@ -138,8 +131,8 @@ public class OpenCensusProtobufReaderTest
 
 
     MetricsData metricsData = metricsDataBuilder.build();
-    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(
-        TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1, null, metricsData.toByteArray(), HEADERS, Optional.empty());
+    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+        null, metricsData.toByteArray(), HEADERS, Optional.empty());
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat(
         "metric.name",
         null,
@@ -182,8 +175,8 @@ public class OpenCensusProtobufReaderTest
       .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_VALUE_RED).build());
 
     MetricsData metricsData = metricsDataBuilder.build();
-    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(
-        TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1, null, metricsData.toByteArray(), HEADERS, Optional.empty());
+    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+        null, metricsData.toByteArray(), HEADERS, Optional.empty());
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
         null,
         "descriptor.",
@@ -248,8 +241,8 @@ public class OpenCensusProtobufReaderTest
       .setValue(AnyValue.newBuilder().setStringValue(METRIC_ATTRIBUTE_FOO_VAL).build());
 
     MetricsData metricsData = metricsDataBuilder.build();
-    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(
-        TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1, null, metricsData.toByteArray(), HEADERS, Optional.empty());
+    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+        null, metricsData.toByteArray(), HEADERS, Optional.empty());
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
         null,
          "descriptor.",
@@ -311,8 +304,8 @@ public class OpenCensusProtobufReaderTest
         )).build();
 
     MetricsData metricsData = metricsDataBuilder.build();
-    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(
-        TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1, null, metricsData.toByteArray(), HEADERS, Optional.empty());
+    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+        null, metricsData.toByteArray(), HEADERS, Optional.empty());
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
         null,
         "descriptor.",
@@ -344,8 +337,8 @@ public class OpenCensusProtobufReaderTest
   public void testInvalidProtobuf() throws IOException
   {
     byte[] invalidProtobuf = new byte[] {0x00, 0x01};
-    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(
-        TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1, null, invalidProtobuf, HEADERS, Optional.empty());
+    ConsumerRecord<byte[], byte[]> consumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+        null, invalidProtobuf, HEADERS, Optional.empty());
     OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
         null,
         "descriptor.",
