@@ -154,7 +154,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       case HISTOGRAM:
       case SUMMARY:
       default:
-        log.trace("Metric type {} is not supported", metric.getDataCase());
+        log.trace("Metric type %s is not supported", metric.getDataCase());
         inputRows = Collections.emptyList();
 
     }
