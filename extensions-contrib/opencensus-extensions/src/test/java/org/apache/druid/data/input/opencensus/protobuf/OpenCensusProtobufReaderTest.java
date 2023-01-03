@@ -361,11 +361,6 @@ public class OpenCensusProtobufReaderTest
     entity.setEntity(new KafkaRecordEntity(consumerRecord));
     try (CloseableIterator<InputRow> rows = reader.read()) {
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
-    }
-    // Can't re-use the entity after the exception above is thrown because {@link SettableByteEntity#open()} can't be
-    // called twice on the same input stream.
-    entity.setEntity(new KafkaRecordEntity(consumerRecord));
-    try (CloseableIterator<InputRow> rows = reader.read()) {
       Assert.assertThrows(ParseException.class, () -> rows.next());
     }
   }

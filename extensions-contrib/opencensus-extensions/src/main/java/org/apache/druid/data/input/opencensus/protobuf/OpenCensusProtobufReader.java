@@ -42,6 +42,7 @@ import org.apache.druid.java.util.common.parsers.ParseException;
 import org.apache.druid.utils.CollectionUtils;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -101,7 +102,12 @@ public class OpenCensusProtobufReader implements InputEntityReader
   List<InputRow> readAsList()
   {
     try {
-      return parseMetric(Metric.parseFrom(source.open()));
+      ByteBuffer buffer = source.getEntity().getBuffer();
+      List<InputRow> rows = parseMetric(Metric.parseFrom(buffer));
+      // Explicitly move the position assuming that all the remaining bytes have been consumed because the protobuf
+      // parser does not update the position itself
+      buffer.position(buffer.limit());
+      return rows;
     }
     catch (IOException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");

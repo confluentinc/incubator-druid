@@ -370,9 +370,6 @@ public class OpenTelemetryMetricsProtobufReaderTest
         "custom."
     ).read()) {
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
-      // Can't re-use the entity after the exception above is thrown because {@link SettableByteEntity#open()} can't be
-      // called twice on the same input stream.
-      settableByteEntity.setEntity(new ByteEntity(invalidProtobuf));
       Assert.assertThrows(ParseException.class, () -> rows.next());
     } catch (IOException e) {
       // Comes from the implicit call to close. Ignore
