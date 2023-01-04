@@ -4,10 +4,6 @@ agent:
   machine:
     type: s1-prod-ubuntu20-04-amd64-1
 
-# Increase time limit to allow tests to run to completion
-execution_time_limit:
-  hours: 2
-
 blocks:
   - name: "Install"
     task:
