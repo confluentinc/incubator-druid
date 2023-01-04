@@ -132,8 +132,6 @@ public class HybridProtobufReader implements InputEntityReader
   @Override
   public CloseableIterator<InputRowListPlusRawValues> sample() throws IOException
   {
-    try (CloseableIterator<InputRow> iterator = read()) {
-      return iterator.map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
-    }
+    return read().map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
   }
 }
