@@ -23,6 +23,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
@@ -107,7 +108,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       buffer.position(buffer.limit());
       return rows;
     }
-    catch (IOException e) {
+    catch (InvalidProtocolBufferException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");
     }
   }

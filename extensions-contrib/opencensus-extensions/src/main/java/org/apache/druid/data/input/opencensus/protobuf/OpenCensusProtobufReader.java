@@ -24,6 +24,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Timestamp;
 import io.opencensus.proto.metrics.v1.LabelKey;
 import io.opencensus.proto.metrics.v1.Metric;
@@ -110,7 +111,7 @@ public class OpenCensusProtobufReader implements InputEntityReader
       buffer.position(buffer.limit());
       return rows;
     }
-    catch (IOException e) {
+    catch (InvalidProtocolBufferException e) {
       throw new ParseException(null, e, "Protobuf message could not be parsed");
     }
   }
