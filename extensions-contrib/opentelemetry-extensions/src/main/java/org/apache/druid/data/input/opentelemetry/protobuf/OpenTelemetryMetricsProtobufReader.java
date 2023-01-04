@@ -41,7 +41,6 @@ import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -229,10 +228,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   }
 
   @Override
-  public CloseableIterator<InputRowListPlusRawValues> sample() throws IOException
+  public CloseableIterator<InputRowListPlusRawValues> sample()
   {
-    try (CloseableIterator<InputRow> iterator = read()) {
-      return iterator.map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
-    }
+    return read().map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
   }
 }

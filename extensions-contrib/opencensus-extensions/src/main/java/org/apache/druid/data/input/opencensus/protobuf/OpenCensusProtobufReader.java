@@ -42,7 +42,6 @@ import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 import org.apache.druid.utils.CollectionUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -225,10 +224,8 @@ public class OpenCensusProtobufReader implements InputEntityReader
   }
 
   @Override
-  public CloseableIterator<InputRowListPlusRawValues> sample() throws IOException
+  public CloseableIterator<InputRowListPlusRawValues> sample()
   {
-    try (CloseableIterator<InputRow> iterator = read()) {
-      return iterator.map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
-    }
+    return read().map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
   }
 }
