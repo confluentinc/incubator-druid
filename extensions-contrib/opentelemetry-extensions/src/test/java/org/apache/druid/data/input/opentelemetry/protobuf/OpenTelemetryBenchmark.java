@@ -22,11 +22,11 @@ package org.apache.druid.data.input.opentelemetry.protobuf;
 import com.google.common.collect.ImmutableList;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
+import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
 import io.opentelemetry.proto.resource.v1.Resource;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.InputRowSchema;
@@ -95,8 +95,8 @@ public class OpenTelemetryBenchmark
       }
 
       for (int j = 0; j < instrumentationLibraryCount; j++) {
-        InstrumentationLibraryMetrics.Builder instrumentationLibraryMetricsBuilder =
-            resourceMetricsBuilder.addInstrumentationLibraryMetricsBuilder();
+        ScopeMetrics.Builder instrumentationLibraryMetricsBuilder =
+            resourceMetricsBuilder.addScopeMetricsBuilder();
 
         for (int k = 0; k < metricsCount; k++) {
           Metric.Builder metricBuilder = instrumentationLibraryMetricsBuilder.addMetricsBuilder();

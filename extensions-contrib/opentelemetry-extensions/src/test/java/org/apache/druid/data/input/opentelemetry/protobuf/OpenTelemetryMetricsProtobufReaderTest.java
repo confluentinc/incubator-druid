@@ -65,7 +65,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
   private final MetricsData.Builder metricsDataBuilder = MetricsData.newBuilder();
 
   private final Metric.Builder metricBuilder = metricsDataBuilder.addResourceMetricsBuilder()
-      .addInstrumentationLibraryMetricsBuilder()
+      .addScopeMetricsBuilder()
       .addMetricsBuilder();
 
   private final DimensionsSpec dimensionsSpec = new DimensionsSpec(ImmutableList.of(
@@ -90,8 +90,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
 
     metricsDataBuilder
         .getResourceMetricsBuilder(0)
-        .getInstrumentationLibraryMetricsBuilder(0)
-        .getInstrumentationLibraryBuilder()
+        .getScopeMetricsBuilder(0)
+        .getScopeBuilder()
         .setName(INSTRUMENTATION_LIBRARY_NAME)
         .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
 
@@ -184,7 +184,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
 
     // Create Second Metric
     Metric.Builder gaugeMetricBuilder = metricsDataBuilder.addResourceMetricsBuilder()
-        .addInstrumentationLibraryMetricsBuilder()
+        .addScopeMetricsBuilder()
         .addMetricsBuilder();
 
     metricsDataBuilder.getResourceMetricsBuilder(1)
@@ -195,8 +195,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
             .build());
 
     metricsDataBuilder.getResourceMetricsBuilder(1)
-        .getInstrumentationLibraryMetricsBuilder(0)
-        .getInstrumentationLibraryBuilder()
+        .getScopeMetricsBuilder(0)
+        .getScopeBuilder()
         .setName(INSTRUMENTATION_LIBRARY_NAME)
         .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
 
@@ -382,7 +382,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
   {
     metricBuilder
         .setName("deprecated_intsum")
-        .getIntSumBuilder()
+        .getExponentialHistogramBuilder()
         .addDataPointsBuilder()
         .setTimeUnixNano(TIMESTAMP);
 
