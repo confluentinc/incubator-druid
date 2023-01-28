@@ -53,8 +53,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public static final String RESOURCE_ATTRIBUTE_ENV = "env";
   public static final String RESOURCE_ATTRIBUTE_VALUE_DEVEL = "devel";
 
-  public static final String INSTRUMENTATION_LIBRARY_NAME = "mock-instr-lib";
-  public static final String INSTRUMENTATION_LIBRARY_VERSION = "1.0";
+  public static final String INSTRUMENTATION_SCOPE_NAME = "mock-instr-lib";
+  public static final String INSTRUMENTATION_SCOPE_VERSION = "1.0";
 
   public static final String METRIC_ATTRIBUTE_COLOR = "color";
   public static final String METRIC_ATTRIBUTE_VALUE_RED = "red";
@@ -92,8 +92,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
         .getResourceMetricsBuilder(0)
         .getScopeMetricsBuilder(0)
         .getScopeBuilder()
-        .setName(INSTRUMENTATION_LIBRARY_NAME)
-        .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
+        .setName(INSTRUMENTATION_SCOPE_NAME)
+        .setVersion(INSTRUMENTATION_SCOPE_VERSION);
 
   }
 
@@ -197,8 +197,8 @@ public class OpenTelemetryMetricsProtobufReaderTest
     metricsDataBuilder.getResourceMetricsBuilder(1)
         .getScopeMetricsBuilder(0)
         .getScopeBuilder()
-        .setName(INSTRUMENTATION_LIBRARY_NAME)
-        .setVersion(INSTRUMENTATION_LIBRARY_VERSION);
+        .setName(INSTRUMENTATION_SCOPE_NAME)
+        .setVersion(INSTRUMENTATION_SCOPE_VERSION);
 
     gaugeMetricBuilder.setName("example_gauge")
         .getGaugeBuilder()

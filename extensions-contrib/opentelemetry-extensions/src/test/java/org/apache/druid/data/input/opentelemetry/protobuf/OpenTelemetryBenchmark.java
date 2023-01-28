@@ -58,7 +58,7 @@ public class OpenTelemetryBenchmark
   private int resourceMetricCount = 1;
 
   @Param(value = {"1"})
-  private int instrumentationLibraryCount = 1;
+  private int instrumentationScopeCount = 1;
 
   @Param(value = {"1", "2", "4", "8" })
   private int metricsCount = 1;
@@ -94,12 +94,12 @@ public class OpenTelemetryBenchmark
         resourceAttributeBuilder.setValue(AnyValue.newBuilder().setStringValue("resource.label_value"));
       }
 
-      for (int j = 0; j < instrumentationLibraryCount; j++) {
-        ScopeMetrics.Builder instrumentationLibraryMetricsBuilder =
+      for (int j = 0; j < instrumentationScopeCount; j++) {
+        ScopeMetrics.Builder scopeMetricsBuilder =
             resourceMetricsBuilder.addScopeMetricsBuilder();
 
         for (int k = 0; k < metricsCount; k++) {
-          Metric.Builder metricBuilder = instrumentationLibraryMetricsBuilder.addMetricsBuilder();
+          Metric.Builder metricBuilder = scopeMetricsBuilder.addMetricsBuilder();
           metricBuilder.setName("io.confluent.domain/such/good/metric/wow");
 
           for (int l = 0; l < dataPointCount; l++) {
