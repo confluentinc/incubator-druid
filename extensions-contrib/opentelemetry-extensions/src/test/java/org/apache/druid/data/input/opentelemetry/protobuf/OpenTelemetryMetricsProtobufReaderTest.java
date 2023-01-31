@@ -381,7 +381,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
   public void testInvalidMetricType()
   {
     metricBuilder
-        .setName("deprecated_intsum")
+        .setName("unsupported_histogram_metric")
         .getExponentialHistogramBuilder()
         .addDataPointsBuilder()
         .setTimeUnixNano(TIMESTAMP);
