@@ -17,10 +17,8 @@
  * under the License.
  */
 
-package org.apache.druid.data.input.opentelemetry.protobuf;
+package org.apache.druid.data.input.opentelemetry.protobuf.metrics;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -28,34 +26,27 @@ import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputRow;
-import org.apache.druid.data.input.InputRowListPlusRawValues;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufReader;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
-import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.logger.Logger;
-import org.apache.druid.java.util.common.parsers.CloseableIterator;
-import org.apache.druid.java.util.common.parsers.ParseException;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
+public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufReader
 {
   private static final Logger log = new Logger(OpenTelemetryMetricsProtobufReader.class);
-
-  private final SettableByteEntity<? extends ByteEntity> source;
   private final String metricDimension;
   private final String valueDimension;
   private final String metricAttributePrefix;
@@ -71,46 +62,14 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       String resourceAttributePrefix
   )
   {
+    super(source);
     this.dimensionsSpec = dimensionsSpec;
-    this.source = source;
     this.metricDimension = metricDimension;
     this.valueDimension = valueDimension;
     this.metricAttributePrefix = metricAttributePrefix;
     this.resourceAttributePrefix = resourceAttributePrefix;
   }
 
-  @Override
-  public CloseableIterator<InputRow> read()
-  {
-    Supplier<Iterator<InputRow>> supplier = Suppliers.memoize(() -> readAsList().iterator());
-    return CloseableIterators.withEmptyBaggage(new Iterator<InputRow>() {
-      @Override
-      public boolean hasNext()
-      {
-        return supplier.get().hasNext();
-      }
-      @Override
-      public InputRow next()
-      {
-        return supplier.get().next();
-      }
-    });
-  }
-
-  List<InputRow> readAsList()
-  {
-    try {
-      ByteBuffer buffer = source.getEntity().getBuffer();
-      List<InputRow> rows = parseMetricsData(MetricsData.parseFrom(buffer));
-      // Explicitly move the position assuming that all the remaining bytes have been consumed because the protobuf
-      // parser does not update the position itself
-      buffer.position(buffer.limit());
-      return rows;
-    }
-    catch (InvalidProtocolBufferException e) {
-      throw new ParseException(null, e, "Protobuf message could not be parsed");
-    }
-  }
 
   private List<InputRow> parseMetricsData(final MetricsData metricsData)
   {
@@ -228,8 +187,9 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
   }
 
   @Override
-  public CloseableIterator<InputRowListPlusRawValues> sample()
+  public List<InputRow> getRows(ByteBuffer byteBuffer)
+      throws InvalidProtocolBufferException
   {
-    return read().map(row -> InputRowListPlusRawValues.of(row, ((MapBasedInputRow) row).getEvent()));
+    return parseMetricsData(MetricsData.parseFrom(byteBuffer));
   }
 }

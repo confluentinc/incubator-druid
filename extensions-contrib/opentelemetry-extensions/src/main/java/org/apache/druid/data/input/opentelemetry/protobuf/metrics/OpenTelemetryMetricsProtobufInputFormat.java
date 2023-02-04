@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.druid.data.input.opentelemetry.protobuf;
+package org.apache.druid.data.input.opentelemetry.protobuf.metrics;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.druid.data.input.InputEntity;
