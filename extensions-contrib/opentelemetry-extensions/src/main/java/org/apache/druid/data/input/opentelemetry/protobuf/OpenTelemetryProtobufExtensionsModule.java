@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Binder;
 import org.apache.druid.data.input.opentelemetry.protobuf.metrics.OpenTelemetryMetricsProtobufInputFormat;
-import org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat;
 import org.apache.druid.initialization.DruidModule;
 
 import java.util.Collections;
@@ -39,8 +38,8 @@ public class OpenTelemetryProtobufExtensionsModule implements DruidModule
     return Collections.singletonList(
         new SimpleModule("OpenTelemetryProtobufInputFormat")
             .registerSubtypes(
-                new NamedType(OpenTelemetryMetricsProtobufInputFormat.class, "opentelemetry-metrics-protobuf"),
-                new NamedType(OpenTelemetryTracesProtobufInputFormat.class, "opentelemetry-traces-protobuf")
+                new NamedType(OpenTelemetryMetricsProtobufInputFormat.class, "opentelemetry-metrics-protobuf")
+                //new NamedType(OpenTelemetryTracesProtobufInputFormat.class, "opentelemetry-traces-protobuf")
             )
     );
   }
