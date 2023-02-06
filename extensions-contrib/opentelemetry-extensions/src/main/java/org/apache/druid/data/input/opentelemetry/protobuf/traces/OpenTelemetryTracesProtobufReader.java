@@ -21,6 +21,7 @@
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import io.opentelemetry.proto.trace.v1.TracesData;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufReader;
@@ -28,6 +29,7 @@ import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufReader
 {
@@ -39,10 +41,16 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
     super(source);
   }
 
+  private List<InputRow> parseTracesData(final TracesData tracesData) {
+    return tracesData.getResourceSpansList()
+       .stream()
+        .flatMap(resourceSpans -> {}).collect(Collectors.toList());
+  }
+
   @Override
   public List<InputRow> getRows(ByteBuffer byteBuffer)
       throws InvalidProtocolBufferException
   {
-    throw new InvalidProtocolBufferException("start");
+    return parseTracesData(TracesData.parseFrom(byteBuffer));
   }
 }

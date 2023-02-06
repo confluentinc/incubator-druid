@@ -38,12 +38,12 @@ import java.util.List;
 
 public abstract class OpenTelemetryProtobufReader implements InputEntityReader
 {
+  protected SettableByteEntity<? extends ByteEntity> source;
+
   public OpenTelemetryProtobufReader(SettableByteEntity<? extends ByteEntity> source)
   {
     this.source = source;
   }
-
-  protected SettableByteEntity<? extends ByteEntity> source;
 
   @Override
   public CloseableIterator<InputRow> read()
@@ -63,7 +63,7 @@ public abstract class OpenTelemetryProtobufReader implements InputEntityReader
     });
   }
 
-  List<InputRow> readAsList()
+  private List<InputRow> readAsList()
   {
     try {
       ByteBuffer buffer = source.getEntity().getBuffer();

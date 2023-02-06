@@ -20,19 +20,32 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
-import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat;
 
 import java.io.File;
+import java.util.Optional;
 
-public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
+public class OpenTelemetryTracesProtobufInputFormat extends OpenTelemetryInputFormat
 {
-  @Override
-  public boolean isSplittable()
+
+  private static final String SPAN_ATTRIBUTE_PREFIX_DEFAULT = "attr_";
+  private static final String RESOURCE_ATTRIBUTE_PREFIX_DEFAULT = "resource_";
+
+  private String spanAttributePrefix;
+  private String resourceAttributePrefix;
+
+  public OpenTelemetryTracesProtobufInputFormat(
+      @JsonProperty("spanAttributePrefix") String spanAttributePrefix,
+      @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix
+  )
   {
-    return false;
+    this.resourceAttributePrefix = Optional.of(spanAttributePrefix).orElse(SPAN_ATTRIBUTE_PREFIX_DEFAULT);
+    this.spanAttributePrefix = resourceAttributePrefix;
+
   }
 
   @Override
