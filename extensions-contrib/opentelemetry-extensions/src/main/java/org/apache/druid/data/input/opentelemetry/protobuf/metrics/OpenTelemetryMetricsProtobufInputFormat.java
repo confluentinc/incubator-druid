@@ -22,11 +22,8 @@ package org.apache.druid.data.input.opentelemetry.protobuf.metrics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
-import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
-import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat;
-import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.StringUtils;
 
 import java.io.File;
@@ -50,10 +47,11 @@ public class OpenTelemetryMetricsProtobufInputFormat extends OpenTelemetryInputF
       @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix
   )
   {
+    super();
+    this.resourceAttributePrefix = resourceAttributePrefix != null ? resourceAttributePrefix : DEFAULT_RESOURCE_PREFIX;
     this.metricDimension = metricDimension != null ? metricDimension : DEFAULT_METRIC_DIMENSION;
     this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
     this.metricAttributePrefix = StringUtils.nullToEmptyNonDruidDataString(metricAttributePrefix);
-    this.resourceAttributePrefix = resourceAttributePrefix != null ? resourceAttributePrefix : DEFAULT_RESOURCE_PREFIX;
   }
 
   @Override

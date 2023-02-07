@@ -44,6 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.druid.data.input.opentelemetry.protobuf.TestUtils.assertDimensionEquals;
+
 public class OpenTelemetryMetricsProtobufReaderTest
 {
   private static final long TIMESTAMP = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z").toEpochMilli());
@@ -403,12 +405,4 @@ public class OpenTelemetryMetricsProtobufReaderTest
     rows.forEachRemaining(rowList::add);
     Assert.assertEquals(0, rowList.size());
   }
-
-  private void assertDimensionEquals(InputRow row, String dimension, Object expected)
-  {
-    List<String> values = row.getDimension(dimension);
-    Assert.assertEquals(1, values.size());
-    Assert.assertEquals(expected, values.get(0));
-  }
-
 }

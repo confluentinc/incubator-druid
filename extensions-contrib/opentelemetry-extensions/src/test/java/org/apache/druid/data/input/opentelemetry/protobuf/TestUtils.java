@@ -17,31 +17,20 @@
  * under the License.
  */
 
+
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
-import org.apache.druid.data.input.InputEntity;
-import org.apache.druid.data.input.InputFormat;
-import org.apache.druid.data.input.impl.ByteEntity;
-import org.apache.druid.indexing.seekablestream.SettableByteEntity;
+import org.apache.druid.data.input.InputRow;
+import org.junit.Assert;
 
-public abstract class OpenTelemetryInputFormat implements InputFormat
+import java.util.List;
+
+public class TestUtils
 {
-  @Override
-  public boolean isSplittable()
+  public static void assertDimensionEquals(InputRow row, String dimension, Object expected)
   {
-    return false;
-  }
-
-  protected static SettableByteEntity<? extends ByteEntity> getSettableEntity(InputEntity source)
-  {
-    // Sampler passes a KafkaRecordEntity directly, while the normal code path wraps the same entity in a
-    // SettableByteEntity
-    if (source instanceof SettableByteEntity) {
-      return (SettableByteEntity<? extends ByteEntity>) source;
-    } else {
-      SettableByteEntity<ByteEntity> wrapper = new SettableByteEntity<>();
-      wrapper.setEntity((ByteEntity) source);
-      return wrapper;
-    }
+    List<String> values = row.getDimension(dimension);
+    Assert.assertEquals(1, values.size());
+    Assert.assertEquals(expected, values.get(0));
   }
 }

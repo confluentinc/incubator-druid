@@ -27,30 +27,52 @@ import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat;
 
 import java.io.File;
-import java.util.Optional;
+import java.util.Objects;
 
 public class OpenTelemetryTracesProtobufInputFormat extends OpenTelemetryInputFormat
 {
+  private final OpenTelemetryTracesProtobufConfiguration config;
 
-  private static final String SPAN_ATTRIBUTE_PREFIX_DEFAULT = "attr_";
-  private static final String RESOURCE_ATTRIBUTE_PREFIX_DEFAULT = "resource_";
-
-  private String spanAttributePrefix;
-  private String resourceAttributePrefix;
+  @JsonProperty
+  public OpenTelemetryTracesProtobufConfiguration getConfig()
+  {
+    return config;
+  }
 
   public OpenTelemetryTracesProtobufInputFormat(
-      @JsonProperty("spanAttributePrefix") String spanAttributePrefix,
-      @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix
+      @JsonProperty("config") OpenTelemetryTracesProtobufConfiguration config
   )
   {
-    this.resourceAttributePrefix = Optional.of(spanAttributePrefix).orElse(SPAN_ATTRIBUTE_PREFIX_DEFAULT);
-    this.spanAttributePrefix = resourceAttributePrefix;
-
+    super();
+    this.config = config;
   }
 
   @Override
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
-    return null;
+    return new OpenTelemetryTracesProtobufReader(
+        inputRowSchema.getDimensionsSpec(),
+        getSettableEntity(source),
+        config
+    );
+  }
+
+  @Override
+  public boolean equals(Object o)
+  {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    OpenTelemetryTracesProtobufInputFormat that = (OpenTelemetryTracesProtobufInputFormat) o;
+    return Objects.equals(config, that.config);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash(config);
   }
 }

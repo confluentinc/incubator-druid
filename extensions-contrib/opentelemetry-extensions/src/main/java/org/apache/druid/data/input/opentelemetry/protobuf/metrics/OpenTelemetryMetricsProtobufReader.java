@@ -20,25 +20,20 @@
 package org.apache.druid.data.input.opentelemetry.protobuf.metrics;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import org.apache.druid.data.input.InputRow;
-import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufReader;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.logger.Logger;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -50,8 +45,6 @@ public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufRea
   private final String metricDimension;
   private final String valueDimension;
   private final String metricAttributePrefix;
-  private final String resourceAttributePrefix;
-  private final DimensionsSpec dimensionsSpec;
 
   public OpenTelemetryMetricsProtobufReader(
       DimensionsSpec dimensionsSpec,
@@ -62,31 +55,18 @@ public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufRea
       String resourceAttributePrefix
   )
   {
-    super(source);
-    this.dimensionsSpec = dimensionsSpec;
+    super(dimensionsSpec, source, resourceAttributePrefix);
     this.metricDimension = metricDimension;
     this.valueDimension = valueDimension;
     this.metricAttributePrefix = metricAttributePrefix;
-    this.resourceAttributePrefix = resourceAttributePrefix;
   }
-
 
   private List<InputRow> parseMetricsData(final MetricsData metricsData)
   {
     return metricsData.getResourceMetricsList()
         .stream()
         .flatMap(resourceMetrics -> {
-          Map<String, Object> resourceAttributes = resourceMetrics.getResource()
-              .getAttributesList()
-              .stream()
-              .collect(HashMap::new,
-                  (m, kv) -> {
-                    Object value = parseAnyValue(kv.getValue());
-                    if (value != null) {
-                      m.put(resourceAttributePrefix + kv.getKey(), value);
-                    }
-                  },
-                  HashMap::putAll);
+          Map<String, Object> resourceAttributes = getResourceAttributes(resourceMetrics.getResource());
           return resourceMetrics.getScopeMetricsList()
               .stream()
               .flatMap(scopeMetrics -> scopeMetrics.getMetricsList()
@@ -154,40 +134,8 @@ public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufRea
     return createRow(TimeUnit.NANOSECONDS.toMillis(dataPoint.getTimeUnixNano()), event);
   }
 
-  @Nullable
-  private static Object parseAnyValue(AnyValue value)
-  {
-    switch (value.getValueCase()) {
-      case INT_VALUE:
-        return value.getIntValue();
-      case BOOL_VALUE:
-        return value.getBoolValue();
-      case DOUBLE_VALUE:
-        return value.getDoubleValue();
-      case STRING_VALUE:
-        return value.getStringValue();
-
-      // TODO: Support KVLIST_VALUE, ARRAY_VALUE and BYTES_VALUE
-
-      default:
-        // VALUE_NOT_SET
-        return null;
-    }
-  }
-
-  InputRow createRow(long timeUnixMilli, Map<String, Object> event)
-  {
-    final List<String> dimensions;
-    if (!dimensionsSpec.getDimensionNames().isEmpty()) {
-      dimensions = dimensionsSpec.getDimensionNames();
-    } else {
-      dimensions = new ArrayList<>(Sets.difference(event.keySet(), dimensionsSpec.getDimensionExclusions()));
-    }
-    return new MapBasedInputRow(timeUnixMilli, dimensions, event);
-  }
-
   @Override
-  public List<InputRow> getRows(ByteBuffer byteBuffer)
+  public List<InputRow> parseData(ByteBuffer byteBuffer)
       throws InvalidProtocolBufferException
   {
     return parseMetricsData(MetricsData.parseFrom(byteBuffer));
