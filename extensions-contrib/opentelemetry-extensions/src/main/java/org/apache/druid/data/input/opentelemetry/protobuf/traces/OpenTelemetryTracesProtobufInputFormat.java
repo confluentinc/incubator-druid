@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +30,7 @@ import java.util.Objects;
 
 public class OpenTelemetryTracesProtobufInputFormat extends OpenTelemetryInputFormat
 {
+
   private final OpenTelemetryTracesProtobufConfiguration config;
 
   @JsonProperty
@@ -43,7 +43,6 @@ public class OpenTelemetryTracesProtobufInputFormat extends OpenTelemetryInputFo
       @JsonProperty("config") OpenTelemetryTracesProtobufConfiguration config
   )
   {
-    super();
     this.config = config;
   }
 

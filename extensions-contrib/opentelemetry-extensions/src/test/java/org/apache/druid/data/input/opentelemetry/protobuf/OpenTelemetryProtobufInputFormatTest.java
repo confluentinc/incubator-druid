@@ -19,18 +19,28 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
-import org.apache.druid.data.input.InputRow;
-import org.junit.Assert;
+import org.apache.druid.data.input.InputEntity;
+import org.apache.druid.data.input.impl.ByteEntity;
+import org.apache.druid.indexing.seekablestream.SettableByteEntity;
+import org.junit.Test;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 
-public class TestUtils
+import static org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat.getSettableEntity;
+import static org.junit.Assert.assertEquals;
+
+public class OpenTelemetryProtobufInputFormatTest
 {
 
-  public static void assertDimensionEquals(InputRow row, String dimension, Object expected)
+  @Test
+  public void testGetSettableByteEntity()
   {
-    List<String> values = row.getDimension(dimension);
-    Assert.assertEquals(1, values.size());
-    Assert.assertEquals(expected, values.get(0));
+    byte[] bytes = "bytes".getBytes(StandardCharsets.UTF_8);
+    InputEntity ie = new ByteEntity(bytes);
+    assertEquals(ie, getSettableEntity(ie).getEntity());
+
+    SettableByteEntity<ByteEntity> se = new SettableByteEntity<>();
+    se.setEntity(new ByteEntity(bytes));
+    assertEquals(se, getSettableEntity(se));
   }
 }

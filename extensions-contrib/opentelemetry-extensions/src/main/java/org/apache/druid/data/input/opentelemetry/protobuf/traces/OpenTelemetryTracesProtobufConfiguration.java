@@ -19,17 +19,21 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
-import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
+@JsonDeserialize(builder = OpenTelemetryTracesProtobufConfiguration.Builder.class)
 public class OpenTelemetryTracesProtobufConfiguration
 {
+
   private final String resourceAttributePrefix;
   private final String spanAttributePrefix;
 
+  // Number of '*Dimension' variables
   public static final int DEFAULT_COLUMN_COUNT = 8;
 
   private final String nameDimension;
@@ -103,28 +107,19 @@ public class OpenTelemetryTracesProtobufConfiguration
   }
 
   private OpenTelemetryTracesProtobufConfiguration(
-      @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix,
-      @JsonProperty("spanAttributePrefix") String spanAttributePrefix,
-      @JsonProperty("nameDimension") String nameDimension,
-      @JsonProperty("spanIdDimension") String spanIdDimension,
-      @JsonProperty("parentSpanIdDimension") String parentSpanIdDimension,
-      @JsonProperty("traceIdDimension") String traceIdDimension,
-      @JsonProperty("endTimeDimension") String endTimeDimension,
-      @JsonProperty("statusCodeDimension") String statusCodeDimension,
-      @JsonProperty("statusMessageDimension") String statusMessageDimension,
-      @JsonProperty("kindDimension") String kindDimension
+      Builder builder
   )
   {
-    this.resourceAttributePrefix = resourceAttributePrefix;
-    this.spanAttributePrefix = spanAttributePrefix;
-    this.nameDimension = nameDimension;
-    this.spanIdDimension = spanIdDimension;
-    this.parentSpanIdDimension = parentSpanIdDimension;
-    this.traceIdDimension = traceIdDimension;
-    this.endTimeDimension = endTimeDimension;
-    this.statusCodeDimension = statusCodeDimension;
-    this.statusMessageDimension = statusMessageDimension;
-    this.kindDimension = kindDimension;
+    this.resourceAttributePrefix = builder.resourceAttributePrefix;
+    this.spanAttributePrefix = builder.spanAttributePrefix;
+    this.nameDimension = builder.nameDimension;
+    this.spanIdDimension = builder.spanIdDimension;
+    this.parentSpanIdDimension = builder.parentSpanIdDimension;
+    this.traceIdDimension = builder.traceIdDimension;
+    this.endTimeDimension = builder.endTimeDimension;
+    this.statusCodeDimension = builder.statusCodeDimension;
+    this.statusMessageDimension = builder.statusMessageDimension;
+    this.kindDimension = builder.kindDimension;
   }
 
   public static Builder newBuilder()
@@ -171,43 +166,67 @@ public class OpenTelemetryTracesProtobufConfiguration
     );
   }
 
+  @JsonPOJOBuilder(withPrefix = "set")
   public static class Builder
   {
-    private String spanAttributePrefix = "";
+    @JsonProperty("spanAttributePrefix")
+    private String spanAttributePrefix = "span.";
+
+    @JsonProperty("resourceAttributePrefix")
     private String resourceAttributePrefix = "resource.";
+
+    @JsonProperty("nameDimension")
     private String nameDimension = "name";
+
+    @JsonProperty("spanIdDimension")
     private String spanIdDimension = "span.id";
+
+    @JsonProperty("parentSpanIdDimension")
     private String parentSpanIdDimension = "parent.span.id";
+
+    @JsonProperty("traceIdDimension")
     private String traceIdDimension = "trace.id";
+
+    @JsonProperty("endTimeDimension")
     private String endTimeDimension = "end.time";
+
+    @JsonProperty("statusCodeDimension")
     private String statusCodeDimension = "status.code";
+
+    @JsonProperty("statusMessageDimension")
     private String statusMessageDimension = "status.message";
+
+    @JsonProperty("kindDimension")
     private String kindDimension = "kind";
 
     private Builder()
     {
     }
 
+    @JsonProperty
     public Builder setSpanAttributePrefix(String spanAttributePrefix)
     {
-      Objects.requireNonNull(spanAttributePrefix, "Span attribute prefix cannot be null");
+      Preconditions.checkNotNull(spanAttributePrefix, "Span attribute prefix cannot be null");
       this.spanAttributePrefix = spanAttributePrefix;
       return this;
     }
 
+    @JsonProperty
     public Builder setResourceAttributePrefix(String resourceAttributePrefix)
     {
-      Objects.requireNonNull(resourceAttributePrefix, "Resource attribute prefix cannot be null");
+      Preconditions.checkNotNull(resourceAttributePrefix, "Resource attribute prefix cannot be null");
       this.resourceAttributePrefix = resourceAttributePrefix;
       return this;
     }
 
+    @JsonProperty
     private void throwIfNullOrEmpty(String input, String dimensionName)
     {
-      Preconditions.checkArgument(!StringUtils.isNullOrEmpty(input),
+      Preconditions.checkArgument(!(input == null || input.isEmpty()),
                                   dimensionName + " dimension cannot be null or empty");
     }
 
+    @JsonProperty
     public Builder setNameDimension(String name)
     {
       throwIfNullOrEmpty(name, "Name");
@@ -215,6 +234,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setSpanIdDimension(String spanId)
     {
       throwIfNullOrEmpty(spanId, "Span Id");
@@ -222,6 +242,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setParentSpanIdDimension(String parentSpanId)
     {
       throwIfNullOrEmpty(parentSpanId, "Parent Span Id");
@@ -229,6 +250,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setTraceIdDimension(String traceId)
     {
       throwIfNullOrEmpty(traceId, "Trace Id");
@@ -236,6 +258,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setEndTimeDimension(String endTime)
     {
       throwIfNullOrEmpty(endTime, "End Time");
@@ -243,6 +266,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setStatusCodeDimension(String statusCode)
     {
       throwIfNullOrEmpty(statusCode, "Status Code");
@@ -250,6 +274,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setStatusMessageDimension(String statusMessage)
     {
       throwIfNullOrEmpty(statusMessage, "Status Message");
@@ -257,6 +282,7 @@ public class OpenTelemetryTracesProtobufConfiguration
       return this;
     }
 
+    @JsonProperty
     public Builder setKindDimension(String kind)
     {
       throwIfNullOrEmpty(kind, "Kind");
@@ -267,16 +293,7 @@ public class OpenTelemetryTracesProtobufConfiguration
     public OpenTelemetryTracesProtobufConfiguration build()
     {
       return new OpenTelemetryTracesProtobufConfiguration(
-          resourceAttributePrefix,
-          spanAttributePrefix,
-          nameDimension,
-          spanIdDimension,
-          parentSpanIdDimension,
-          traceIdDimension,
-          endTimeDimension,
-          statusCodeDimension,
-          statusMessageDimension,
-          kindDimension
+          this
       );
     }
   }

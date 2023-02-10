@@ -17,23 +17,23 @@
  * under the License.
  */
 
-package org.apache.druid.data.input.opentelemetry.protobuf;
+package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.MetricsData;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
 import io.opentelemetry.proto.resource.v1.Resource;
+import io.opentelemetry.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.proto.trace.v1.ScopeSpans;
+import io.opentelemetry.proto.trace.v1.Span;
+import io.opentelemetry.proto.trace.v1.Status;
+import io.opentelemetry.proto.trace.v1.TracesData;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
 import org.apache.druid.data.input.impl.StringDimensionSchema;
-import org.apache.druid.data.input.opentelemetry.protobuf.metrics.OpenTelemetryMetricsProtobufInputFormat;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
@@ -45,49 +45,50 @@ import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 @Fork(1)
 @State(Scope.Benchmark)
-public class OpenTelemetryBenchmark
+public class OpenTelemetryTracesBenchmark
 {
-
   private static ByteBuffer BUFFER;
 
   @Param(value = {"1", "2", "4", "8" })
-  private int resourceMetricCount = 1;
+  private int resourceSpanCount = 1;
 
   @Param(value = {"1"})
   private int instrumentationScopeCount = 1;
 
   @Param(value = {"1", "2", "4", "8" })
-  private int metricsCount = 1;
+  private int spansCount = 1;
 
-  @Param(value = {"1", "2", "4", "8" })
-  private int dataPointCount;
+  private static final long START = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z")
+                                                                         .toEpochMilli());
 
-  private static final long TIMESTAMP = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z").toEpochMilli());
+  private static final long END = START + 1_000_000L;
+
+  private static final OpenTelemetryTracesProtobufInputFormat INPUT_FORMAT =
+      new OpenTelemetryTracesProtobufInputFormat(
+          OpenTelemetryTracesProtobufConfiguration
+          .newBuilder()
+          .build()
+      );
 
   private static final InputRowSchema ROW_SCHEMA = new InputRowSchema(null,
-      new DimensionsSpec(ImmutableList.of(
-          new StringDimensionSchema("name"),
-          new StringDimensionSchema("value"),
-          new StringDimensionSchema("foo_key"))),
-      null);
+                         new DimensionsSpec(ImmutableList.of(
+                             new StringDimensionSchema("name"),
+                             new StringDimensionSchema("span.id"),
+                             new StringDimensionSchema("foo_key"))),
+                         null);
 
-  private static final OpenTelemetryMetricsProtobufInputFormat INPUT_FORMAT =
-      new OpenTelemetryMetricsProtobufInputFormat("name",
-          "value",
-          "",
-          "resource.");
-
-  private ByteBuffer createMetricBuffer()
+  private ByteBuffer createTracesBuffer()
   {
-    MetricsData.Builder metricsData = MetricsData.newBuilder();
-    for (int i = 0; i < resourceMetricCount; i++) {
-      ResourceMetrics.Builder resourceMetricsBuilder = metricsData.addResourceMetricsBuilder();
-      Resource.Builder resourceBuilder = resourceMetricsBuilder.getResourceBuilder();
+    TracesData.Builder tracesData = TracesData.newBuilder();
+    for (int i = 0; i < resourceSpanCount; i++) {
+      ResourceSpans.Builder resourceSpansBuilder = tracesData.addResourceSpansBuilder();
+      Resource.Builder resourceBuilder = resourceSpansBuilder.getResourceBuilder();
 
       for (int resourceAttributeI = 0; resourceAttributeI < 5; resourceAttributeI++) {
         KeyValue.Builder resourceAttributeBuilder = resourceBuilder.addAttributesBuilder();
@@ -96,36 +97,37 @@ public class OpenTelemetryBenchmark
       }
 
       for (int j = 0; j < instrumentationScopeCount; j++) {
-        ScopeMetrics.Builder scopeMetricsBuilder =
-            resourceMetricsBuilder.addScopeMetricsBuilder();
+        ScopeSpans.Builder scopeSpansBuilder = resourceSpansBuilder.addScopeSpansBuilder();
 
-        for (int k = 0; k < metricsCount; k++) {
-          Metric.Builder metricBuilder = scopeMetricsBuilder.addMetricsBuilder();
-          metricBuilder.setName("io.confluent.domain/such/good/metric/wow");
+        for (int k = 0; k < spansCount; k++) {
+          Span.Builder spanBuilder = scopeSpansBuilder.addSpansBuilder();
+          spanBuilder.setStartTimeUnixNano(START)
+                     .setEndTimeUnixNano(END)
+                     .setStatus(Status.newBuilder().setCodeValue(100).setMessage("Dummy").build())
+                     .setName("spanName")
+                     .setSpanId(ByteString.copyFrom("Span-Id", StandardCharsets.UTF_8))
+                     .setParentSpanId(ByteString.copyFrom("Parent-Span-Id", StandardCharsets.UTF_8))
+                     .setTraceId(ByteString.copyFrom("Trace-Id", StandardCharsets.UTF_8))
+                     .setKind(Span.SpanKind.SPAN_KIND_CONSUMER);
 
-          for (int l = 0; l < dataPointCount; l++) {
-            NumberDataPoint.Builder dataPointBuilder = metricBuilder.getSumBuilder().addDataPointsBuilder();
-            dataPointBuilder.setAsDouble(42.0).setTimeUnixNano(TIMESTAMP);
-
-            for (int metricAttributeI = 0; metricAttributeI < 10; metricAttributeI++) {
-              KeyValue.Builder attributeBuilder = dataPointBuilder.addAttributesBuilder();
-              attributeBuilder.setKey("foo_key_" + metricAttributeI);
-              attributeBuilder.setValue(AnyValue.newBuilder().setStringValue("foo-value"));
-            }
+          for (int spanAttributeI = 0; spanAttributeI < 10; spanAttributeI++) {
+            KeyValue.Builder attributeBuilder = spanBuilder.addAttributesBuilder();
+            attributeBuilder.setKey("foo_key_" + spanAttributeI);
+            attributeBuilder.setValue(AnyValue.newBuilder().setStringValue("foo-value"));
           }
         }
       }
     }
-    return ByteBuffer.wrap(metricsData.build().toByteArray());
+    return ByteBuffer.wrap(tracesData.build().toByteArray());
   }
 
   @Setup
   public void init()
   {
-    BUFFER = createMetricBuffer();
+    BUFFER = createTracesBuffer();
   }
 
-  @Benchmark()
+  @Benchmark
   public void measureSerde(Blackhole blackhole) throws IOException
   {
     for (CloseableIterator<InputRow> it = INPUT_FORMAT.createReader(ROW_SCHEMA, new ByteEntity(BUFFER), null).read(); it.hasNext(); ) {

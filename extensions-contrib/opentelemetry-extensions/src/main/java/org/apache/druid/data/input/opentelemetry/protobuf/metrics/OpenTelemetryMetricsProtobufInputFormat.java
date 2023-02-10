@@ -47,11 +47,10 @@ public class OpenTelemetryMetricsProtobufInputFormat extends OpenTelemetryInputF
       @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix
   )
   {
-    super();
-    this.resourceAttributePrefix = resourceAttributePrefix != null ? resourceAttributePrefix : DEFAULT_RESOURCE_PREFIX;
     this.metricDimension = metricDimension != null ? metricDimension : DEFAULT_METRIC_DIMENSION;
     this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
     this.metricAttributePrefix = StringUtils.nullToEmptyNonDruidDataString(metricAttributePrefix);
+    this.resourceAttributePrefix = resourceAttributePrefix != null ? resourceAttributePrefix : DEFAULT_RESOURCE_PREFIX;
   }
 
   @Override

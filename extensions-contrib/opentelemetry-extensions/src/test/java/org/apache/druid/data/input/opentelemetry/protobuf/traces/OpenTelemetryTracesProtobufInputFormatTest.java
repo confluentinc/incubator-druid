@@ -20,6 +20,7 @@
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufExtensionsModule;
 import org.junit.Assert;
@@ -65,5 +66,11 @@ public class OpenTelemetryTracesProtobufInputFormatTest
     );
 
     Assert.assertEquals(inputFormat, actual);
+  }
+
+  @Test
+  public void testEquals()
+  {
+    EqualsVerifier.forClass(OpenTelemetryTracesProtobufInputFormat.class).usingGetClass().verify();
   }
 }

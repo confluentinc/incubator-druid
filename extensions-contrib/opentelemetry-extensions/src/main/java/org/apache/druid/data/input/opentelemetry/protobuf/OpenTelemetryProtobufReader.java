@@ -46,6 +46,7 @@ import java.util.Map;
 
 public abstract class OpenTelemetryProtobufReader implements InputEntityReader
 {
+
   protected final String resourceAttributePrefix;
   protected final SettableByteEntity<? extends ByteEntity> source;
   private final DimensionsSpec dimensionsSpec;

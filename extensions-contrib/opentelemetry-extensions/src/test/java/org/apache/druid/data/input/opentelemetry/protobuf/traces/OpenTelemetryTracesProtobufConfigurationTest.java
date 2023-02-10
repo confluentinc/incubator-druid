@@ -20,12 +20,24 @@
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.jqno.equalsverifier.EqualsVerifier;
 import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufExtensionsModule;
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class OpenTelemetryTracesProtobufConfigurationTest
 {
+
+  final ObjectMapper jsonMapper = new ObjectMapper();
+
+  @Before
+  public void setup()
+  {
+    jsonMapper.registerModules(new OpenTelemetryProtobufExtensionsModule().getJacksonModules());
+  }
+
   @Test
   public void testSerde() throws Exception
   {
@@ -53,41 +65,53 @@ public class OpenTelemetryTracesProtobufConfigurationTest
         .setEndTimeDimension(endTime)
         .build();
 
-    final ObjectMapper jsonMapper = new ObjectMapper();
-    jsonMapper.registerModules(new OpenTelemetryProtobufExtensionsModule().getJacksonModules());
-
-    final OpenTelemetryTracesProtobufConfiguration actual = (OpenTelemetryTracesProtobufConfiguration) jsonMapper.readValue(
-        jsonMapper.writeValueAsString(config),
-        OpenTelemetryTracesProtobufConfiguration.class
-    );
-    Assert.assertEquals(config, actual);
-    Assert.assertEquals(resourceAttrPrefix, actual.getResourceAttributePrefix());
-    Assert.assertEquals(spanAttrPrefix, actual.getSpanAttributePrefix());
-    Assert.assertEquals(kind, actual.getKindDimension());
-    Assert.assertEquals(name, actual.getNameDimension());
-    Assert.assertEquals(parentSpanId, actual.getParentSpanIdDimension());
-    Assert.assertEquals(spanId, actual.getSpanIdDimension());
-    Assert.assertEquals(traceId, actual.getTraceIdDimension());
-    Assert.assertEquals(statusMessage, actual.getStatusMessageDimension());
-    Assert.assertEquals(statusCode, actual.getStatusCodeDimension());
-    Assert.assertEquals(endTime, actual.getEndTimeDimension());
+    final OpenTelemetryTracesProtobufConfiguration actual = (OpenTelemetryTracesProtobufConfiguration) jsonMapper
+        .readValue(
+          jsonMapper.writeValueAsString(config),
+          OpenTelemetryTracesProtobufConfiguration.class
+        );
+    assertEquals(config, actual);
+    assertEquals(resourceAttrPrefix, actual.getResourceAttributePrefix());
+    assertEquals(spanAttrPrefix, actual.getSpanAttributePrefix());
+    assertEquals(kind, actual.getKindDimension());
+    assertEquals(name, actual.getNameDimension());
+    assertEquals(parentSpanId, actual.getParentSpanIdDimension());
+    assertEquals(spanId, actual.getSpanIdDimension());
+    assertEquals(traceId, actual.getTraceIdDimension());
+    assertEquals(statusMessage, actual.getStatusMessageDimension());
+    assertEquals(statusCode, actual.getStatusCodeDimension());
+    assertEquals(endTime, actual.getEndTimeDimension());
   }
 
   @Test
   public void testDefaults() throws Exception
   {
-    OpenTelemetryTracesProtobufConfiguration config = OpenTelemetryTracesProtobufConfiguration
-        .newBuilder()
-        .build();
-    Assert.assertEquals("resource.", config.getResourceAttributePrefix());
-    Assert.assertEquals("", config.getSpanAttributePrefix());
-    Assert.assertEquals("kind", config.getKindDimension());
-    Assert.assertEquals("name", config.getNameDimension());
-    Assert.assertEquals("parent.span.id", config.getParentSpanIdDimension());
-    Assert.assertEquals("span.id", config.getSpanIdDimension());
-    Assert.assertEquals("trace.id", config.getTraceIdDimension());
-    Assert.assertEquals("status.message", config.getStatusMessageDimension());
-    Assert.assertEquals("status.code", config.getStatusCodeDimension());
-    Assert.assertEquals("end.time", config.getEndTimeDimension());
+    verifyDefaultFields(OpenTelemetryTracesProtobufConfiguration
+                            .newBuilder()
+                            .build());
+    verifyDefaultFields(jsonMapper.readValue(
+        "{}",
+        OpenTelemetryTracesProtobufConfiguration.class
+    ));
+  }
+
+  private void verifyDefaultFields(OpenTelemetryTracesProtobufConfiguration config)
+  {
+    assertEquals("resource.", config.getResourceAttributePrefix());
+    assertEquals("span.", config.getSpanAttributePrefix());
+    assertEquals("kind", config.getKindDimension());
+    assertEquals("name", config.getNameDimension());
+    assertEquals("parent.span.id", config.getParentSpanIdDimension());
+    assertEquals("span.id", config.getSpanIdDimension());
+    assertEquals("trace.id", config.getTraceIdDimension());
+    assertEquals("status.message", config.getStatusMessageDimension());
+    assertEquals("status.code", config.getStatusCodeDimension());
+    assertEquals("end.time", config.getEndTimeDimension());
+  }
+
+  @Test
+  public void testEquals() throws Exception
+  {
+    EqualsVerifier.forClass(OpenTelemetryTracesProtobufConfiguration.class).usingGetClass().verify();
   }
 }

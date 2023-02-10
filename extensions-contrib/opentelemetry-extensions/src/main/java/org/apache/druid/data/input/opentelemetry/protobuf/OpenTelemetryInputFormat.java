@@ -26,6 +26,7 @@ import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 
 public abstract class OpenTelemetryInputFormat implements InputFormat
 {
+
   @Override
   public boolean isSplittable()
   {
