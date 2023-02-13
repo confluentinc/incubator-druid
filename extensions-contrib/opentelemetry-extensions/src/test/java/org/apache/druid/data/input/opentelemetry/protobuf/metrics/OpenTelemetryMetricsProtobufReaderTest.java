@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.druid.data.input.opentelemetry.protobuf;
+package org.apache.druid.data.input.opentelemetry.protobuf.metrics;
 
 import com.google.common.collect.ImmutableList;
 import io.opentelemetry.proto.common.v1.AnyValue;
@@ -43,6 +43,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.druid.data.input.opentelemetry.protobuf.TestUtils.assertDimensionEquals;
 
 public class OpenTelemetryMetricsProtobufReaderTest
 {
@@ -403,12 +405,4 @@ public class OpenTelemetryMetricsProtobufReaderTest
     rows.forEachRemaining(rowList::add);
     Assert.assertEquals(0, rowList.size());
   }
-
-  private void assertDimensionEquals(InputRow row, String dimension, Object expected)
-  {
-    List<String> values = row.getDimension(dimension);
-    Assert.assertEquals(1, values.size());
-    Assert.assertEquals(expected, values.get(0));
-  }
-
 }
