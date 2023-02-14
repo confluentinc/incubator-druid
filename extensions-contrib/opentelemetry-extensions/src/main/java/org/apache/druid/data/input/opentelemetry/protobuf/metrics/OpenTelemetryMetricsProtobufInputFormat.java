@@ -24,12 +24,11 @@ import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
+import org.apache.druid.data.input.opentelemetry.protobuf.Utils;
 import org.apache.druid.java.util.common.StringUtils;
 
 import java.io.File;
 import java.util.Objects;
-
-import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.getSettableEntity;
 
 public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
 {
@@ -65,12 +64,12 @@ public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
   public InputEntityReader createReader(InputRowSchema inputRowSchema, InputEntity source, File temporaryDirectory)
   {
     return new OpenTelemetryMetricsProtobufReader(
-            inputRowSchema.getDimensionsSpec(),
-            getSettableEntity(source),
-            metricDimension,
-            valueDimension,
-            metricAttributePrefix,
-            resourceAttributePrefix
+        inputRowSchema.getDimensionsSpec(),
+        Utils.getSettableEntity(source),
+        metricDimension,
+        valueDimension,
+        metricAttributePrefix,
+        resourceAttributePrefix
     );
   }
 

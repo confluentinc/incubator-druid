@@ -24,11 +24,10 @@ import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
+import org.apache.druid.data.input.opentelemetry.protobuf.Utils;
 
 import java.io.File;
 import java.util.Objects;
-
-import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.getSettableEntity;
 
 public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 {
@@ -59,7 +58,7 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
   {
     return new OpenTelemetryTracesProtobufReader(
         inputRowSchema.getDimensionsSpec(),
-        getSettableEntity(source),
+        Utils.getSettableEntity(source),
         config
     );
   }
