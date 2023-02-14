@@ -26,10 +26,10 @@ import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat.getSettableEntity;
+import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.getSettableEntity;
 import static org.junit.Assert.assertEquals;
 
-public class OpenTelemetryProtobufInputFormatTest
+public class UtilsTest
 {
 
   @Test

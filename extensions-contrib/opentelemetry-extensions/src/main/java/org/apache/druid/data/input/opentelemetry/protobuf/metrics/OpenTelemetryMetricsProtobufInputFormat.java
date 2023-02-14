@@ -22,14 +22,16 @@ package org.apache.druid.data.input.opentelemetry.protobuf.metrics;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
+import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat;
 import org.apache.druid.java.util.common.StringUtils;
 
 import java.io.File;
 import java.util.Objects;
 
-public class OpenTelemetryMetricsProtobufInputFormat extends OpenTelemetryInputFormat
+import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.getSettableEntity;
+
+public class OpenTelemetryMetricsProtobufInputFormat implements InputFormat
 {
   private static final String DEFAULT_METRIC_DIMENSION = "metric";
   private static final String DEFAULT_VALUE_DIMENSION = "value";
@@ -51,6 +53,12 @@ public class OpenTelemetryMetricsProtobufInputFormat extends OpenTelemetryInputF
     this.valueDimension = valueDimension != null ? valueDimension : DEFAULT_VALUE_DIMENSION;
     this.metricAttributePrefix = StringUtils.nullToEmptyNonDruidDataString(metricAttributePrefix);
     this.resourceAttributePrefix = resourceAttributePrefix != null ? resourceAttributePrefix : DEFAULT_RESOURCE_PREFIX;
+  }
+
+  @Override
+  public boolean isSplittable()
+  {
+    return false;
   }
 
   @Override

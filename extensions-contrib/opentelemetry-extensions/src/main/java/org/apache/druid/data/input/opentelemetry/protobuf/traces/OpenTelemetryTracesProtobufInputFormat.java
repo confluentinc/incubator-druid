@@ -22,13 +22,15 @@ package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
+import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryInputFormat;
 
 import java.io.File;
 import java.util.Objects;
 
-public class OpenTelemetryTracesProtobufInputFormat extends OpenTelemetryInputFormat
+import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.getSettableEntity;
+
+public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 {
 
   private final OpenTelemetryTracesProtobufConfiguration config;
@@ -44,6 +46,12 @@ public class OpenTelemetryTracesProtobufInputFormat extends OpenTelemetryInputFo
   )
   {
     this.config = config;
+  }
+
+  @Override
+  public boolean isSplittable()
+  {
+    return false;
   }
 
   @Override

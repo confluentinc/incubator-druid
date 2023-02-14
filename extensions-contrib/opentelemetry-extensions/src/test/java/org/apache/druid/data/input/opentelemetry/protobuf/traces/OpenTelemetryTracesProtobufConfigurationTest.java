@@ -109,6 +109,7 @@ public class OpenTelemetryTracesProtobufConfigurationTest
     assertEquals("end.time", config.getEndTimeDimension());
   }
 
+
   @Test
   public void testEquals() throws Exception
   {
