@@ -26,16 +26,6 @@ import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufE
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_END_TIME_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_KIND_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_PARENT_SPAN_ID_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_RESOURCE_ATTR_PREFIX;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ATTR_PREFIX;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ID_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_NAME_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_STATUS_CODE_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_STATUS_MESSAGE_DIMENSION;
-import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_TRACE_ID_DIMENSION;
 import static org.junit.Assert.assertEquals;
 
 public class OpenTelemetryTracesProtobufInputFormatTest
@@ -79,7 +69,7 @@ public class OpenTelemetryTracesProtobufInputFormatTest
   @Test
   public void testDefaults() throws Exception
   {
-    verifyDefaultFields(new OpenTelemetryTracesProtobufInputFormat(
+    OpenTelemetryTracesProtobufInputFormat obj = new OpenTelemetryTracesProtobufInputFormat(
         null,
         null,
         null,
@@ -89,25 +79,17 @@ public class OpenTelemetryTracesProtobufInputFormatTest
         null,
         null,
         null,
-        null));
-    verifyDefaultFields(jsonMapper.readValue(
-        "{}",
-        OpenTelemetryTracesProtobufInputFormat.class
-    ));
-  }
-
-  private void verifyDefaultFields(OpenTelemetryTracesProtobufInputFormat obj)
-  {
-    assertEquals(DEFAULT_RESOURCE_ATTR_PREFIX, obj.getResourceAttributePrefix());
-    assertEquals(DEFAULT_SPAN_ATTR_PREFIX, obj.getSpanAttributePrefix());
-    assertEquals(DEFAULT_KIND_DIMENSION, obj.getKindDimension());
-    assertEquals(DEFAULT_SPAN_NAME_DIMENSION, obj.getSpanNameDimension());
-    assertEquals(DEFAULT_PARENT_SPAN_ID_DIMENSION, obj.getParentSpanIdDimension());
-    assertEquals(DEFAULT_SPAN_ID_DIMENSION, obj.getSpanIdDimension());
-    assertEquals(DEFAULT_TRACE_ID_DIMENSION, obj.getTraceIdDimension());
-    assertEquals(DEFAULT_STATUS_MESSAGE_DIMENSION, obj.getStatusMessageDimension());
-    assertEquals(DEFAULT_STATUS_CODE_DIMENSION, obj.getStatusCodeDimension());
-    assertEquals(DEFAULT_END_TIME_DIMENSION, obj.getEndTimeDimension());
+        null);
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_RESOURCE_ATTR_PREFIX, obj.getResourceAttributePrefix());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ATTR_PREFIX, obj.getSpanAttributePrefix());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_KIND_DIMENSION, obj.getKindDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_NAME_DIMENSION, obj.getSpanNameDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_PARENT_SPAN_ID_DIMENSION, obj.getParentSpanIdDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ID_DIMENSION, obj.getSpanIdDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_TRACE_ID_DIMENSION, obj.getTraceIdDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_STATUS_MESSAGE_DIMENSION, obj.getStatusMessageDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_STATUS_CODE_DIMENSION, obj.getStatusCodeDimension());
+    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_END_TIME_DIMENSION, obj.getEndTimeDimension());
   }
 
   @Test

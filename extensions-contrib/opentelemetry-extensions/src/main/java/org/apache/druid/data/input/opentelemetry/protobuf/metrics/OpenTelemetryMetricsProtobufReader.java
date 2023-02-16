@@ -27,7 +27,8 @@ import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufReader;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenXProtobufReader;
+import org.apache.druid.data.input.opentelemetry.protobuf.Utils;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.logger.Logger;
 
@@ -39,12 +40,13 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufReader
+public class OpenTelemetryMetricsProtobufReader extends OpenXProtobufReader
 {
   private static final Logger log = new Logger(OpenTelemetryMetricsProtobufReader.class);
   private final String metricDimension;
   private final String valueDimension;
   private final String metricAttributePrefix;
+  private final String resourceAttributePrefix;
 
   public OpenTelemetryMetricsProtobufReader(
       DimensionsSpec dimensionsSpec,
@@ -55,10 +57,11 @@ public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufRea
       String resourceAttributePrefix
   )
   {
-    super(dimensionsSpec, source, resourceAttributePrefix);
+    super(dimensionsSpec, source);
     this.metricDimension = metricDimension;
     this.valueDimension = valueDimension;
     this.metricAttributePrefix = metricAttributePrefix;
+    this.resourceAttributePrefix = resourceAttributePrefix;
   }
 
   private List<InputRow> parseMetricsData(final MetricsData metricsData)
@@ -66,7 +69,8 @@ public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufRea
     return metricsData.getResourceMetricsList()
         .stream()
         .flatMap(resourceMetrics -> {
-          Map<String, Object> resourceAttributes = getResourceAttributes(resourceMetrics.getResource());
+          Map<String, Object> resourceAttributes = Utils.getResourceAttributes(resourceMetrics.getResource(),
+                                                                         resourceAttributePrefix);
           return resourceMetrics.getScopeMetricsList()
               .stream()
               .flatMap(scopeMetrics -> scopeMetrics.getMetricsList()
@@ -125,7 +129,7 @@ public class OpenTelemetryMetricsProtobufReader extends OpenTelemetryProtobufRea
 
     event.putAll(resourceAttributes);
     dataPoint.getAttributesList().forEach(att -> {
-      Object value = parseAnyValue(att.getValue());
+      Object value = Utils.parseAnyValue(att.getValue());
       if (value != null) {
         event.put(metricAttributePrefix + att.getKey(), value);
       }

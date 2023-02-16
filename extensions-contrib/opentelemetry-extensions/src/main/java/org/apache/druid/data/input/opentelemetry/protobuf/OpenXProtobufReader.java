@@ -23,8 +23,6 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.resource.v1.Resource;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.InputRowListPlusRawValues;
@@ -36,27 +34,23 @@ import org.apache.druid.java.util.common.CloseableIterators;
 import org.apache.druid.java.util.common.parsers.CloseableIterator;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public abstract class OpenTelemetryProtobufReader implements InputEntityReader
+
+public abstract class OpenXProtobufReader implements InputEntityReader
 {
 
-  protected final String resourceAttributePrefix;
   protected final SettableByteEntity<? extends ByteEntity> source;
-  private final DimensionsSpec dimensionsSpec;
+  protected final DimensionsSpec dimensionsSpec;
 
-  public OpenTelemetryProtobufReader(DimensionsSpec dimensionsSpec,
-                                     SettableByteEntity<? extends ByteEntity> source,
-                                     String resourceAttributePrefix)
+  public OpenXProtobufReader(DimensionsSpec dimensionsSpec,
+                             SettableByteEntity<? extends ByteEntity> source)
   {
     this.dimensionsSpec = dimensionsSpec;
-    this.resourceAttributePrefix = resourceAttributePrefix;
     this.source = source;
   }
 
@@ -80,7 +74,7 @@ public abstract class OpenTelemetryProtobufReader implements InputEntityReader
     });
   }
 
-  private List<InputRow> readAsList()
+  public List<InputRow> readAsList()
   {
     try {
       ByteBuffer buffer = source.getEntity().getBuffer();
@@ -95,27 +89,6 @@ public abstract class OpenTelemetryProtobufReader implements InputEntityReader
     }
   }
 
-  @Nullable
-  protected static Object parseAnyValue(AnyValue value)
-  {
-    switch (value.getValueCase()) {
-      case INT_VALUE:
-        return value.getIntValue();
-      case BOOL_VALUE:
-        return value.getBoolValue();
-      case DOUBLE_VALUE:
-        return value.getDoubleValue();
-      case STRING_VALUE:
-        return value.getStringValue();
-
-      // TODO: Support KVLIST_VALUE, ARRAY_VALUE and BYTES_VALUE
-
-      default:
-        // VALUE_NOT_SET
-        return null;
-    }
-  }
-
   protected InputRow createRow(long timeUnixMilli, Map<String, Object> event)
   {
     final List<String> dimensions;
@@ -125,22 +98,6 @@ public abstract class OpenTelemetryProtobufReader implements InputEntityReader
       dimensions = new ArrayList<>(Sets.difference(event.keySet(), dimensionsSpec.getDimensionExclusions()));
     }
     return new MapBasedInputRow(timeUnixMilli, dimensions, event);
-  }
-
-  protected Map<String, Object> getResourceAttributes(Resource resource)
-  {
-    return resource.getAttributesList()
-        .stream()
-        .collect(
-            HashMap::new,
-            (m, kv) -> {
-              Object value = parseAnyValue(kv.getValue());
-              if (value != null) {
-                m.put(resourceAttributePrefix + kv.getKey(), value);
-              }
-            },
-            HashMap::putAll
-        );
   }
 
   @Override

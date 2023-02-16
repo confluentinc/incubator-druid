@@ -28,7 +28,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufReader;
+import org.apache.druid.data.input.opentelemetry.protobuf.OpenXProtobufReader;
+import org.apache.druid.data.input.opentelemetry.protobuf.Utils;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 
 import java.nio.ByteBuffer;
@@ -37,9 +38,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufReader
+public class OpenTelemetryTracesProtobufReader extends OpenXProtobufReader
 {
   private final String spanAttributePrefix;
+  private final String resourceAttributePrefix;
 
   // Number of '*Dimension' variables
   private static final int DEFAULT_COLUMN_COUNT = 8;
@@ -57,8 +59,8 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
   public OpenTelemetryTracesProtobufReader(
       DimensionsSpec dimensionsSpec,
       SettableByteEntity<? extends ByteEntity> source,
-      String resourceAttributePrefix,
       String spanAttributePrefix,
+      String resourceAttributePrefix,
       String spanNameDimension,
       String spanIdDimension,
       String parentSpanIdDimension,
@@ -69,7 +71,8 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
       String kindDimension
   )
   {
-    super(dimensionsSpec, source, resourceAttributePrefix);
+    super(dimensionsSpec, source);
+    this.resourceAttributePrefix = resourceAttributePrefix;
     this.spanAttributePrefix = spanAttributePrefix;
     this.spanNameDimension = spanNameDimension;
     this.spanIdDimension = spanIdDimension;
@@ -79,7 +82,7 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
     this.statusCodeDimension = statusCodeDimension;
     this.statusMessageDimension = statusMessageDimension;
     this.kindDimension = kindDimension;
- }
+  }
 
   @Override
   public List<InputRow> parseData(ByteBuffer byteBuffer)
@@ -93,7 +96,8 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
     return tracesData.getResourceSpansList()
         .stream()
         .flatMap(resourceSpans -> {
-          Map<String, Object> resourceAttributes = getResourceAttributes(resourceSpans.getResource());
+          Map<String, Object> resourceAttributes = Utils.getResourceAttributes(resourceSpans.getResource(),
+                                                                               resourceAttributePrefix);
           return resourceSpans.getScopeSpansList()
               .stream()
               .flatMap(scopeSpans -> scopeSpans.getSpansList()
@@ -118,7 +122,7 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
     event.put(kindDimension, StringUtils.replace(span.getKind().toString(), "SPAN_KIND_", ""));
     event.putAll(resourceAttributes);
     span.getAttributesList().forEach(att -> {
-      Object value = parseAnyValue(att.getValue());
+      Object value = Utils.parseAnyValue(att.getValue());
       if (value != null) {
         event.put(spanAttributePrefix + att.getKey(), value);
       }

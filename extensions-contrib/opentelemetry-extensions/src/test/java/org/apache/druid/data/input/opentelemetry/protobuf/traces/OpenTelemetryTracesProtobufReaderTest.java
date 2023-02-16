@@ -81,11 +81,11 @@ public class OpenTelemetryTracesProtobufReaderTest
   private final String spanAttributePrefix = "span.";
   private final String resourceAttributePrefix = "resource.";
   private final String spanNameDimension = "name";
-  private final String spanIdDimension ="span_id" ;
+  private final String spanIdDimension = "span_id";
   private final String parentSpanIdDimension = "parent_span_id";
   private final String traceIdDimension = "trace_id";
   private final String endTimeDimension = "end_time";
-  private final String statusCodeDimension =  "status_code";
+  private final String statusCodeDimension = "status_code";
   private final String statusMessageDimension = "status_message";
   private final String kindDimension = "kind";
 
@@ -205,8 +205,8 @@ public class OpenTelemetryTracesProtobufReaderTest
     byte[] spanId2 = "span-2".getBytes(StandardCharsets.UTF_8);
     byte[] parentId2 = "parent-2".getBytes(StandardCharsets.UTF_8);
     Span.SpanKind spanKind2 = Span.SpanKind.SPAN_KIND_CLIENT;
-    String metricAttributeKey2 = "someIntAttribute";
-    int metricAttributeVal2 = 23;
+    String spanAttributeKey2 = "someIntAttribute";
+    int spanAttributeVal2 = 23;
     String statusMessage2 = "NOT_OK";
     int statusCode2 = 400;
 
@@ -221,8 +221,8 @@ public class OpenTelemetryTracesProtobufReaderTest
         .setKind(spanKind2)
         .addAttributes(
             KeyValue.newBuilder()
-                    .setKey(metricAttributeKey2)
-                    .setValue(AnyValue.newBuilder().setIntValue(metricAttributeVal2))
+                    .setKey(spanAttributeKey2)
+                    .setValue(AnyValue.newBuilder().setIntValue(spanAttributeVal2))
                     .build());
     CloseableIterator<InputRow> rows = getDataIterator(dimensionsSpec);
     List<InputRow> rowList = new ArrayList<>();
@@ -238,9 +238,9 @@ public class OpenTelemetryTracesProtobufReaderTest
     assertEquals(2, row.getDimensions().size());
     assertDimensionEquals(row, resourceAttributePrefix + ATTRIBUTE_NAMESPACE,
                           ATTRIBUTE_VALUE_NAMESPACE);
-    assertDimensionEquals(row, resourceAttributePrefix + metricAttributeKey2,
-                          Integer.toString(metricAttributeVal2));
-    assertDimensionEquals(row, spanName2, spanName2);
+    assertDimensionEquals(row, spanAttributePrefix + spanAttributeKey2,
+                          Integer.toString(spanAttributeVal2));
+    assertDimensionEquals(row, spanNameDimension, spanName2);
     assertDimensionEquals(row, spanIdDimension, Hex.encodeHexString(spanId2));
     assertDimensionEquals(row, parentSpanIdDimension, Hex.encodeHexString(parentId2));
     assertDimensionEquals(row, traceIdDimension, Hex.encodeHexString(traceId2));

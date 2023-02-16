@@ -19,6 +19,8 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
+import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.common.v1.ArrayValue;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
@@ -27,11 +29,12 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 
 import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.getSettableEntity;
+import static org.apache.druid.data.input.opentelemetry.protobuf.Utils.parseAnyValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class UtilsTest
 {
-
   @Test
   public void testGetSettableByteEntity()
   {
@@ -42,5 +45,16 @@ public class UtilsTest
     SettableByteEntity<ByteEntity> se = new SettableByteEntity<>();
     se.setEntity(new ByteEntity(bytes));
     assertEquals(se, getSettableEntity(se));
+  }
+
+  @Test
+  public void testParseAnyValue()
+  {
+    AnyValue.Builder anyValBuilder = AnyValue.newBuilder();
+    assertEquals(100L, parseAnyValue(anyValBuilder.setIntValue(100L).build()));
+    assertEquals(false, parseAnyValue(anyValBuilder.setBoolValue(false).build()));
+    assertEquals("String", parseAnyValue(anyValBuilder.setStringValue("String").build()));
+    assertEquals(100.0, parseAnyValue(anyValBuilder.setDoubleValue(100.0).build()));
+    assertNull(parseAnyValue(anyValBuilder.setArrayValue(ArrayValue.getDefaultInstance()).build()));
   }
 }

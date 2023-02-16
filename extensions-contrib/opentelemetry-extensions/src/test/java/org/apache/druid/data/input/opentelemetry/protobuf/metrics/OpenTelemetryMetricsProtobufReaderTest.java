@@ -358,7 +358,7 @@ public class OpenTelemetryMetricsProtobufReaderTest
   }
 
   @Test
-  public void testInvalidProtobuf()
+  public void testInvalidProtobuf() throws IOException
   {
     byte[] invalidProtobuf = new byte[] {0x00, 0x01};
     SettableByteEntity<ByteEntity> settableByteEntity = new SettableByteEntity<>();
@@ -373,9 +373,6 @@ public class OpenTelemetryMetricsProtobufReaderTest
     ).read()) {
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
       Assert.assertThrows(ParseException.class, () -> rows.next());
-    }
-    catch (IOException e) {
-      // Comes from the implicit call to close. Ignore
     }
   }
 

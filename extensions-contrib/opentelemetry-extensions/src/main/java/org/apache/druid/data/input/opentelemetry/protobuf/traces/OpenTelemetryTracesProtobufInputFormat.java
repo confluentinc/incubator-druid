@@ -44,7 +44,6 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
   static String DEFAULT_STATUS_MESSAGE_DIMENSION = "status.message";
   static String DEFAULT_KIND_DIMENSION = "kind";
 
-
   private final String spanAttributePrefix;
   private final String resourceAttributePrefix;
   private final String spanNameDimension;
@@ -118,13 +117,18 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 
   private String validateDimensionName(String input, String dimensionName)
   {
-    Preconditions.checkArgument(input.isEmpty(),
+    Preconditions.checkArgument(!input.isEmpty(),
                                 dimensionName + " dimension cannot be empty");
 
-    Preconditions.checkState(!( !resourceAttributePrefix.isEmpty() && input.startsWith(resourceAttributePrefix)),
-                                " dimension name cannot start with resourceAttributePrefix");
-    Preconditions.checkArgument(!( !spanAttributePrefix.isEmpty() && input.startsWith(spanAttributePrefix)),
-                                " dimension name cannot start with spanAttributePrefix");
+    if (!resourceAttributePrefix.isEmpty()) {
+      Preconditions.checkArgument(!input.startsWith(resourceAttributePrefix),
+                                  " dimension name cannot start with resourceAttributePrefix");
+    }
+
+    if (!spanAttributePrefix.isEmpty()) {
+      Preconditions.checkArgument(!input.startsWith(spanAttributePrefix),
+                                  " dimension name cannot start with spanAttributePrefix");
+    }
     return input;
   }
 
@@ -159,7 +163,7 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
                                validateDimensionName(statusCodeDimension, "Status Code");
     this.statusMessageDimension = statusMessageDimension == null ? DEFAULT_STATUS_MESSAGE_DIMENSION :
                                validateDimensionName(statusMessageDimension, "Status Message");
-    this.kindDimension = kindDimension == null  ? DEFAULT_KIND_DIMENSION :
+    this.kindDimension = kindDimension == null ? DEFAULT_KIND_DIMENSION :
                          validateDimensionName(kindDimension, "Kind");
 
   }

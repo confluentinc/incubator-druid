@@ -19,13 +19,18 @@
 
 package org.apache.druid.data.input.opentelemetry.protobuf;
 
+import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.resource.v1.Resource;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Utils
 {
-
   public static SettableByteEntity<? extends ByteEntity> getSettableEntity(InputEntity source)
   {
     // Sampler passes a KafkaRecordEntity directly, while the normal code path wraps the same entity in a
@@ -37,5 +42,43 @@ public class Utils
       wrapper.setEntity((ByteEntity) source);
       return wrapper;
     }
+  }
+
+  @Nullable
+  public static Object parseAnyValue(AnyValue value)
+  {
+    switch (value.getValueCase()) {
+      case INT_VALUE:
+        return value.getIntValue();
+      case BOOL_VALUE:
+        return value.getBoolValue();
+      case DOUBLE_VALUE:
+        return value.getDoubleValue();
+      case STRING_VALUE:
+        return value.getStringValue();
+
+      // TODO: Support KVLIST_VALUE, ARRAY_VALUE and BYTES_VALUE
+
+      default:
+        // VALUE_NOT_SET
+        return null;
+    }
+  }
+
+  public static Map<String, Object> getResourceAttributes(Resource resource, String resourceAttributePrefix)
+  {
+    return resource
+        .getAttributesList()
+        .stream()
+        .collect(
+            HashMap::new,
+            (m, kv) -> {
+              Object value = Utils.parseAnyValue(kv.getValue());
+              if (value != null) {
+                m.put(resourceAttributePrefix + kv.getKey(), value);
+              }
+            },
+            HashMap::putAll
+        );
   }
 }
