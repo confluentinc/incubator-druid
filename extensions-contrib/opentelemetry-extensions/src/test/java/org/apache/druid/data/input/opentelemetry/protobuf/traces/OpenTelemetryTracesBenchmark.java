@@ -71,9 +71,16 @@ public class OpenTelemetryTracesBenchmark
 
   private static final OpenTelemetryTracesProtobufInputFormat INPUT_FORMAT =
       new OpenTelemetryTracesProtobufInputFormat(
-          OpenTelemetryTracesProtobufConfiguration
-          .newBuilder()
-          .build()
+          "test.span.",
+          "test.resource.",
+          "test.name",
+          "test.span_id",
+          "test.parent.span",
+          "test.trace.id",
+          "test.end.time",
+          "test.status.code",
+          "test.status.message",
+          "test.kind"
       );
 
   private static final InputRowSchema ROW_SCHEMA = new InputRowSchema(null,

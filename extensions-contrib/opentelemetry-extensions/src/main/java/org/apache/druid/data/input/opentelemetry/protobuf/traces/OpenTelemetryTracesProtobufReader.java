@@ -39,17 +39,47 @@ import java.util.stream.Collectors;
 
 public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufReader
 {
-  private final OpenTelemetryTracesProtobufConfiguration config;
+  private final String spanAttributePrefix;
+
+  // Number of '*Dimension' variables
+  private static final int DEFAULT_COLUMN_COUNT = 8;
+
+  private final String spanNameDimension;
+  private final String spanIdDimension;
+  private final String parentSpanIdDimension;
+  private final String traceIdDimension;
+
+  private final String endTimeDimension;
+  private final String statusCodeDimension;
+  private final String statusMessageDimension;
+  private final String kindDimension;
 
   public OpenTelemetryTracesProtobufReader(
       DimensionsSpec dimensionsSpec,
       SettableByteEntity<? extends ByteEntity> source,
-      OpenTelemetryTracesProtobufConfiguration config
+      String resourceAttributePrefix,
+      String spanAttributePrefix,
+      String spanNameDimension,
+      String spanIdDimension,
+      String parentSpanIdDimension,
+      String traceIdDimension,
+      String endTimeDimension,
+      String statusCodeDimension,
+      String statusMessageDimension,
+      String kindDimension
   )
   {
-    super(dimensionsSpec, source, config.getResourceAttributePrefix());
-    this.config = config;
-  }
+    super(dimensionsSpec, source, resourceAttributePrefix);
+    this.spanAttributePrefix = spanAttributePrefix;
+    this.spanNameDimension = spanNameDimension;
+    this.spanIdDimension = spanIdDimension;
+    this.parentSpanIdDimension = parentSpanIdDimension;
+    this.traceIdDimension = traceIdDimension;
+    this.endTimeDimension = endTimeDimension;
+    this.statusCodeDimension = statusCodeDimension;
+    this.statusMessageDimension = statusMessageDimension;
+    this.kindDimension = kindDimension;
+ }
 
   @Override
   public List<InputRow> parseData(ByteBuffer byteBuffer)
@@ -76,21 +106,21 @@ public class OpenTelemetryTracesProtobufReader extends OpenTelemetryProtobufRead
   private InputRow parseSpan(Span span, Map<String, Object> resourceAttributes)
   {
     int capacity = resourceAttributes.size() + span.getAttributesCount() +
-                   OpenTelemetryTracesProtobufConfiguration.DEFAULT_COLUMN_COUNT;
+                   DEFAULT_COLUMN_COUNT;
     Map<String, Object> event = Maps.newHashMapWithExpectedSize(capacity);
-    event.put(config.getNameDimension(), span.getName());
-    event.put(config.getSpanIdDimension(), Hex.encodeHexString(span.getSpanId().asReadOnlyByteBuffer()));
-    event.put(config.getParentSpanIdDimension(), Hex.encodeHexString(span.getParentSpanId().asReadOnlyByteBuffer()));
-    event.put(config.getTraceIdDimension(), Hex.encodeHexString(span.getTraceId().asReadOnlyByteBuffer()));
-    event.put(config.getEndTimeDimension(), TimeUnit.NANOSECONDS.toMillis(span.getEndTimeUnixNano()));
-    event.put(config.getStatusCodeDimension(), span.getStatus().getCodeValue());
-    event.put(config.getStatusMessageDimension(), span.getStatus().getMessage());
-    event.put(config.getKindDimension(), StringUtils.replace(span.getKind().toString(), "SPAN_KIND_", ""));
+    event.put(spanNameDimension, span.getName());
+    event.put(spanIdDimension, Hex.encodeHexString(span.getSpanId().asReadOnlyByteBuffer()));
+    event.put(parentSpanIdDimension, Hex.encodeHexString(span.getParentSpanId().asReadOnlyByteBuffer()));
+    event.put(traceIdDimension, Hex.encodeHexString(span.getTraceId().asReadOnlyByteBuffer()));
+    event.put(endTimeDimension, TimeUnit.NANOSECONDS.toMillis(span.getEndTimeUnixNano()));
+    event.put(statusCodeDimension, span.getStatus().getCodeValue());
+    event.put(statusMessageDimension, span.getStatus().getMessage());
+    event.put(kindDimension, StringUtils.replace(span.getKind().toString(), "SPAN_KIND_", ""));
     event.putAll(resourceAttributes);
     span.getAttributesList().forEach(att -> {
       Object value = parseAnyValue(att.getValue());
       if (value != null) {
-        event.put(config.getSpanAttributePrefix() + att.getKey(), value);
+        event.put(spanAttributePrefix + att.getKey(), value);
       }
     });
 

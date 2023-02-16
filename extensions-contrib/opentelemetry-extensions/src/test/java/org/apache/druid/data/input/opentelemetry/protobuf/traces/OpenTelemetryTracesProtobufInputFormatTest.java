@@ -26,38 +26,46 @@ import org.apache.druid.data.input.opentelemetry.protobuf.OpenTelemetryProtobufE
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_END_TIME_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_KIND_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_PARENT_SPAN_ID_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_RESOURCE_ATTR_PREFIX;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ATTR_PREFIX;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ID_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_NAME_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_STATUS_CODE_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_STATUS_MESSAGE_DIMENSION;
+import static org.apache.druid.data.input.opentelemetry.protobuf.traces.OpenTelemetryTracesProtobufInputFormat.DEFAULT_TRACE_ID_DIMENSION;
+import static org.junit.Assert.assertEquals;
+
 public class OpenTelemetryTracesProtobufInputFormatTest
 {
+  final ObjectMapper jsonMapper = new ObjectMapper();
 
   @Test
   public void testSerde() throws Exception
   {
-    String resourceAttrPrefix = "test.resource";
+    String resourceAttrPrefix = "test.resource.";
     String spanAttrPrefix = "test.span.";
     String kind = "test.kind";
-    String name = "test.name";
+    String spanName = "test.name";
     String parentSpanId = "test.parent.span";
-    String spanId = "test.span.id";
+    String spanId = "test.span_id";
     String traceId = "test.trace.id";
     String statusCode = "test.status.code";
     String statusMessage = "test.status.message";
     String endTime = "test.end.time";
-    OpenTelemetryTracesProtobufConfiguration config = OpenTelemetryTracesProtobufConfiguration
-        .newBuilder()
-        .setResourceAttributePrefix(resourceAttrPrefix)
-        .setSpanAttributePrefix(spanAttrPrefix)
-        .setKindDimension(kind)
-        .setNameDimension(name)
-        .setParentSpanIdDimension(parentSpanId)
-        .setSpanIdDimension(spanId)
-        .setTraceIdDimension(traceId)
-        .setStatusCodeDimension(statusCode)
-        .setStatusMessageDimension(statusMessage)
-        .setEndTimeDimension(endTime)
-        .build();
-    OpenTelemetryTracesProtobufInputFormat inputFormat = new OpenTelemetryTracesProtobufInputFormat(config);
-
-    final ObjectMapper jsonMapper = new ObjectMapper();
+    OpenTelemetryTracesProtobufInputFormat inputFormat = new OpenTelemetryTracesProtobufInputFormat(
+        "test.span.",
+        "test.resource.",
+        "test.name",
+        "test.span_id",
+        "test.parent.span",
+        "test.trace.id",
+        "test.end.time",
+        "test.status.code",
+        "test.status.message",
+        "test.kind");
     jsonMapper.registerModules(new OpenTelemetryProtobufExtensionsModule().getJacksonModules());
 
     final OpenTelemetryTracesProtobufInputFormat actual = (OpenTelemetryTracesProtobufInputFormat) jsonMapper.readValue(
@@ -66,6 +74,40 @@ public class OpenTelemetryTracesProtobufInputFormatTest
     );
 
     Assert.assertEquals(inputFormat, actual);
+  }
+
+  @Test
+  public void testDefaults() throws Exception
+  {
+    verifyDefaultFields(new OpenTelemetryTracesProtobufInputFormat(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null));
+    verifyDefaultFields(jsonMapper.readValue(
+        "{}",
+        OpenTelemetryTracesProtobufInputFormat.class
+    ));
+  }
+
+  private void verifyDefaultFields(OpenTelemetryTracesProtobufInputFormat obj)
+  {
+    assertEquals(DEFAULT_RESOURCE_ATTR_PREFIX, obj.getResourceAttributePrefix());
+    assertEquals(DEFAULT_SPAN_ATTR_PREFIX, obj.getSpanAttributePrefix());
+    assertEquals(DEFAULT_KIND_DIMENSION, obj.getKindDimension());
+    assertEquals(DEFAULT_SPAN_NAME_DIMENSION, obj.getSpanNameDimension());
+    assertEquals(DEFAULT_PARENT_SPAN_ID_DIMENSION, obj.getParentSpanIdDimension());
+    assertEquals(DEFAULT_SPAN_ID_DIMENSION, obj.getSpanIdDimension());
+    assertEquals(DEFAULT_TRACE_ID_DIMENSION, obj.getTraceIdDimension());
+    assertEquals(DEFAULT_STATUS_MESSAGE_DIMENSION, obj.getStatusMessageDimension());
+    assertEquals(DEFAULT_STATUS_CODE_DIMENSION, obj.getStatusCodeDimension());
+    assertEquals(DEFAULT_END_TIME_DIMENSION, obj.getEndTimeDimension());
   }
 
   @Test

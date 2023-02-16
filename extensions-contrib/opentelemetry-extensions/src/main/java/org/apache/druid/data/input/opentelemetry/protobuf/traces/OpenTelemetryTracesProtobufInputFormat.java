@@ -20,6 +20,7 @@
 package org.apache.druid.data.input.opentelemetry.protobuf.traces;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Preconditions;
 import org.apache.druid.data.input.InputEntity;
 import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
@@ -32,19 +33,135 @@ import java.util.Objects;
 public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 {
 
-  private final OpenTelemetryTracesProtobufConfiguration config;
+  static String DEFAULT_SPAN_ATTR_PREFIX = "span.attr.";
+  static String DEFAULT_RESOURCE_ATTR_PREFIX = "resource.";
+  static String DEFAULT_SPAN_NAME_DIMENSION = "span.name";
+  static String DEFAULT_SPAN_ID_DIMENSION = "span.id";
+  static String DEFAULT_PARENT_SPAN_ID_DIMENSION = "parent.span.id";
+  static String DEFAULT_TRACE_ID_DIMENSION = "trace.id";
+  static String DEFAULT_END_TIME_DIMENSION = "end.time";
+  static String DEFAULT_STATUS_CODE_DIMENSION = "status.code";
+  static String DEFAULT_STATUS_MESSAGE_DIMENSION = "status.message";
+  static String DEFAULT_KIND_DIMENSION = "kind";
+
+
+  private final String spanAttributePrefix;
+  private final String resourceAttributePrefix;
+  private final String spanNameDimension;
+  private final String spanIdDimension;
+  private final String parentSpanIdDimension;
+  private final String traceIdDimension;
+  private final String endTimeDimension;
+  private final String statusCodeDimension;
+  private final String statusMessageDimension;
+  private final String kindDimension;
 
   @JsonProperty
-  public OpenTelemetryTracesProtobufConfiguration getConfig()
+  public String getSpanNameDimension()
   {
-    return config;
+    return spanNameDimension;
+  }
+
+  @JsonProperty
+  public String getResourceAttributePrefix()
+  {
+    return resourceAttributePrefix;
+  }
+
+  @JsonProperty
+  public String getSpanIdDimension()
+  {
+    return spanIdDimension;
+  }
+
+  @JsonProperty
+  public String getParentSpanIdDimension()
+  {
+    return parentSpanIdDimension;
+  }
+
+  @JsonProperty
+  public String getTraceIdDimension()
+  {
+    return traceIdDimension;
+  }
+
+  @JsonProperty
+  public String getEndTimeDimension()
+  {
+    return endTimeDimension;
+  }
+
+  @JsonProperty
+  public String getStatusCodeDimension()
+  {
+    return statusCodeDimension;
+  }
+
+  @JsonProperty
+  public String getStatusMessageDimension()
+  {
+    return statusMessageDimension;
+  }
+
+  @JsonProperty
+  public String getKindDimension()
+  {
+    return kindDimension;
+  }
+
+  @JsonProperty
+  public String getSpanAttributePrefix()
+  {
+    return spanAttributePrefix;
+  }
+
+  private String validateDimensionName(String input, String dimensionName)
+  {
+    Preconditions.checkArgument(input.isEmpty(),
+                                dimensionName + " dimension cannot be empty");
+
+    Preconditions.checkState(!( !resourceAttributePrefix.isEmpty() && input.startsWith(resourceAttributePrefix)),
+                                " dimension name cannot start with resourceAttributePrefix");
+    Preconditions.checkArgument(!( !spanAttributePrefix.isEmpty() && input.startsWith(spanAttributePrefix)),
+                                " dimension name cannot start with spanAttributePrefix");
+    return input;
   }
 
   public OpenTelemetryTracesProtobufInputFormat(
-      @JsonProperty("config") OpenTelemetryTracesProtobufConfiguration config
+      @JsonProperty("spanAttributePrefix") String spanAttributePrefix,
+      @JsonProperty("resourceAttributePrefix") String resourceAttributePrefix,
+      @JsonProperty("spanNameDimension") String spanNameDimension,
+      @JsonProperty("spanIdDimension") String spanIdDimension,
+      @JsonProperty("parentSpanIdDimension") String parentSpanIdDimension,
+      @JsonProperty("traceIdDimension") String traceIdDimension,
+      @JsonProperty("endTimeDimension") String endTimeDimension,
+      @JsonProperty("statusCodeDimension") String statusCodeDimension,
+      @JsonProperty("statusMessageDimension") String statusMessageDimension,
+      @JsonProperty("kindDimension") String kindDimension
   )
   {
-    this.config = config;
+
+    this.spanAttributePrefix = spanAttributePrefix == null ? DEFAULT_SPAN_ATTR_PREFIX : spanAttributePrefix;
+    this.resourceAttributePrefix = resourceAttributePrefix == null ? DEFAULT_RESOURCE_ATTR_PREFIX : resourceAttributePrefix;
+
+    this.spanNameDimension = spanNameDimension == null ? DEFAULT_SPAN_NAME_DIMENSION :
+                             validateDimensionName(spanNameDimension, "Span Name");
+    this.spanIdDimension = spanIdDimension == null ? DEFAULT_SPAN_ID_DIMENSION :
+                           validateDimensionName(spanIdDimension, "Span Id");
+    this.parentSpanIdDimension = parentSpanIdDimension == null ? DEFAULT_PARENT_SPAN_ID_DIMENSION :
+                                 validateDimensionName(parentSpanIdDimension, "Parent Span Id");
+    this.traceIdDimension = traceIdDimension == null ? DEFAULT_TRACE_ID_DIMENSION :
+                            validateDimensionName(traceIdDimension, "Trace Id");
+    this.endTimeDimension = endTimeDimension == null ? DEFAULT_END_TIME_DIMENSION :
+                            validateDimensionName(endTimeDimension, "End Time");
+    this.statusCodeDimension = statusCodeDimension == null ? DEFAULT_STATUS_CODE_DIMENSION :
+                               validateDimensionName(statusCodeDimension, "Status Code");
+    this.statusMessageDimension = statusMessageDimension == null ? DEFAULT_STATUS_MESSAGE_DIMENSION :
+                               validateDimensionName(statusMessageDimension, "Status Message");
+    this.kindDimension = kindDimension == null  ? DEFAULT_KIND_DIMENSION :
+                         validateDimensionName(kindDimension, "Kind");
+
   }
 
   @Override
@@ -59,7 +176,16 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
     return new OpenTelemetryTracesProtobufReader(
         inputRowSchema.getDimensionsSpec(),
         Utils.getSettableEntity(source),
-        config
+        spanAttributePrefix,
+        resourceAttributePrefix,
+        spanNameDimension,
+        spanIdDimension,
+        parentSpanIdDimension,
+        traceIdDimension,
+        endTimeDimension,
+        statusCodeDimension,
+        statusMessageDimension,
+        kindDimension
     );
   }
 
@@ -73,12 +199,32 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
       return false;
     }
     OpenTelemetryTracesProtobufInputFormat that = (OpenTelemetryTracesProtobufInputFormat) o;
-    return Objects.equals(config, that.config);
+    return Objects.equals(spanAttributePrefix, that.spanAttributePrefix)
+           && Objects.equals(resourceAttributePrefix, that.resourceAttributePrefix)
+           && Objects.equals(spanNameDimension, that.spanNameDimension)
+           && Objects.equals(spanIdDimension, that.spanIdDimension)
+           && Objects.equals(parentSpanIdDimension, that.parentSpanIdDimension)
+           && Objects.equals(traceIdDimension, that.traceIdDimension)
+           && Objects.equals(endTimeDimension, that.endTimeDimension)
+           && Objects.equals(statusCodeDimension, that.statusCodeDimension)
+           && Objects.equals(statusMessageDimension, that.statusMessageDimension)
+           && Objects.equals(kindDimension, that.kindDimension);
   }
 
   @Override
   public int hashCode()
   {
-    return Objects.hash(config);
+    return Objects.hash(
+        spanAttributePrefix,
+        resourceAttributePrefix,
+        spanNameDimension,
+        spanIdDimension,
+        parentSpanIdDimension,
+        traceIdDimension,
+        endTimeDimension,
+        statusCodeDimension,
+        statusMessageDimension,
+        kindDimension
+    );
   }
 }

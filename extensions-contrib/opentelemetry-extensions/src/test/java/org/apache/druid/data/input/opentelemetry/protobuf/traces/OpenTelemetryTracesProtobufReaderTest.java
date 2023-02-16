@@ -78,19 +78,16 @@ public class OpenTelemetryTracesProtobufReaderTest
       .addScopeSpansBuilder()
       .addSpansBuilder();
 
-  private final OpenTelemetryTracesProtobufConfiguration config = OpenTelemetryTracesProtobufConfiguration
-      .newBuilder()
-      .setResourceAttributePrefix("resource.")
-      .setSpanAttributePrefix("span.")
-      .setKindDimension("kind")
-      .setNameDimension("name")
-      .setParentSpanIdDimension("parent_span_id")
-      .setSpanIdDimension("span_id")
-      .setTraceIdDimension("trace_id")
-      .setStatusCodeDimension("status_code")
-      .setStatusMessageDimension("status_message")
-      .setEndTimeDimension("end_time")
-      .build();
+  private final String spanAttributePrefix = "span.";
+  private final String resourceAttributePrefix = "resource.";
+  private final String spanNameDimension = "name";
+  private final String spanIdDimension ="span_id" ;
+  private final String parentSpanIdDimension = "parent_span_id";
+  private final String traceIdDimension = "trace_id";
+  private final String endTimeDimension = "end_time";
+  private final String statusCodeDimension =  "status_code";
+  private final String statusMessageDimension = "status_message";
+  private final String kindDimension = "kind";
 
   private final DimensionsSpec dimensionsSpec = new DimensionsSpec(ImmutableList.of(
       new StringDimensionSchema("resource." + ATTRIBUTE_NAMESPACE),
@@ -140,21 +137,30 @@ public class OpenTelemetryTracesProtobufReaderTest
     return new OpenTelemetryTracesProtobufReader(
         spec,
         settableByteEntity,
-        config
+        spanAttributePrefix,
+        resourceAttributePrefix,
+        spanNameDimension,
+        spanIdDimension,
+        parentSpanIdDimension,
+        traceIdDimension,
+        endTimeDimension,
+        statusCodeDimension,
+        statusMessageDimension,
+        kindDimension
     ).read();
   }
 
   private void verifyDefaultFirstRowData(InputRow row)
   {
     assertDimensionEquals(row, "resource.namespace", ATTRIBUTE_VALUE_NAMESPACE);
-    assertDimensionEquals(row, config.getNameDimension(), NAME_VALUE);
-    assertDimensionEquals(row, config.getSpanIdDimension(), SPAN_ID_VALUE_HEX);
-    assertDimensionEquals(row, config.getParentSpanIdDimension(), PARENT_ID_VALUE_HEX);
-    assertDimensionEquals(row, config.getTraceIdDimension(), TRACE_ID_VALUE_HEX);
-    assertDimensionEquals(row, config.getEndTimeDimension(), Long.toString(TimeUnit.NANOSECONDS.toMillis(now)));
-    assertDimensionEquals(row, config.getStatusCodeDimension(), Integer.toString(1));
-    assertDimensionEquals(row, config.getStatusMessageDimension(), "OK");
-    assertDimensionEquals(row, config.getKindDimension(), "SERVER");
+    assertDimensionEquals(row, spanNameDimension, NAME_VALUE);
+    assertDimensionEquals(row, spanIdDimension, SPAN_ID_VALUE_HEX);
+    assertDimensionEquals(row, parentSpanIdDimension, PARENT_ID_VALUE_HEX);
+    assertDimensionEquals(row, traceIdDimension, TRACE_ID_VALUE_HEX);
+    assertDimensionEquals(row, endTimeDimension, Long.toString(TimeUnit.NANOSECONDS.toMillis(now)));
+    assertDimensionEquals(row, statusCodeDimension, Integer.toString(1));
+    assertDimensionEquals(row, statusMessageDimension, "OK");
+    assertDimensionEquals(row, kindDimension, "SERVER");
   }
 
   @Test
@@ -194,7 +200,7 @@ public class OpenTelemetryTracesProtobufReaderTest
         .setName(INSTRUMENTATION_SCOPE_NAME)
         .setVersion(INSTRUMENTATION_SCOPE_VERSION);
 
-    String name2 = "span-2";
+    String spanName2 = "span-2";
     byte[] traceId2 = "trace-2".getBytes(StandardCharsets.UTF_8);
     byte[] spanId2 = "span-2".getBytes(StandardCharsets.UTF_8);
     byte[] parentId2 = "parent-2".getBytes(StandardCharsets.UTF_8);
@@ -207,7 +213,7 @@ public class OpenTelemetryTracesProtobufReaderTest
     secondSpanBuilder
         .setStartTimeUnixNano(before)
         .setEndTimeUnixNano(now)
-        .setName(name2)
+        .setName(spanName2)
         .setStatus(Status.newBuilder().setCodeValue(statusCode2).setMessage(statusMessage2).build())
         .setTraceId(ByteString.copyFrom(traceId2))
         .setSpanId(ByteString.copyFrom(spanId2))
@@ -225,29 +231,29 @@ public class OpenTelemetryTracesProtobufReaderTest
 
     InputRow row = rowList.get(0);
     assertEquals(2, row.getDimensions().size());
-    assertDimensionEquals(row, config.getSpanAttributePrefix() + ATTRIBUTE_SERVICE, ATTRIBUTE_VALUE_TEST);
+    assertDimensionEquals(row, spanAttributePrefix + ATTRIBUTE_SERVICE, ATTRIBUTE_VALUE_TEST);
     verifyDefaultFirstRowData(row);
 
     row = rowList.get(1);
     assertEquals(2, row.getDimensions().size());
-    assertDimensionEquals(row, config.getResourceAttributePrefix() + ATTRIBUTE_NAMESPACE,
+    assertDimensionEquals(row, resourceAttributePrefix + ATTRIBUTE_NAMESPACE,
                           ATTRIBUTE_VALUE_NAMESPACE);
-    assertDimensionEquals(row, config.getSpanAttributePrefix() + metricAttributeKey2,
+    assertDimensionEquals(row, resourceAttributePrefix + metricAttributeKey2,
                           Integer.toString(metricAttributeVal2));
-    assertDimensionEquals(row, config.getNameDimension(), name2);
-    assertDimensionEquals(row, config.getSpanIdDimension(), Hex.encodeHexString(spanId2));
-    assertDimensionEquals(row, config.getParentSpanIdDimension(), Hex.encodeHexString(parentId2));
-    assertDimensionEquals(row, config.getTraceIdDimension(), Hex.encodeHexString(traceId2));
-    assertDimensionEquals(row, config.getEndTimeDimension(), Long.toString(TimeUnit.NANOSECONDS.toMillis(now)));
-    assertDimensionEquals(row, config.getStatusCodeDimension(), Integer.toString(statusCode2));
-    assertDimensionEquals(row, config.getStatusMessageDimension(), statusMessage2);
-    assertDimensionEquals(row, config.getKindDimension(), "CLIENT");
+    assertDimensionEquals(row, spanName2, spanName2);
+    assertDimensionEquals(row, spanIdDimension, Hex.encodeHexString(spanId2));
+    assertDimensionEquals(row, parentSpanIdDimension, Hex.encodeHexString(parentId2));
+    assertDimensionEquals(row, traceIdDimension, Hex.encodeHexString(traceId2));
+    assertDimensionEquals(row, endTimeDimension, Long.toString(TimeUnit.NANOSECONDS.toMillis(now)));
+    assertDimensionEquals(row, statusCodeDimension, Integer.toString(statusCode2));
+    assertDimensionEquals(row, statusMessageDimension, statusMessage2);
+    assertDimensionEquals(row, kindDimension, "CLIENT");
   }
 
   @Test
   public void testDimensionSpecExclusions()
   {
-    String excludedAttribute = config.getSpanAttributePrefix() + ATTRIBUTE_SERVICE;
+    String excludedAttribute = spanAttributePrefix + ATTRIBUTE_SERVICE;
     DimensionsSpec dimensionsSpecWithExclusions = DimensionsSpec.builder().setDimensionExclusions(ImmutableList.of(
         excludedAttribute
     )).build();
@@ -260,7 +266,7 @@ public class OpenTelemetryTracesProtobufReaderTest
   }
 
   @Test
-  public void testInvalidProtobuf()
+  public void testInvalidProtobuf() throws IOException
   {
     byte[] invalidProtobuf = new byte[] {0x04, 0x01};
     SettableByteEntity<ByteEntity> settableByteEntity = new SettableByteEntity<>();
@@ -268,13 +274,19 @@ public class OpenTelemetryTracesProtobufReaderTest
     try (CloseableIterator<InputRow> rows = new OpenTelemetryTracesProtobufReader(
         dimensionsSpec,
         settableByteEntity,
-        config
+        spanAttributePrefix,
+        resourceAttributePrefix,
+        spanNameDimension,
+        spanIdDimension,
+        parentSpanIdDimension,
+        traceIdDimension,
+        endTimeDimension,
+        statusCodeDimension,
+        statusMessageDimension,
+        kindDimension
     ).read()) {
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
       Assert.assertThrows(ParseException.class, () -> rows.next());
-    }
-    catch (IOException ignore) {
-      // Comes from the implicit call to close
     }
   }
 
@@ -290,8 +302,8 @@ public class OpenTelemetryTracesProtobufReaderTest
     CloseableIterator<InputRow> rows = getDataIterator(dimensionsSpec);
     assertTrue(rows.hasNext());
     InputRow row = rows.next();
-    assertDimensionEquals(row, config.getSpanAttributePrefix() + ATTRIBUTE_SERVICE, ATTRIBUTE_VALUE_TEST);
-    assertFalse(row.getDimensions().contains(config.getSpanAttributePrefix() + excludededAttributeKey));
+    assertDimensionEquals(row, spanAttributePrefix + ATTRIBUTE_SERVICE, ATTRIBUTE_VALUE_TEST);
+    assertFalse(row.getDimensions().contains(spanAttributePrefix + excludededAttributeKey));
     verifyDefaultFirstRowData(row);
   }
 }
