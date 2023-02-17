@@ -24,7 +24,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.TracesData;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
@@ -119,7 +118,10 @@ public class OpenTelemetryTracesProtobufReader extends OpenXProtobufReader
     event.put(endTimeDimension, TimeUnit.NANOSECONDS.toMillis(span.getEndTimeUnixNano()));
     event.put(statusCodeDimension, span.getStatus().getCodeValue());
     event.put(statusMessageDimension, span.getStatus().getMessage());
-    event.put(kindDimension, StringUtils.replace(span.getKind().toString(), "SPAN_KIND_", ""));
+
+    String spanKind = span.getKind().toString();
+    // remove the "SPAN_KIND_" prefix
+    event.put(kindDimension, spanKind.substring(spanKind.lastIndexOf('_') + 1));
     event.putAll(resourceAttributes);
     span.getAttributesList().forEach(att -> {
       Object value = Utils.parseAnyValue(att.getValue());
