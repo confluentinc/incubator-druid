@@ -69,16 +69,21 @@ public class JwtVerifier
   /**
    * Return JWT custom claim: groups
    */
-  public static List<String> getClaimGroups(JwtClaims claims) throws MalformedClaimException
+  public static List<String> getClaimGroups(JwtClaims claims) throws InvalidGroupsClaimException
   {
-    return claims.getStringListClaimValue(CLAIM_GROUPS);
+    try {
+      return claims.getStringListClaimValue(CLAIM_GROUPS);
+    }
+    catch (MalformedClaimException e) {
+      throw new InvalidGroupsClaimException("Missing JWT Custom Claim: groups", e);
+    }
   }
 
   /**
    * Caller/Client's groups claim is configured to uniquely identify caller itself.
    * Ideally every Caller/Client service would have a unique group that would be used for authorization.
    */
-  public static String getCallerGroup(JwtClaims claims) throws MalformedClaimException
+  public static String getCallerGroup(JwtClaims claims) throws InvalidGroupsClaimException
   {
     return String.join(",", getClaimGroups(claims));
   }

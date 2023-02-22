@@ -61,13 +61,16 @@ public class JwtJwksAuthenticator implements Authenticator
   private final JwtVerifier jwtVerifier;
   private final IssuerExtractor issuerExtractor;
 
+  private final Map<String, String> jwtGroupIdentityMap;
+
   @JsonCreator
   public JwtJwksAuthenticator(
       @JsonProperty("name") String name,
       @JsonProperty("issuer") String issuer,
       @JsonProperty("audience") List<String> audience,
       @JsonProperty("jwksUri") String jwksUri,
-      @JsonProperty("authorizerName") String authorizerName
+      @JsonProperty("authorizerName") String authorizerName,
+      @JsonProperty("jwtGroupIdentityMap") Map jwtGroupIdentityMap
   )
   {
     this.name = Preconditions.checkNotNull(name, "null Name");
@@ -75,8 +78,35 @@ public class JwtJwksAuthenticator implements Authenticator
     this.jwksUri = Preconditions.checkNotNull(jwksUri, "null jwksUri");
     this.authorizerName = authorizerName;
     this.audience = audience;
+    this.jwtGroupIdentityMap = jwtGroupIdentityMap;
     this.jwtVerifier = new JwtVerifier(issuer, jwksUri, audience);
     this.issuerExtractor = new IssuerExtractor();
+  }
+
+  /**
+   * Map JWT groups claim to the identity of the requester which is used in authorizer.
+   * Ideally, Caller/Client's groups claim is configured to uniquely identify caller itself.
+   * If Groups claim isn't configured, we return the sub claim (Subject of the JWT) as the identity of the requester.
+   */
+  private static String claimToIdentity(
+      Map<String, String> jwtGroupIdentityMap, JwtClaims jwtClaims
+  ) throws MalformedClaimException
+  {
+    if (jwtGroupIdentityMap == null) {
+      return jwtClaims.getSubject();
+    } else {
+      try {
+        String groupIdentity = JwtVerifier.getCallerGroup(jwtClaims);
+        String identity = jwtGroupIdentityMap.get(groupIdentity);
+        if (identity == null) {
+          return jwtClaims.getSubject();
+        }
+        return identity;
+      }
+      catch (InvalidGroupsClaimException e) {
+        return jwtClaims.getSubject();
+      }
+    }
   }
 
   @Override
@@ -115,7 +145,6 @@ public class JwtJwksAuthenticator implements Authenticator
     return null;
   }
 
-
   @Override
   @Nullable
   public AuthenticationResult authenticateJDBCContext(Map<String, Object> context)
@@ -127,19 +156,14 @@ public class JwtJwksAuthenticator implements Authenticator
         JwtClaims jwtClaims = jwtVerifier.authenticate(bearerToken);
         if (jwtClaims != null) {
           LOG.info("JWT validation succeeded!");
-          return new AuthenticationResult(
-              JwtVerifier.getCallerGroup(jwtClaims),
-              authorizerName,
-              name,
-              null
-          );
+          return new AuthenticationResult(claimToIdentity(jwtGroupIdentityMap, jwtClaims), authorizerName, name, null);
         }
       }
       catch (InvalidJwtException e) {
         LOG.error(e, "Invalid Credentails");
       }
       catch (MalformedClaimException e) {
-        LOG.error(e, "Missing JWT Custom Claim: groups");
+        LOG.error(e, "Missing JWT Claim: sub");
       }
     }
     return null;
@@ -185,12 +209,10 @@ public class JwtJwksAuthenticator implements Authenticator
         JwtClaims jwtClaims = jwtVerifier.authenticate(bearerToken);
         LOG.info("JWT validation succeeded!");
         // TODO add useful JWT claims into the context filed of AuthenticationResult
-        AuthenticationResult authenticationResult = new AuthenticationResult(
-            JwtVerifier.getCallerGroup(jwtClaims),
-            authorizerName,
-            name,
-            null
-        );
+        AuthenticationResult authenticationResult = new AuthenticationResult(claimToIdentity(
+            jwtGroupIdentityMap,
+            jwtClaims
+        ), authorizerName, name, null);
         servletRequest.setAttribute(AuthConfig.DRUID_AUTHENTICATION_RESULT, authenticationResult);
         filterChain.doFilter(servletRequest, servletResponse);
       }
@@ -199,8 +221,8 @@ public class JwtJwksAuthenticator implements Authenticator
         httpResp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Bearer authentication failed, Invalid JWT");
       }
       catch (MalformedClaimException e) {
-        httpResp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing JWT Custom Claim: groups");
-        LOG.error(e, "Missing Custom Claim: groups");
+        httpResp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing JWT Claim: sub");
+        LOG.error(e, "Missing JWT Claim: sub");
       }
     }
 
