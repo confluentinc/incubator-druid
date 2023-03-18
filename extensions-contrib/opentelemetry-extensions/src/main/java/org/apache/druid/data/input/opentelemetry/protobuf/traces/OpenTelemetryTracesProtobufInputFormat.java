@@ -122,12 +122,12 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 
     if (!resourceAttributePrefix.isEmpty()) {
       Preconditions.checkArgument(!input.startsWith(resourceAttributePrefix),
-                                  " dimension name cannot start with resourceAttributePrefix");
+                                  " cannot start with resourceAttributePrefix");
     }
 
     if (!spanAttributePrefix.isEmpty()) {
       Preconditions.checkArgument(!input.startsWith(spanAttributePrefix),
-                                  " dimension name cannot start with spanAttributePrefix");
+                                  " cannot start with spanAttributePrefix");
     }
     return input;
   }
@@ -150,21 +150,21 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
     this.resourceAttributePrefix = resourceAttributePrefix == null ? DEFAULT_RESOURCE_ATTR_PREFIX : resourceAttributePrefix;
 
     this.spanNameDimension = spanNameDimension == null ? DEFAULT_SPAN_NAME_DIMENSION :
-                             validateDimensionName(spanNameDimension, "Span Name");
+                             validateDimensionName(spanNameDimension, "spanNameDimension");
     this.spanIdDimension = spanIdDimension == null ? DEFAULT_SPAN_ID_DIMENSION :
-                           validateDimensionName(spanIdDimension, "Span Id");
+                           validateDimensionName(spanIdDimension, "spanIdDimension");
     this.parentSpanIdDimension = parentSpanIdDimension == null ? DEFAULT_PARENT_SPAN_ID_DIMENSION :
-                                 validateDimensionName(parentSpanIdDimension, "Parent Span Id");
+                                 validateDimensionName(parentSpanIdDimension, "parentSpanIdDimension");
     this.traceIdDimension = traceIdDimension == null ? DEFAULT_TRACE_ID_DIMENSION :
-                            validateDimensionName(traceIdDimension, "Trace Id");
+                            validateDimensionName(traceIdDimension, "traceIdDimension");
     this.endTimeDimension = endTimeDimension == null ? DEFAULT_END_TIME_DIMENSION :
-                            validateDimensionName(endTimeDimension, "End Time");
+                            validateDimensionName(endTimeDimension, "endTimeDimension");
     this.statusCodeDimension = statusCodeDimension == null ? DEFAULT_STATUS_CODE_DIMENSION :
-                               validateDimensionName(statusCodeDimension, "Status Code");
+                               validateDimensionName(statusCodeDimension, "statusCodeDimension");
     this.statusMessageDimension = statusMessageDimension == null ? DEFAULT_STATUS_MESSAGE_DIMENSION :
-                               validateDimensionName(statusMessageDimension, "Status Message");
+                               validateDimensionName(statusMessageDimension, "statusMessageDimension");
     this.kindDimension = kindDimension == null ? DEFAULT_KIND_DIMENSION :
-                         validateDimensionName(kindDimension, "Kind");
+                         validateDimensionName(kindDimension, "kindDimension");
 
   }
 
