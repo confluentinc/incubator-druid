@@ -41,14 +41,14 @@ import java.util.List;
 import java.util.Map;
 
 
-public abstract class OpenXProtobufReader implements InputEntityReader
+public abstract class AbstractProtobufReader implements InputEntityReader
 {
 
   protected final SettableByteEntity<? extends ByteEntity> source;
   protected final DimensionsSpec dimensionsSpec;
 
-  public OpenXProtobufReader(DimensionsSpec dimensionsSpec,
-                             SettableByteEntity<? extends ByteEntity> source)
+  public AbstractProtobufReader(DimensionsSpec dimensionsSpec,
+                                SettableByteEntity<? extends ByteEntity> source)
   {
     this.dimensionsSpec = dimensionsSpec;
     this.source = source;
