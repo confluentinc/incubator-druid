@@ -39,7 +39,7 @@ import java.util.Objects;
  * use {@link OpenCensusProtobufInputFormat} instead
  */
 @Deprecated
-@SuppressForbidden("AbstractProtobufReader class lookup failed")
+@SuppressForbidden(reason = "AbstractProtobufReader class lookup failed")
 public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParser
 {
   private static final Logger LOG = new Logger(OpenCensusProtobufInputRowParser.class);
