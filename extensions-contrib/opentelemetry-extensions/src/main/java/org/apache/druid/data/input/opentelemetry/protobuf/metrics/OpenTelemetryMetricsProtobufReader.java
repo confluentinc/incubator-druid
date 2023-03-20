@@ -27,7 +27,7 @@ import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenXProtobufReader;
+import org.apache.druid.data.input.opentelemetry.protobuf.AbstractProtobufReader;
 import org.apache.druid.data.input.opentelemetry.protobuf.Utils;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.java.util.common.logger.Logger;
@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class OpenTelemetryMetricsProtobufReader extends OpenXProtobufReader
+public class OpenTelemetryMetricsProtobufReader extends AbstractProtobufReader
 {
   private static final Logger log = new Logger(OpenTelemetryMetricsProtobufReader.class);
   private final String metricDimension;

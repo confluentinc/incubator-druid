@@ -32,7 +32,7 @@ import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.MapBasedInputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
 import org.apache.druid.data.input.impl.DimensionsSpec;
-import org.apache.druid.data.input.opentelemetry.protobuf.OpenXProtobufReader;
+import org.apache.druid.data.input.opentelemetry.protobuf.AbstractProtobufReader;
 import org.apache.druid.indexing.seekablestream.SettableByteEntity;
 import org.apache.druid.utils.CollectionUtils;
 
@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class OpenCensusProtobufReader extends OpenXProtobufReader
+public class OpenCensusProtobufReader extends AbstractProtobufReader
 {
   private static final String SEPARATOR = "-";
   private static final String VALUE_COLUMN = "value";
