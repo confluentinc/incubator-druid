@@ -114,7 +114,8 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
         settableByteEntity,
         metricDimension,
         metricLabelPrefix,
-        resourceLabelPrefix).readAsList();
+        resourceLabelPrefix
+    ).readAsList();
   }
 
   @Override
