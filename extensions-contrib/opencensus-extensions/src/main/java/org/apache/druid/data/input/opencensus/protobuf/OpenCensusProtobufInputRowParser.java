@@ -54,7 +54,6 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   private final String resourceLabelPrefix;
 
   @JsonCreator
-  @SuppressForbidden(reason = "AbstractProtobufReader class lookup failed")
   public OpenCensusProtobufInputRowParser(
       @JsonProperty("parseSpec") ParseSpec parseSpec,
       @JsonProperty("metricDimension") String metricDimension,
