@@ -22,6 +22,7 @@ package org.apache.druid.data.input.opencensus.protobuf;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
+import io.netty.util.SuppressForbidden;
 import org.apache.druid.data.input.ByteBufferInputRowParser;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
@@ -52,6 +53,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   private final String resourceLabelPrefix;
 
   @JsonCreator
+  @SuppressForbidden(reason = "AbstractProtobufReader class lookup failed")
   public OpenCensusProtobufInputRowParser(
       @JsonProperty("parseSpec") ParseSpec parseSpec,
       @JsonProperty("metricDimension") String metricDimension,
