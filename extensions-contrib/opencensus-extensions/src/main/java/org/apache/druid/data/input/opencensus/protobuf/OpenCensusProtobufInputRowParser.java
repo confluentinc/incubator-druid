@@ -22,6 +22,7 @@ package org.apache.druid.data.input.opencensus.protobuf;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
+import io.netty.util.SuppressForbidden;
 import org.apache.druid.data.input.ByteBufferInputRowParser;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.data.input.impl.ByteEntity;
@@ -102,6 +103,7 @@ public class OpenCensusProtobufInputRowParser implements ByteBufferInputRowParse
   }
 
   @Override
+  @SuppressForbidden(reason = "AbstractProtobufReader#readAsList")
   public List<InputRow> parseBatch(ByteBuffer input)
   {
     SettableByteEntity<ByteEntity> settableByteEntity = new SettableByteEntity<>();
