@@ -35,11 +35,11 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 
   static String DEFAULT_SPAN_ATTR_PREFIX = "span.attr.";
   static String DEFAULT_RESOURCE_ATTR_PREFIX = "resource.";
-  static String DEFAULT_SPAN_NAME_DIMENSION = "span.name";
-  static String DEFAULT_SPAN_ID_DIMENSION = "span.id";
-  static String DEFAULT_PARENT_SPAN_ID_DIMENSION = "parent.span.id";
-  static String DEFAULT_TRACE_ID_DIMENSION = "trace.id";
-  static String DEFAULT_END_TIME_DIMENSION = "end.time";
+  static String DEFAULT_SPAN_NAME_DIMENSION = "span";
+  static String DEFAULT_SPAN_ID_DIMENSION = "span_id";
+  static String DEFAULT_PARENT_SPAN_ID_DIMENSION = "parent_span_id";
+  static String DEFAULT_TRACE_ID_DIMENSION = "trace_id";
+  static String DEFAULT_END_TIME_DIMENSION = "end_time";
   static String DEFAULT_STATUS_CODE_DIMENSION = "status.code";
   static String DEFAULT_STATUS_MESSAGE_DIMENSION = "status.message";
   static String DEFAULT_KIND_DIMENSION = "kind";
