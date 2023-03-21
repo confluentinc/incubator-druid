@@ -81,7 +81,7 @@ public class OpenTelemetryTracesProtobufInputFormatTest
         null,
         null);
     assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_RESOURCE_ATTR_PREFIX, obj.getResourceAttributePrefix());
-    assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_ATTR_PREFIX, obj.getSpanAttributePrefix());
+    assertEquals("", obj.getSpanAttributePrefix());
     assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_KIND_DIMENSION, obj.getKindDimension());
     assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_SPAN_NAME_DIMENSION, obj.getSpanNameDimension());
     assertEquals(OpenTelemetryTracesProtobufInputFormat.DEFAULT_PARENT_SPAN_ID_DIMENSION, obj.getParentSpanIdDimension());
