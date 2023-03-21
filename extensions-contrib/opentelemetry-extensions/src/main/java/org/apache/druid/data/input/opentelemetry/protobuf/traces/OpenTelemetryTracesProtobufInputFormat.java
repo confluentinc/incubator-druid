@@ -26,20 +26,19 @@ import org.apache.druid.data.input.InputEntityReader;
 import org.apache.druid.data.input.InputFormat;
 import org.apache.druid.data.input.InputRowSchema;
 import org.apache.druid.data.input.opentelemetry.protobuf.Utils;
+import org.apache.druid.java.util.common.StringUtils;
 
 import java.io.File;
 import java.util.Objects;
 
 public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
 {
-
-  static String DEFAULT_SPAN_ATTR_PREFIX = "span.attr.";
   static String DEFAULT_RESOURCE_ATTR_PREFIX = "resource.";
-  static String DEFAULT_SPAN_NAME_DIMENSION = "span.name";
-  static String DEFAULT_SPAN_ID_DIMENSION = "span.id";
-  static String DEFAULT_PARENT_SPAN_ID_DIMENSION = "parent.span.id";
-  static String DEFAULT_TRACE_ID_DIMENSION = "trace.id";
-  static String DEFAULT_END_TIME_DIMENSION = "end.time";
+  static String DEFAULT_SPAN_NAME_DIMENSION = "span_name";
+  static String DEFAULT_SPAN_ID_DIMENSION = "span_id";
+  static String DEFAULT_PARENT_SPAN_ID_DIMENSION = "parent_span_id";
+  static String DEFAULT_TRACE_ID_DIMENSION = "trace_id";
+  static String DEFAULT_END_TIME_DIMENSION = "end_time";
   static String DEFAULT_STATUS_CODE_DIMENSION = "status.code";
   static String DEFAULT_STATUS_MESSAGE_DIMENSION = "status.message";
   static String DEFAULT_KIND_DIMENSION = "kind";
@@ -119,16 +118,6 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
   {
     Preconditions.checkArgument(!input.isEmpty(),
                                 dimensionName + " dimension cannot be empty");
-
-    if (!resourceAttributePrefix.isEmpty()) {
-      Preconditions.checkArgument(!input.startsWith(resourceAttributePrefix),
-                                  " cannot start with resourceAttributePrefix");
-    }
-
-    if (!spanAttributePrefix.isEmpty()) {
-      Preconditions.checkArgument(!input.startsWith(spanAttributePrefix),
-                                  " cannot start with spanAttributePrefix");
-    }
     return input;
   }
 
@@ -146,7 +135,7 @@ public class OpenTelemetryTracesProtobufInputFormat implements InputFormat
   )
   {
 
-    this.spanAttributePrefix = spanAttributePrefix == null ? DEFAULT_SPAN_ATTR_PREFIX : spanAttributePrefix;
+    this.spanAttributePrefix = StringUtils.nullToEmptyNonDruidDataString(spanAttributePrefix);
     this.resourceAttributePrefix = resourceAttributePrefix == null ? DEFAULT_RESOURCE_ATTR_PREFIX : resourceAttributePrefix;
 
     this.spanNameDimension = spanNameDimension == null ? DEFAULT_SPAN_NAME_DIMENSION :
