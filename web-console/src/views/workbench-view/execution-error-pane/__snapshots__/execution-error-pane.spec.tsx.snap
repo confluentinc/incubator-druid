@@ -9,26 +9,26 @@ exports[`ExecutionErrorPane matches snapshot 1`] = `
     className="error-message-text"
   >
     <Memo(ExternalLink)
-      href="https://druid.apache.org/docs/24.0.2/multi-stage-query/concepts.html#error-codes"
+      href="https://druid.apache.org/docs/25.0.0/multi-stage-query/concepts.html#error-codes"
     >
       TooManyWarnings
     </Memo(ExternalLink)>
-    : 
+    :
     Too many warnings of type CannotParseExternalData generated (max = 10)
   </p>
   <div>
-    Failed task ID: 
+    Failed task ID:
     <Memo(ClickToCopy)
       text="query-c6bffa9d-43c4-45a0-95f8-0c8c453655fb"
     />
-     (on host: 
+     (on host:
     <Memo(ClickToCopy)
       text="localhost"
     />
     )
   </div>
   <div>
-    Debug: 
+    Debug:
     <a
       onClick={[Function]}
     >
