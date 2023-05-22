@@ -74,6 +74,18 @@ public class SegmentReplicantLookup
       }
     }
 
+    for (ServerHolder serverHolder : cluster.getRealtimes()) {
+      ImmutableDruidServer server = serverHolder.getServer();
+
+      for (DataSegment segment : server.iterateAllSegments()) {
+        Integer numReplicants = segmentsInCluster.get(segment.getId(), server.getTier());
+        if (numReplicants == null) {
+          numReplicants = 0;
+        }
+        segmentsInCluster.put(segment.getId(), server.getTier(), numReplicants + 1);
+      }
+    }
+
     return new SegmentReplicantLookup(segmentsInCluster, loadingSegments, cluster);
   }
 
