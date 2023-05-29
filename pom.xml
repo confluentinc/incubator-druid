@@ -127,6 +127,7 @@
         <repoOrgId>apache.snapshots</repoOrgId>
         <repoOrgName>Apache Snapshot Repository</repoOrgName>
         <repoOrgUrl>https://repository.apache.org/snapshots</repoOrgUrl>
+        <opentelemetry.proto.version>0.19.0-alpha</opentelemetry.proto.version>
 
         <!-- Allow the handful of flaky tests with transient failures to pass. -->
         <surefire.rerunFailingTestsCount>3</surefire.rerunFailingTestsCount>
@@ -215,6 +216,9 @@
         <module>extensions-contrib/prometheus-emitter</module>
         <module>extensions-contrib/opentelemetry-emitter</module>
         <module>extensions-contrib/kubernetes-overlord-extensions</module>
+        <module>extensions-contrib/opencensus-extensions</module>
+        <module>extensions-contrib/confluent-extensions</module>
+        <module>extensions-contrib/opentelemetry-extensions</module>
         <!-- distribution packaging -->
         <module>distribution</module>
         <!-- Revised integration tests -->
@@ -743,6 +747,11 @@
                 <version>${protobuf.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.tesla.aether</groupId>
                 <artifactId>tesla-aether</artifactId>
                 <version>0.0.5</version>
@@ -1195,6 +1204,11 @@
               </exclusion>
             </exclusions>
           </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.proto</groupId>
+                <artifactId>opentelemetry-proto</artifactId>
+                <version>${opentelemetry.proto.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1506,7 +1520,7 @@
                                 <projectName>Apache Druid</projectName>
                             </properties>
                             <resourceBundles>
-                                <resourceBundle>org.apache.apache.resources:apache-jar-resource-bundle:1.5-SNAPSHOT</resourceBundle>
+                                <resourceBundle>org.apache.apache.resources:apache-jar-resource-bundle:1.5</resourceBundle>
                             </resourceBundles>
                         </configuration>
                     </execution>
