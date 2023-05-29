@@ -51,7 +51,7 @@ public class OpenTelemetryEmitter implements Emitter
 
   OpenTelemetryEmitter(OpenTelemetry openTelemetry)
   {
-    tracer = openTelemetry.getTracer("druid-opentelemetry-extension");
+    tracer = openTelemetry.getTracer("druid-opentelemetry-extension-test");
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
