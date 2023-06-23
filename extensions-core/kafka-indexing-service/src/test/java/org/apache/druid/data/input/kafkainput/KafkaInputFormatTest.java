@@ -625,8 +625,10 @@ public class KafkaInputFormatTest
    * It extends a basic JsonInputFormat to parse the "timestamp" field, and use it to set the timestamp on
    * the input row returned by the input format.
    */
-  static class TimestampExtractingInputFormat extends JsonInputFormat {
-    public TimestampExtractingInputFormat() {
+  static class TimestampExtractingInputFormat extends JsonInputFormat
+  {
+    public TimestampExtractingInputFormat()
+    {
       super(null, null, null, false);
     }
 
@@ -643,7 +645,7 @@ public class KafkaInputFormatTest
           return reader.read().map(inputRow -> new MapBasedInputRow(
               timestampParser.apply(inputRow.getRaw("timestamp")),
               inputRow.getDimensions(),
-              ((MapBasedInputRow)inputRow).getEvent()
+              ((MapBasedInputRow) inputRow).getEvent()
           ));
         }
 
