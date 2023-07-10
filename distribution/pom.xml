@@ -796,7 +796,7 @@
                   <buildArgs>
                     <VERSION>${project.version}</VERSION>
                     <JDK_VERSION>${docker.jdk.version}</JDK_VERSION>
-                      <TARGETARCH>${targetarch}</TARGETARCH>
+                    <TARGETARCH>${targetarch}</TARGETARCH>
                   </buildArgs>
                 </configuration>
               </plugin>
