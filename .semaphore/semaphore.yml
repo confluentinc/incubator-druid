@@ -34,9 +34,11 @@ blocks:
       jobs:
         - name: "Install"
           commands:
+            - cache restore            
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
+            - cache store
 
   - name: "Tests"
     task:
