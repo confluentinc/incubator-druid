@@ -33,7 +33,8 @@ blocks:
       jobs:
         - name: "Install"
           commands:
-            - cache restore
+            - cache restore            
+            - rm ~/.m2/settings.xml
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
@@ -48,6 +49,7 @@ blocks:
           - sem-version java 17
           - checkout
           - cache restore
+          - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
           commands:
