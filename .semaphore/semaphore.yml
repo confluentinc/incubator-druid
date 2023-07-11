@@ -46,6 +46,7 @@ blocks:
           - echo $SEMAPHORE_WORKFLOW_ID
           - sem-version java 17
           - checkout
+          - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
           commands:
