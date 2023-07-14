@@ -36,7 +36,7 @@ blocks:
           commands:
             - cache restore
             - tar zcvf cache.tgz .m2 target
-            - artifact delete project cache.tgz
+            # - artifact delete project cache.tgz
             - artifact push project cache.tgz
             - rm ~/.m2/settings.xml
             - >
