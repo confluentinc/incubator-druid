@@ -41,8 +41,10 @@ blocks:
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
             - tar zcvf cache-post.tgz .m2 target
-            - artifact delete project cache-post.tgz
-            - artifact push project cache-post.tgz
+            - artifact delete project cache.tgz || true
+            - artifact push project cache.tgz
+            - artifact delete workflow cache-post-install.tgz || true
+            - artifact push workflow cache-post-install.tgz
 
   - name: "Tests"
     task:
@@ -52,8 +54,8 @@ blocks:
           - echo $SEMAPHORE_WORKFLOW_ID
           - sem-version java 17
           - checkout
-          - artifact pull project cache.tgz
-          - tar zxvf cache.tgz
+          - artifact pull workflow cache-post-install.tgz
+          - tar zxvf cache-post-install.tgz
           - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
