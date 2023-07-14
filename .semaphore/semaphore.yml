@@ -3,7 +3,8 @@ name: Apache Druid
 agent:
   machine:
     type: s1-prod-ubuntu20-04-amd64-1
-
+execution_time_limit:
+  hours: 3
 blocks:
   - name: "Install"
     task:
@@ -34,10 +35,17 @@ blocks:
         - name: "Install"
           commands:
             - cache restore
+            - tar zcvf cache.tgz .m2 target
+            - artifact delete project cache.tgz
+            - artifact push project cache.tgz
+            - rm ~/.m2/settings.xml
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
             - cache store
+            - tar zcvf cache-post.tgz .m2 target
+            - artifact delete project cache-post.tgz
+            - artifact push project cache-post.tgz
 
   - name: "Tests"
     task:
@@ -47,7 +55,8 @@ blocks:
           - echo $SEMAPHORE_WORKFLOW_ID
           - sem-version java 17
           - checkout
-          - cache restore
+          # - cache restore
+          - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
           commands:
