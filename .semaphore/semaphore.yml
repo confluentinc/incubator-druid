@@ -34,15 +34,12 @@ blocks:
       jobs:
         - name: "Install"
           commands:
-            - cache restore
-            - tar zcvf cache.tgz .m2 target
-            - artifact delete project cache.tgz
-            - artifact push project cache.tgz
-            - rm ~/.m2/settings.xml
+            - artifact pull project cache.tgz
+            - tar zxvf cache.tgz
+            # - rm ~/.m2/settings.xml
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
-            - cache store
             - tar zcvf cache-post.tgz .m2 target
             - artifact delete project cache-post.tgz
             - artifact push project cache-post.tgz
