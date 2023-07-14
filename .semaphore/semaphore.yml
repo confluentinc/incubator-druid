@@ -52,7 +52,8 @@ blocks:
           - echo $SEMAPHORE_WORKFLOW_ID
           - sem-version java 17
           - checkout
-          # - cache restore
+          - artifact pull project cache.tgz
+          - tar zxvf cache.tgz
           - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
