@@ -40,9 +40,9 @@ blocks:
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
-            - tar zcvf cache-post.tgz .m2 target
             - artifact delete project cache.tgz || true
             - artifact push project cache.tgz
+            - tar zcvf cache-post-install.tgz .m2 target
             - artifact delete workflow cache-post-install.tgz || true
             - artifact push workflow cache-post-install.tgz
 
