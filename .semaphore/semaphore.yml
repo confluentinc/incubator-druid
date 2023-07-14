@@ -44,7 +44,7 @@ blocks:
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
             - cache store
             - tar zcvf cache-post.tgz .m2 target
-            - artifact delete project cache-post.tgz
+            # - artifact delete project cache-post.tgz
             - artifact push project cache-post.tgz
 
   - name: "Tests"
