@@ -44,7 +44,7 @@ blocks:
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
             - cache store
             - tar zcvf cache-post.tgz .m2 target
-            # - artifact delete project cache-post.tgz
+            - artifact delete project cache-post.tgz
             - artifact push project cache-post.tgz
 
   - name: "Tests"
@@ -55,7 +55,8 @@ blocks:
           - echo $SEMAPHORE_WORKFLOW_ID
           - sem-version java 17
           - checkout
-          - cache restore
+          # - cache restore
+          - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
           commands:
