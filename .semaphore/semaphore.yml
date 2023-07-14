@@ -36,7 +36,7 @@ blocks:
           commands:
             - artifact pull project cache.tgz
             - tar zxvf cache.tgz
-            # - rm ~/.m2/settings.xml
+            - rm ~/.m2/settings.xml
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
