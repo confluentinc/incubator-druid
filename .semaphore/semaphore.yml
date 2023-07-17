@@ -36,6 +36,7 @@ blocks:
           commands:
             - artifact pull project cache.tgz
             - tar zxf cache.tgz
+            - rm ~/.m2/settings.xml
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
@@ -56,6 +57,7 @@ blocks:
           - checkout
           - artifact pull workflow cache-post-install.tgz
           - tar zxf cache-post-install.tgz
+          - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
           commands:
