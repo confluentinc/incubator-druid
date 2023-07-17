@@ -35,12 +35,11 @@ blocks:
         - name: "Install"
           commands:
             - artifact pull project cache.tgz
-            - tar zxvf cache.tgz
-            - rm ~/.m2/settings.xml
+            - tar zxf cache.tgz
             - >
               MAVEN_OPTS="${MAVEN_OPTS} -Xmx3000m" ${MVN} clean install
               -q -ff ${MAVEN_SKIP} ${MAVEN_SKIP_TESTS} -T1C
-            - tar zcvf cache-post-install.tgz .m2 target
+            - tar zcf cache-post-install.tgz .m2 target
             - artifact delete workflow cache-post-install.tgz || true
             - artifact push workflow cache-post-install.tgz
             - mv cache-post-install.tgz cache.tgz
@@ -56,8 +55,7 @@ blocks:
           - sem-version java 17
           - checkout
           - artifact pull workflow cache-post-install.tgz
-          - tar zxvf cache-post-install.tgz
-          - rm ~/.m2/settings.xml
+          - tar zxf cache-post-install.tgz
       jobs:
         - name: "animal sniffer checks"
           commands:
