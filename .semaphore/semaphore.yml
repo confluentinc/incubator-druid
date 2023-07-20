@@ -55,6 +55,8 @@ blocks:
           - checkout
           - artifact pull workflow cache-post-install.tgz
           - tar zxf cache-post-install.tgz
+          # This is a change meant to validate semaphore public builds
+          # so thus removing configurations for Confluent's internal CodeArtifact
           - rm ~/.m2/settings.xml
       jobs:
         - name: "animal sniffer checks"
