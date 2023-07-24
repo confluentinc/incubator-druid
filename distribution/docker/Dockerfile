@@ -18,6 +18,7 @@
 #
 
 ARG JDK_VERSION=11
+ARG BASE_IMAGE=gcr.io/distroless/java$JDK_VERSION-debian11
 
 # The platform is explicitly specified as x64 to build the Druid distribution.
 # This is because it's not able to build the distribution on arm64 due to dependency problem of web-console. See: https://github.com/apache/druid/issues/13012
@@ -51,12 +52,19 @@ RUN --mount=type=cache,target=/root/.m2 VERSION=$(mvn -B -q org.apache.maven.plu
 
 FROM busybox:1.34.1-glibc as busybox
 
-FROM gcr.io/distroless/java$JDK_VERSION-debian11
+FROM $BASE_IMAGE
+ARG JDK_VERSION
+ARG BASE_IMAGE
+
 LABEL maintainer="Apache Druid Developers <dev@druid.apache.org>"
 
 COPY --from=busybox /bin/busybox /busybox/busybox
-RUN ["/busybox/busybox", "--install", "/bin"]
-
+RUN ["/busybox/busybox", "sh", "-c", "if [ $BASE_IMAGE = gcr.io/distroless/java$JDK_VERSION-debian11 ]; then \
+                                        exec /busybox/busybox --install /bin; \
+                                      else \
+                                        rm /busybox/busybox \
+                                        && exit; \
+                                      fi;"]
 # Predefined builtin arg, see: https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 ARG TARGETARCH
 
@@ -65,19 +73,26 @@ ARG TARGETARCH
 # Although bash-static supports multiple platforms, but there's no need for us to support all those platform, amd64 and arm64 are enough.
 #
 ARG BASH_URL_BASE="https://github.com/robxu9/bash-static/releases/download/5.1.016-1.2.3"
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-      BASH_URL="${BASH_URL_BASE}/bash-linux-aarch64" ; \
-    elif [ "$TARGETARCH" = "amd64" ]; then \
-      BASH_URL="${BASH_URL_BASE}/bash-linux-x86_64" ; \
-    else \
-      echo "Unsupported architecture ($TARGETARCH)" && exit 1; \
-    fi; \
-    echo "Downloading bash-static from ${BASH_URL}" \
-    && wget ${BASH_URL} -O /bin/bash \
-    && chmod 755 /bin/bash
+RUN if [ "$BASE_IMAGE" = "gcr.io/distroless/java$JDK_VERSION-debian11" ]; then \
+      if [ "$TARGETARCH" = "arm64" ]; then \
+        BASH_URL="${BASH_URL_BASE}/bash-linux-aarch64" ; \
+      elif [ "$TARGETARCH" = "amd64" ]; then \
+        BASH_URL="${BASH_URL_BASE}/bash-linux-x86_64" ; \
+      else \
+        echo "Unsupported architecture ($TARGETARCH)" && exit 1; \
+      fi; \
+      echo "Downloading bash-static from ${BASH_URL}" \
+      && wget ${BASH_URL} -O /bin/bash \
+      && chmod 755 /bin/bash; \
+    fi;
 
-RUN addgroup -S -g 1000 druid \
- && adduser -S -u 1000 -D -H -h /opt/druid -s /bin/sh -g '' -G druid druid
+RUN if [ "$BASE_IMAGE" = "gcr.io/distroless/java$JDK_VERSION-debian11" ]; then \
+      addgroup -S -g 1000 druid \
+      && adduser -S -u 1000 -D -H -h /opt/druid -s /bin/sh -g '' -G druid druid; \
+    else \
+      groupadd --force --system --gid 1000 druid \
+      && useradd --system --uid 1000 -M --home /opt/druid --shell /bin/sh -c '' --gid druid druid; \
+    fi;
 
 COPY --chown=druid:druid --from=builder /opt /opt
 COPY distribution/docker/druid.sh /druid.sh
@@ -89,6 +104,12 @@ COPY distribution/docker/peon.sh /peon.sh
 RUN mkdir /opt/druid/var /opt/shared \
  && chown druid:druid /opt/druid/var /opt/shared \
  && chmod 775 /opt/druid/var /opt/shared
+
+# Install iproute2 library if busybox not installed
+RUN if [ "$BASE_IMAGE" != "gcr.io/distroless/java$JDK_VERSION-debian11" ]; then \
+     apt update \
+     && apt install -y iproute2; \
+    fi;
 
 USER druid
 VOLUME /opt/druid/var
