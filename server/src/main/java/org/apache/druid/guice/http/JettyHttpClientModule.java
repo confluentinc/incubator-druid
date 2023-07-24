@@ -109,6 +109,7 @@ public class JettyHttpClientModule implements Module
       final QueuedThreadPool pool = new QueuedThreadPool(config.getNumMaxThreads());
       pool.setName(JettyHttpClientModule.class.getSimpleName() + "-threadPool-" + pool.hashCode());
       httpClient.setExecutor(pool);
+      httpClientThreadPool = pool;
 
       final Lifecycle lifecycle = getLifecycleProvider().get();
 
