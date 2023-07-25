@@ -104,7 +104,7 @@ RUN mkdir /opt/druid/var /opt/shared \
 
 # Install iproute2 to get the ip command needed to set config of druid.host IP address
 # Command needed in druid.sh Line 140;
-RUN if [ -x "$(command -v apt)" ] && [ ! -x "$(command -v ip)" ]; then \
+RUN if [ ! -x "$(command -v ip)" ]; then \
       apt update \
       && apt install -y iproute2; \
     fi;
