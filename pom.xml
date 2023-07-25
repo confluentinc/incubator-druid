@@ -220,7 +220,7 @@
         <!-- <module>extensions-contrib/kubernetes-overlord-extensions</module> -->
         <module>extensions-contrib/opencensus-extensions</module>
         <module>extensions-contrib/confluent-extensions</module>
-        <!-- <module>extensions-contrib/opentelemetry-extensions</module> -->
+        <module>extensions-contrib/opentelemetry-extensions</module>
         <!-- distribution packaging -->
         <module>distribution</module>
         <!-- Revised integration tests -->
