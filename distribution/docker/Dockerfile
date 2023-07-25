@@ -58,7 +58,7 @@ LABEL maintainer="Apache Druid Developers <dev@druid.apache.org>"
 
 COPY --from=busybox /bin/busybox /busybox/busybox
 RUN ["/busybox/busybox", "sh", "-c", "if [ ! -x \"$(command -v bash)\" ]; then \
-                                        exec /busybox/busybox --install /bin; \
+                                        /busybox/busybox --install /bin; \
                                       else \
                                         rm /busybox/busybox; \
                                       fi;"]
