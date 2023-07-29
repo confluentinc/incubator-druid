@@ -158,7 +158,7 @@
         <module>cloud/aws-common</module>
         <module>cloud/gcp-common</module>
         <!-- Core extensions -->
-        <!-- <module>extensions-core/kubernetes-extensions</module> -->
+        <module>extensions-core/kubernetes-extensions</module>
         <!-- <module>extensions-core/avro-extensions</module> -->
         <!-- <module>extensions-core/azure-extensions</module> -->
         <module>extensions-core/datasketches</module>
@@ -171,18 +171,18 @@
         <!-- <module>extensions-core/kafka-extraction-namespace</module> -->
         <module>extensions-core/kafka-indexing-service</module>
         <!-- <module>extensions-core/kinesis-indexing-service</module> -->
-        <!-- <module>extensions-core/multi-stage-query</module> -->
+        <module>extensions-core/multi-stage-query</module>
         <!-- <module>extensions-core/mysql-metadata-storage</module> -->
         <!-- <module>extensions-core/orc-extensions</module> -->
         <!-- <module>extensions-core/parquet-extensions</module> -->
         <module>extensions-core/postgresql-metadata-storage</module>
-        <!-- <module>extensions-core/protobuf-extensions</module> -->
+        <module>extensions-core/protobuf-extensions</module>
         <!-- <module>extensions-core/lookups-cached-global</module> -->
         <!-- <module>extensions-core/lookups-cached-single</module> -->
         <!-- <module>extensions-core/ec2-extensions</module> -->
         <module>extensions-core/s3-extensions</module>
         <module>extensions-core/druid-aws-rds-extensions</module>
-        <!-- <module>extensions-core/simple-client-sslcontext</module> -->
+        <module>extensions-core/simple-client-sslcontext</module>
         <module>extensions-core/druid-basic-security</module>
         <!-- <module>extensions-core/google-extensions</module> -->
         <!-- <module>extensions-core/druid-ranger-security</module> -->
@@ -204,7 +204,7 @@
         <!-- <module>extensions-contrib/thrift-extensions</module> -->
         <!-- <module>extensions-contrib/ambari-metrics-emitter</module> -->
         <!-- <module>extensions-contrib/sqlserver-metadata-storage</module> -->
-        <!-- <module>extensions-contrib/kafka-emitter</module> -->
+        <module>extensions-contrib/kafka-emitter</module>
         <!-- <module>extensions-contrib/redis-cache</module> -->
         <!-- <module>extensions-contrib/opentsdb-emitter</module> -->
         <!-- <module>extensions-contrib/materialized-view-maintenance</module> -->
@@ -215,8 +215,8 @@
         <!-- <module>extensions-contrib/influxdb-emitter</module> -->
         <!-- <module>extensions-contrib/gce-extensions</module> -->
         <!-- <module>extensions-contrib/aliyun-oss-extensions</module> -->
-        <!-- <module>extensions-contrib/prometheus-emitter</module> -->
-        <!-- <module>extensions-contrib/opentelemetry-emitter</module> -->
+        <module>extensions-contrib/prometheus-emitter</module>
+        <module>extensions-contrib/opentelemetry-emitter</module>
         <!-- <module>extensions-contrib/kubernetes-overlord-extensions</module> -->
         <module>extensions-contrib/opencensus-extensions</module>
         <module>extensions-contrib/confluent-extensions</module>
