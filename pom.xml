@@ -1211,12 +1211,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    <dependencies>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>elasticache-java-cluster-client</artifactId>
-        </dependency>
-    </dependencies>
 
     <build>
         <plugins>
