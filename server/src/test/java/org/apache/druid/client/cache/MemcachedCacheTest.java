@@ -317,6 +317,11 @@ class MockMemcachedClient implements MemcachedClientIF
   }
 
   @Override
+  public boolean refreshCertificate()
+  {
+    return true;
+  }
+  @Override
   public Collection<SocketAddress> getUnavailableServers()
   {
     throw new UnsupportedOperationException("not implemented");
