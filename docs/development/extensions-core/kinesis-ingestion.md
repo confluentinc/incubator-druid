@@ -38,6 +38,13 @@ To use the Kinesis indexing service, load the `druid-kinesis-indexing-service` c
 
 To use the Kinesis indexing service, load the `druid-kinesis-indexing-service` extension on both the Overlord and the MiddleManagers. Druid starts a supervisor for a dataSource when you submit a supervisor spec. Submit your supervisor spec to the following endpoint:
 
+|Property|Type|Description|Required|
+|--------|----|-----------|--------|
+|`type`|String|The supervisor type; this should always be `kinesis`.|Yes|
+|`spec`|Object|The container object for the supervisor configuration.|Yes|
+|`ioConfig`|Object|The [I/O configuration](#supervisor-io-configuration) object for configuring Kinesis connection and I/O-related settings for the supervisor and indexing task.|Yes|
+|`dataSchema`|Object|The schema used by the Kinesis indexing task during ingestion. See [`dataSchema`](../../ingestion/ingestion-spec.md#dataschema) for more information.|Yes|
+|`tuningConfig`|Object|The [tuning configuration](#supervisor-tuning-configuration) object for configuring performance-related settings for the supervisor and indexing tasks.|No|
 
 `http://<OVERLORD_IP>:<OVERLORD_PORT>/druid/indexer/v1/supervisor`
 
@@ -502,7 +509,17 @@ no longer available in Kinesis (typically because the message retention period h
 removed and re-created) the supervisor will refuse to start and in-flight tasks will fail. This operation 
 enables you to recover from this condition. 
 
-Note that the supervisor must be running for this endpoint to be available.
+### Resetting Offsets for a supervisor
+
+To reset partition offsets for a supervisor, send a `POST` request to the `/druid/indexer/v1/supervisor/:supervisorId/resetOffsets` endpoint. This endpoint clears stored
+sequence numbers, prompting the supervisor to start reading from the specified offsets.
+After resetting stored offsets, the supervisor kills and recreates any active tasks pertaining to the specified partitions,
+so that tasks begin reading specified offsets. For partitions that are not specified in this operation, the supervisor will resume from the last
+stored offset.
+
+Use this endpoint with caution as it may result in skipped messages, leading to data loss or duplicate data.
+
+### Terminate a supervisor
 
 ### Terminating Supervisors
 
