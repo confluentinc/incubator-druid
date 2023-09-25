@@ -145,14 +145,16 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       case SUM: {
         inputRows = new ArrayList<>(metric.getSum().getDataPointsCount());
         metric.getSum()
-            .getDataPointsList()
+            // https://github.com/open-telemetry/opentelemetry-collector/blob/2ebe1e501f9a206237de1009a127f1a419ab3696/pdata/internal/data/protogen/metrics/v1/metrics.pb.go#L123-L139
+            .getDataPointsList().stream().filter(x -> (x.getFlags() & 1) != 1)
             .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
         break;
       }
       case GAUGE: {
         inputRows = new ArrayList<>(metric.getGauge().getDataPointsCount());
         metric.getGauge()
-            .getDataPointsList()
+            // https://github.com/open-telemetry/opentelemetry-collector/blob/2ebe1e501f9a206237de1009a127f1a419ab3696/pdata/internal/data/protogen/metrics/v1/metrics.pb.go#L123-L139
+            .getDataPointsList().stream().filter(x -> (x.getFlags() & 1) != 1)
             .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
         break;
       }
