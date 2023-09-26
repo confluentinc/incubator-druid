@@ -25,6 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.proto.common.v1.AnyValue;
+import io.opentelemetry.proto.metrics.v1.DataPointFlags;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
@@ -145,16 +146,14 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       case SUM: {
         inputRows = new ArrayList<>(metric.getSum().getDataPointsCount());
         metric.getSum()
-            // https://github.com/open-telemetry/opentelemetry-collector/blob/2ebe1e501f9a206237de1009a127f1a419ab3696/pdata/internal/data/protogen/metrics/v1/metrics.pb.go#L123-L139
-            .getDataPointsList().stream().filter(x -> (x.getFlags() & 1) != 1)
+            .getDataPointsList().stream().filter(OpenTelemetryMetricsProtobufReader::hasRecordedValue)
             .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
         break;
       }
       case GAUGE: {
         inputRows = new ArrayList<>(metric.getGauge().getDataPointsCount());
         metric.getGauge()
-            // https://github.com/open-telemetry/opentelemetry-collector/blob/2ebe1e501f9a206237de1009a127f1a419ab3696/pdata/internal/data/protogen/metrics/v1/metrics.pb.go#L123-L139
-            .getDataPointsList().stream().filter(x -> (x.getFlags() & 1) != 1)
+            .getDataPointsList().stream().filter(OpenTelemetryMetricsProtobufReader::hasRecordedValue)
             .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
         break;
       }
@@ -167,6 +166,10 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 
     }
     return inputRows;
+  }
+
+  private static boolean hasRecordedValue(NumberDataPoint d) {
+    return (d.getFlags() & DataPointFlags.FLAG_NO_RECORDED_VALUE_VALUE) == 0;
   }
 
   private InputRow parseNumberDataPoint(NumberDataPoint dataPoint,
