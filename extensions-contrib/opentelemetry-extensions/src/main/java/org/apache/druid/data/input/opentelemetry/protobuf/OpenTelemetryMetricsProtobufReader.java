@@ -146,15 +146,23 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       case SUM: {
         inputRows = new ArrayList<>(metric.getSum().getDataPointsCount());
         metric.getSum()
-            .getDataPointsList().stream().filter(OpenTelemetryMetricsProtobufReader::hasRecordedValue)
-            .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
+            .getDataPointsList()
+            .forEach(dataPoint -> {
+              if (hasRecordedValue(dataPoint)) {
+                inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName));
+              }
+            });
         break;
       }
       case GAUGE: {
         inputRows = new ArrayList<>(metric.getGauge().getDataPointsCount());
         metric.getGauge()
-            .getDataPointsList().stream().filter(OpenTelemetryMetricsProtobufReader::hasRecordedValue)
-            .forEach(dataPoint -> inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName)));
+            .getDataPointsList()
+            .forEach(dataPoint -> {
+              if (hasRecordedValue(dataPoint)) {
+                inputRows.add(parseNumberDataPoint(dataPoint, resourceAttributes, metricName));
+              }
+            });
         break;
       }
       // TODO Support HISTOGRAM and SUMMARY metrics
