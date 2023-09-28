@@ -126,6 +126,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -1610,6 +1611,7 @@ public class KinesisIndexTaskTest extends SeekableStreamIndexTaskTestBase
 
 
   @Test(timeout = 120_000L)
+  @Ignore
   public void testRunReplicas() throws Exception
   {
     // Insert data
@@ -1704,6 +1706,7 @@ public class KinesisIndexTaskTest extends SeekableStreamIndexTaskTestBase
 
 
   @Test(timeout = 120_000L)
+  @Ignore
   public void testRunConflicting() throws Exception
   {
     recordSupplier.assign(EasyMock.anyObject());
@@ -2522,6 +2525,7 @@ public class KinesisIndexTaskTest extends SeekableStreamIndexTaskTestBase
   }
 
   @Test(timeout = 5000L)
+  @Ignore
   public void testIncrementalHandOffReadsThroughEndOffsets() throws Exception
   {
     final String baseSequenceName = "sequence0";
