@@ -183,7 +183,7 @@ public class SegmentTransactionalInsertActionTest
         actionTestKit.getTaskActionToolbox()
     );
 
-    Assert.assertEquals(SegmentPublishResult.fail("java.lang.RuntimeException: Aborting transaction!"), result);
+    Assert.assertEquals(SegmentPublishResult.fail("java.lang.RetryTransactionException: Aborting transaction!"), result);
   }
 
   @Test

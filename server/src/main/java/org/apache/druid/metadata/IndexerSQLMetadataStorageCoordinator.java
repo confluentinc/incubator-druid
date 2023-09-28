@@ -1577,7 +1577,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
           oldCommitMetadataFromDb,
           startMetadata
       );
-      return DataStoreMetadataUpdateResult.FAILURE;
+      return DataStoreMetadataUpdateResult.TRY_AGAIN;
     }
 
     // Only endOffsets should be stored in metadata store
