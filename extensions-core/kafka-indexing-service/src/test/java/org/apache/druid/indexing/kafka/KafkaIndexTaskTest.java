@@ -159,7 +159,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -1012,7 +1011,6 @@ public class KafkaIndexTaskTest extends SeekableStreamIndexTaskTestBase
   }
 
   @Test(timeout = 60_000L)
-  @Ignore
   public void testIncrementalHandOffReadsThroughEndOffsets() throws Exception
   {
     records = generateSinglePartitionRecords(topic);
@@ -1796,7 +1794,6 @@ public class KafkaIndexTaskTest extends SeekableStreamIndexTaskTestBase
   }
 
   @Test(timeout = 60_000L)
-  @Ignore
   public void testRunReplicas() throws Exception
   {
     final KafkaIndexTask task1 = createTask(
@@ -1865,7 +1862,6 @@ public class KafkaIndexTaskTest extends SeekableStreamIndexTaskTestBase
   }
 
   @Test(timeout = 60_000L)
-  @Ignore
   public void testRunConflicting() throws Exception
   {
     final KafkaIndexTask task1 = createTask(
@@ -3099,7 +3095,14 @@ public class KafkaIndexTaskTest extends SeekableStreamIndexTaskTestBase
         testUtils.getTestObjectMapper(),
         derby.metadataTablesConfigSupplier().get(),
         derbyConnector
-    );
+    )
+    {
+      @Override
+      public int getSqlMetadataMaxRetry()
+      {
+        return 2;
+      }
+    };
     taskLockbox = new TaskLockbox(taskStorage, metadataStorageCoordinator);
     final TaskActionToolbox taskActionToolbox = new TaskActionToolbox(
         taskLockbox,
