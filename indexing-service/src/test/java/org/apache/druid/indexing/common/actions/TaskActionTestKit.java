@@ -64,6 +64,11 @@ public class TaskActionTestKit extends ExternalResource
     return metadataStorageCoordinator;
   }
 
+  public TaskStorage getTaskStorage()
+  {
+    return taskStorage;
+  }
+
   public SegmentsMetadataManager getSegmentsMetadataManager()
   {
     return segmentsMetadataManager;
