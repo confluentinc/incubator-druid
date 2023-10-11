@@ -683,7 +683,8 @@ public class IndexerSQLMetadataStorageCoordinatorTest
     Assert.assertEquals(SegmentPublishResult.fail("org.apache.druid.metadata.RetryTransactionException: Aborting transaction!"), result1);
 
     // Should only be tried once.
-    Assert.assertEquals(1, metadataUpdateCounter.get());
+    // Now, we will retry for this test case as well, So it will be equal to total retries available which is 2.
+    Assert.assertEquals(2, metadataUpdateCounter.get());
   }
 
   @Test
