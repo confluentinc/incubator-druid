@@ -70,6 +70,15 @@ public interface DataSourceMetadata
   boolean matches(DataSourceMetadata other);
 
   /**
+   * Returns true if the metadata in this instance is greater than the metadata in "other"
+   *
+   * Behavior is undefined if you pass in an instance of a different class from this one.
+   *
+   * @return true or false
+   */
+  boolean isGreater(DataSourceMetadata other);
+
+  /**
    * Returns a copy of this instance with "other" merged in. Any conflicts should be resolved in favor of
    * information from "other".
    *

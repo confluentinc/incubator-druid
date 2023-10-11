@@ -54,6 +54,15 @@ public interface SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetTy
   );
 
   /**
+   * Return True if this is greater than other instance sequence.
+   *
+   * @see DataSourceMetadata#isGreater
+   */
+  boolean isGreater(
+          SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other
+  );
+
+  /**
    * Subtracts the given other from this and returns the result.
    *
    * @see DataSourceMetadata#minus
