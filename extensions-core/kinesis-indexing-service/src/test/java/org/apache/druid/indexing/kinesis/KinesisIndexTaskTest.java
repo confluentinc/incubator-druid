@@ -3059,14 +3059,7 @@ public class KinesisIndexTaskTest extends SeekableStreamIndexTaskTestBase
         testUtils.getTestObjectMapper(),
         derby.metadataTablesConfigSupplier().get(),
         derbyConnector
-    )
-    {
-      @Override
-      public int getSqlMetadataMaxRetry()
-      {
-        return 2;
-      }
-    };
+    );
     taskLockbox = new TaskLockbox(taskStorage, metadataStorageCoordinator);
     final TaskActionToolbox taskActionToolbox = new TaskActionToolbox(
         taskLockbox,

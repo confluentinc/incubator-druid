@@ -680,11 +680,10 @@ public class IndexerSQLMetadataStorageCoordinatorTest
         new ObjectMetadata(ImmutableMap.of("foo", "bar")),
         new ObjectMetadata(ImmutableMap.of("foo", "baz"))
     );
-    Assert.assertEquals(SegmentPublishResult.fail("org.apache.druid.metadata.RetryTransactionException: Aborting transaction!"), result1);
+    Assert.assertEquals(SegmentPublishResult.fail("java.lang.RuntimeException: Aborting transaction!"), result1);
 
     // Should only be tried once.
-    // TODO REVERT: Since now i have updated to retry instead of failure, there will more then one call for result2.
-    Assert.assertEquals(2, metadataUpdateCounter.get());
+    Assert.assertEquals(1, metadataUpdateCounter.get());
   }
 
   @Test
@@ -779,7 +778,7 @@ public class IndexerSQLMetadataStorageCoordinatorTest
         null
     );
     Assert.assertEquals(SegmentPublishResult.fail(
-        "org.apache.druid.metadata.RetryTransactionException: Aborting transaction!"), result1);
+        "java.lang.RuntimeException: Aborting transaction!"), result1);
 
     Assert.assertEquals(MAX_SQL_MEATADATA_RETRY_FOR_TEST, segmentTableDropUpdateCounter.get());
 
@@ -806,7 +805,7 @@ public class IndexerSQLMetadataStorageCoordinatorTest
         new ObjectMetadata(null),
         new ObjectMetadata(ImmutableMap.of("foo", "baz"))
     );
-    Assert.assertEquals(SegmentPublishResult.fail("org.apache.druid.metadata.RetryTransactionException: Aborting transaction!"), result2);
+    Assert.assertEquals(SegmentPublishResult.fail("java.lang.RuntimeException: Aborting transaction!"), result2);
 
     // Should only be tried once per call.
     // TODO REVERT: Since now i have updated to retry instead of failure, there will more then one call for result2.
@@ -833,8 +832,7 @@ public class IndexerSQLMetadataStorageCoordinatorTest
     Assert.assertEquals(SegmentPublishResult.fail("org.apache.druid.metadata.RetryTransactionException: Aborting transaction!"), result2);
 
     // Should only be tried once per call.
-    // TODO REVERT: Since now i have updated to retry instead of failure, there will more then one call for result2.
-    Assert.assertEquals(3, metadataUpdateCounter.get());
+    Assert.assertEquals(2, metadataUpdateCounter.get());
   }
 
   @Test

@@ -1558,11 +1558,17 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
     }
 
     final boolean startMetadataMatchesExisting;
+    final boolean startMetadataGreaterthenExisting;
 
     if (oldCommitMetadataFromDb == null) {
       startMetadataMatchesExisting = startMetadata.isValidStart();
+      startMetadataGreaterthenExisting = true;
     } else {
       // Checking against the last committed metadata.
+      // If the new start sequence number is greater than the end sequence number of last commit.
+      // It's possible multiple tasks are publishing the sequence at around same time.
+      startMetadataGreaterthenExisting = startMetadata.asStartMetadata().isGreater(oldCommitMetadataFromDb.asStartMetadata());
+
       // Converting the last one into start metadata for checking since only the same type of metadata can be matched.
       // Even though kafka/kinesis indexing services use different sequenceNumber types for representing
       // start and end sequenceNumbers, the below conversion is fine because the new start sequenceNumbers are supposed
@@ -1570,6 +1576,16 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
       startMetadataMatchesExisting = startMetadata.asStartMetadata().matches(oldCommitMetadataFromDb.asStartMetadata());
     }
 
+    if (startMetadataGreaterthenExisting && !startMetadataMatchesExisting) {
+      // Offset stored in StartMetadata is Greater than the last commited metadata,
+      // Then retry multiple task might be trying to publish the segment for same partitions.
+      log.info(
+              "Retrying to update metadata, existing state[%s] in metadata store is behind the new start state[%s].",
+              oldCommitMetadataFromDb,
+              startMetadata
+      );
+      return DataStoreMetadataUpdateResult.TRY_AGAIN;
+    }
     if (!startMetadataMatchesExisting) {
       // Not in the desired start state.
       log.error(
@@ -1577,7 +1593,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
           oldCommitMetadataFromDb,
           startMetadata
       );
-      return DataStoreMetadataUpdateResult.TRY_AGAIN;
+      return DataStoreMetadataUpdateResult.FAILURE;
     }
 
     // Only endOffsets should be stored in metadata store

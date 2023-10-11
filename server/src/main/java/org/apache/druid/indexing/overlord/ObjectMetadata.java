@@ -61,6 +61,12 @@ public final class ObjectMetadata implements DataSourceMetadata
   }
 
   @Override
+  public boolean isGreater(DataSourceMetadata other)
+  {
+    return false;
+  }
+
+  @Override
   public DataSourceMetadata plus(DataSourceMetadata other)
   {
     return other;
