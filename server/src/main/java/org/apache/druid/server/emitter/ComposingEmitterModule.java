@@ -62,6 +62,7 @@ public class ComposingEmitterModule implements DruidModule
           @Override
           public Emitter apply(String s)
           {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             return injector.getInstance(Key.get(Emitter.class, Names.named(s)));
           }
         }

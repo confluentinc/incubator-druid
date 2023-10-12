@@ -48,6 +48,7 @@ public class CacheModule implements Module
   @Override
   public void configure(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(Cache.class).toProvider(Key.get(CacheProvider.class, Global.class)).in(ManageLifecycle.class);
     binder.bind(CachePopulatorStats.class).in(LazySingleton.class);
     JsonConfigProvider.bind(binder, prefix, CacheProvider.class, Global.class);

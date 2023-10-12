@@ -49,6 +49,7 @@ public class SqlAggregationModule implements Module
     PolyBind.createChoiceWithDefault(
         binder,
         SqlModule.PROPERTY_SQL_APPROX_COUNT_DISTINCT_CHOICE,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(SqlAggregator.class, ApproxCountDistinct.class),
         BuiltinApproxCountDistinctSqlAggregator.NAME
     );

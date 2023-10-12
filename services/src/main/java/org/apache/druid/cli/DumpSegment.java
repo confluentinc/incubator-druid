@@ -230,6 +230,7 @@ public class DumpSegment extends GuiceRunnable
 
   private void runMetadata(final Injector injector, final QueryableIndex index) throws IOException
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     final ObjectMapper objectMapper = injector.getInstance(Key.get(ObjectMapper.class, Json.class))
                                               .copy()
                                               .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
@@ -277,6 +278,7 @@ public class DumpSegment extends GuiceRunnable
 
   private void runDump(final Injector injector, final QueryableIndex index) throws IOException
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     final ObjectMapper objectMapper = injector.getInstance(Key.get(ObjectMapper.class, Json.class));
     final QueryableIndexStorageAdapter adapter = new QueryableIndexStorageAdapter(index);
     final List<String> columnNames = getColumnsToInclude(index);
@@ -356,6 +358,7 @@ public class DumpSegment extends GuiceRunnable
       List<String> columnNames,
       boolean decompressBitmaps
   ) throws IOException
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   {
     final ObjectMapper objectMapper = injector.getInstance(Key.get(ObjectMapper.class, Json.class));
     final BitmapFactory bitmapFactory = index.getBitmapFactoryForDimensions();
@@ -439,6 +442,7 @@ public class DumpSegment extends GuiceRunnable
       final String outputFileName,
       final QueryableIndex index,
       String columnName
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   ) throws IOException
   {
     final ObjectMapper objectMapper = injector.getInstance(Key.get(ObjectMapper.class, Json.class));
@@ -554,6 +558,7 @@ public class DumpSegment extends GuiceRunnable
       final String outputFileName,
       final QueryableIndex index,
       String columnName,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       String path
   ) throws IOException
   {

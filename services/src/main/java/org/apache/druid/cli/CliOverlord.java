@@ -224,9 +224,12 @@ public class CliOverlord extends ServerRunnable
             PolyBind.createChoice(
                 binder,
                 "druid.indexer.task.rowIngestionMeters.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 Key.get(RowIngestionMetersFactory.class),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 Key.get(DropwizardRowIngestionMetersFactory.class)
             );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             final MapBinder<String, RowIngestionMetersFactory> rowIngestionMetersHandlerProviderBinder =
                 PolyBind.optionBinder(binder, Key.get(RowIngestionMetersFactory.class));
             rowIngestionMetersHandlerProviderBinder
@@ -271,6 +274,7 @@ public class CliOverlord extends ServerRunnable
                 IndexingService.class,
                 DiscoverySideEffectsProvider.create()
             );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
             Jerseys.addResource(binder, SelfDiscoveryResource.class);
             LifecycleModule.registerKey(binder, Key.get(SelfDiscoveryResource.class));
@@ -280,8 +284,11 @@ public class CliOverlord extends ServerRunnable
           {
             JsonConfigProvider.bind(binder, "druid.indexer.storage", TaskStorageConfig.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             PolyBind.createChoice(
                 binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 "druid.indexer.storage.type",
                 Key.get(TaskStorage.class),
                 Key.get(HeapMemoryTaskStorage.class)
@@ -294,9 +301,12 @@ public class CliOverlord extends ServerRunnable
 
             storageBinder.addBinding("metadata").to(MetadataTaskStorage.class).in(ManageLifecycle.class);
             binder.bind(MetadataTaskStorage.class).in(LazySingleton.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
           }
           private void configureIntermediaryData(Binder binder)
           {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             PolyBind.createChoice(
                 binder,
                 "druid.processing.intermediaryData.storage.type",
@@ -309,9 +319,12 @@ public class CliOverlord extends ServerRunnable
             );
             biddy.addBinding("local").to(LocalIntermediaryDataManager.class);
             biddy.addBinding("deepstore").to(DeepStorageIntermediaryDataManager.class).in(LazySingleton.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
           }
 
           private void configureRunners(Binder binder)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
           {
             JsonConfigProvider.bind(binder, "druid.worker", WorkerConfig.class);
 
@@ -344,9 +357,12 @@ public class CliOverlord extends ServerRunnable
           }
 
           private void configureAutoscale(Binder binder)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
           {
             JsonConfigProvider.bind(binder, "druid.indexer.autoscale", ProvisioningSchedulerConfig.class);
             JsonConfigProvider.bind(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 binder,
                 "druid.indexer.autoscale",
                 PendingTaskBasedWorkerProvisioningConfig.class
@@ -395,6 +411,7 @@ public class CliOverlord extends ServerRunnable
 
     @Inject
     OverlordJettyServerInitializer(AuthConfig authConfig, ServerConfig serverConfig)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     {
       this.authConfig = authConfig;
       this.serverConfig = serverConfig;

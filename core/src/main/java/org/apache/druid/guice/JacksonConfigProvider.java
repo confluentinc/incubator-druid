@@ -35,6 +35,7 @@ public class JacksonConfigProvider<T> implements Provider<Supplier<T>>
 {
   public static <T> void bind(Binder binder, String key, Class<T> clazz, T defaultVal)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(Key.get(Types.newParameterizedType(Supplier.class, clazz)))
           .toProvider((Provider) of(key, clazz, defaultVal))
           .in(LazySingleton.class);

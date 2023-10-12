@@ -54,6 +54,7 @@ public class SqlBindings
       final Class<? extends SqlAggregator> clazz
   )
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(SqlAggregator.class, ApproxCountDistinct.class))
             .addBinding(name)
             .to(clazz);

@@ -62,7 +62,9 @@ public class DropwizardEmitterModule implements DruidModule
     List<Emitter> alertEmitters = dropwizardEmitterConfig.getAlertEmitters()
                                                          .stream()
                                                          .map(s -> injector.getInstance(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                                                              Key.get(
+
                                                                  Emitter.class,
                                                                  Names.named(s)
                                                              )))

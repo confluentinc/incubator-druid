@@ -88,7 +88,9 @@ public class JsonConfigProvider<T> implements Provider<Supplier<T>>
         binder,
         propertyBase,
         classToProvide,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(classToProvide),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         (Key) Key.get(Types.newParameterizedType(Supplier.class, classToProvide))
     );
   }
@@ -105,6 +107,8 @@ public class JsonConfigProvider<T> implements Provider<Supplier<T>>
         binder,
         propertyBase,
         classToProvide,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         defaultClass,
         Key.get(classToProvide),
         (Key) Key.get(Types.newParameterizedType(Supplier.class, classToProvide))
@@ -115,6 +119,8 @@ public class JsonConfigProvider<T> implements Provider<Supplier<T>>
   public static <T> void bind(Binder binder, String propertyBase, Class<T> classToProvide, Annotation annotation)
   {
     bind(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         binder,
         propertyBase,
         classToProvide,
@@ -130,6 +136,8 @@ public class JsonConfigProvider<T> implements Provider<Supplier<T>>
       Class<T> classToProvide,
       Class<? extends Annotation> annotation
   )
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   {
     bind(
         binder,
@@ -171,8 +179,11 @@ public class JsonConfigProvider<T> implements Provider<Supplier<T>>
       Key<T> bindKey,
       T instance
   )
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(bindKey).toInstance(instance);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     final ParameterizedType supType = Types.newParameterizedType(Supplier.class, bindKey.getTypeLiteral().getType());
     final Key supplierKey;

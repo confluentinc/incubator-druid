@@ -49,19 +49,23 @@ public class DerbyMetadataStorageDruidModule extends SQLMetadataStorageDruidModu
 
     binder.bind(MetadataStorage.class).toProvider(NoopMetadataStorageProvider.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(MetadataStorageProvider.class))
             .addBinding(TYPE)
             .to(DerbyMetadataStorageProvider.class)
             .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(MetadataStorageConnector.class))
             .addBinding(TYPE)
             .to(DerbyConnector.class)
             .in(LazySingleton.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     PolyBind.optionBinder(binder, Key.get(SQLMetadataConnector.class))
             .addBinding(TYPE)
             .to(DerbyConnector.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .in(LazySingleton.class);
 
     PolyBind.optionBinder(binder, Key.get(MetadataStorageActionHandlerFactory.class))

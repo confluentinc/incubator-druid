@@ -142,9 +142,12 @@ public class CliMiddleManager extends ServerRunnable
             PolyBind.createChoice(
                 binder,
                 "druid.indexer.task.rowIngestionMeters.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 Key.get(RowIngestionMetersFactory.class),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 Key.get(DropwizardRowIngestionMetersFactory.class)
             );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             final MapBinder<String, RowIngestionMetersFactory> rowIngestionMetersHandlerProviderBinder =
                 PolyBind.optionBinder(binder, Key.get(RowIngestionMetersFactory.class));
             rowIngestionMetersHandlerProviderBinder
@@ -169,6 +172,7 @@ public class CliMiddleManager extends ServerRunnable
                 binder,
                 DiscoverySideEffectsProvider.create()
             );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
             Jerseys.addResource(binder, SelfDiscoveryResource.class);
             LifecycleModule.registerKey(binder, Key.get(SelfDiscoveryResource.class));
@@ -178,9 +182,12 @@ public class CliMiddleManager extends ServerRunnable
 
           private void configureIntermediaryData(Binder binder)
           {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             PolyBind.createChoice(
                 binder,
                 "druid.processing.intermediaryData.storage.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 Key.get(IntermediaryDataManager.class),
                 Key.get(LocalIntermediaryDataManager.class)
             );

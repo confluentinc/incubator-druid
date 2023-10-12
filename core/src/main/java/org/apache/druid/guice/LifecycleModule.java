@@ -68,6 +68,7 @@ public class LifecycleModule implements Module
    */
   public static void register(Binder binder, Class<?> clazz)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     registerKey(binder, Key.get(clazz));
   }
 
@@ -93,6 +94,7 @@ public class LifecycleModule implements Module
    */
   public static void register(Binder binder, Class<?> clazz, Class<? extends Annotation> annotation)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     registerKey(binder, Key.get(clazz, annotation));
   }
 
@@ -137,6 +139,7 @@ public class LifecycleModule implements Module
 
   @Provides @LazySingleton
   public Lifecycle getLifecycle(final Injector injector)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   {
     final Key<Set<KeyHolder>> keyHolderKey = Key.get(new TypeLiteral<Set<KeyHolder>>(){}, Names.named("lifecycle"));
     final Set<KeyHolder> eagerClasses = injector.getInstance(keyHolderKey);

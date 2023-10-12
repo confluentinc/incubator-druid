@@ -41,6 +41,7 @@ public class SocketUtil
     int currPort = startPort;
 
     while (currPort < 0xffff) {
+// Appears that this is using the network without encryption, please verify and fix. https://go/fips-compliance
       try (ServerSocket socket = new ServerSocket(currPort)) {
         return currPort;
       }

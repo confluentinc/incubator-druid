@@ -145,6 +145,7 @@ public class ExportMetadata extends GuiceRunnable
         binder -> {
           JsonConfigProvider.bindInstance(
               binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
               Key.get(MetadataStorageConnectorConfig.class),
               new MetadataStorageConnectorConfig()
               {
@@ -169,10 +170,12 @@ public class ExportMetadata extends GuiceRunnable
           );
           JsonConfigProvider.bindInstance(
               binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
               Key.get(MetadataStorageTablesConfig.class),
               MetadataStorageTablesConfig.fromBase(base)
           );
           JsonConfigProvider.bindInstance(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
               binder,
               Key.get(DruidNode.class, Self.class),
               new DruidNode("tools", "localhost", false, -1, null, true, false)

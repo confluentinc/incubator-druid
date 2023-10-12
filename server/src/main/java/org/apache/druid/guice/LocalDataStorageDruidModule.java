@@ -58,12 +58,16 @@ public class LocalDataStorageDruidModule implements DruidModule
     PolyBind.createChoice(
         binder,
         "druid.storage.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(DataSegmentPusher.class),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(LocalDataSegmentPusher.class)
     );
 
     PolyBind.createChoice(
         binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         "druid.storage.type",
         Key.get(DataSegmentKiller.class),
         Key.get(LocalDataSegmentKiller.class)
@@ -79,6 +83,7 @@ public class LocalDataStorageDruidModule implements DruidModule
 
     Binders.dataSegmentKillerBinder(binder)
            .addBinding(SCHEME)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
            .to(LocalDataSegmentKiller.class)
            .in(LazySingleton.class);
 

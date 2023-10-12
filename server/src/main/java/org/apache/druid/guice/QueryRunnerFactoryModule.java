@@ -72,6 +72,7 @@ public class QueryRunnerFactoryModule extends QueryToolChestModule
     super.configure(binder);
 
     binder.bind(QueryScheduler.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
           .toProvider(Key.get(QuerySchedulerProvider.class, Global.class))
           .in(LazySingleton.class);
     binder.bind(QuerySchedulerProvider.class).in(LazySingleton.class);

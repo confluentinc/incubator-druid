@@ -77,6 +77,7 @@ public class SqlModule implements Module
       return;
     }
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(ViewManager.class))
             .addBinding(NoopViewManager.TYPE)
             .to(NoopViewManager.class)
@@ -85,9 +86,11 @@ public class SqlModule implements Module
     PolyBind.createChoiceWithDefault(
         binder,
         PROPERTY_SQL_VIEW_MANAGER_TYPE,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(ViewManager.class),
         NoopViewManager.TYPE
     );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     PolyBind.optionBinder(binder, Key.get(DruidSchemaManager.class))
             .addBinding(NoopDruidSchemaManager.TYPE)
@@ -95,6 +98,7 @@ public class SqlModule implements Module
             .in(LazySingleton.class);
 
     PolyBind.createChoiceWithDefault(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         binder,
         PROPERTY_SQL_SCHEMA_MANAGER_TYPE,
         Key.get(DruidSchemaManager.class),

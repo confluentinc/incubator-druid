@@ -62,6 +62,7 @@ public class GraphiteEmitterModule implements DruidModule
         Lists.transform(
             graphiteEmitterConfig.getAlertEmitters(),
             alertEmitterName -> {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
               return injector.getInstance(Key.get(Emitter.class, Names.named(alertEmitterName)));
             }
         )
@@ -71,6 +72,7 @@ public class GraphiteEmitterModule implements DruidModule
         Lists.transform(
             graphiteEmitterConfig.getRequestLogEmitters(),
             requestLogEmitterName -> {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
               return injector.getInstance(Key.get(Emitter.class, Names.named(requestLogEmitterName)));
             }
         )

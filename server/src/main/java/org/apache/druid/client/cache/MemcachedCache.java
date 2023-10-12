@@ -413,6 +413,7 @@ public class MemcachedCache implements Cache
       // Build SSLContext
       TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
       tmf.init((KeyStore) null);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       SSLContext sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, tmf.getTrustManagers(), null);
       // Create the client in TLS mode

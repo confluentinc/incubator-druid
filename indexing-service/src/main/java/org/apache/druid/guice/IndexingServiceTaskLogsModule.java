@@ -37,6 +37,8 @@ public class IndexingServiceTaskLogsModule implements Module
   @Override
   public void configure(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoice(binder, "druid.indexer.logs.type", Key.get(TaskLogs.class), Key.get(FileTaskLogs.class));
     JsonConfigProvider.bind(binder, "druid.indexer.logs", FileTaskLogsConfig.class);
 

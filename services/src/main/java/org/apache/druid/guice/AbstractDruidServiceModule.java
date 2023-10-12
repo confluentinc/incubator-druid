@@ -76,6 +76,7 @@ public abstract class AbstractDruidServiceModule implements Module
     );
     serviceBinder
         .addBinding(role)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .to(Key.get(new TypeLiteral<Set<Class<? extends DruidService>>>(){}, role.getDruidServiceInjectName()));
   }
 }

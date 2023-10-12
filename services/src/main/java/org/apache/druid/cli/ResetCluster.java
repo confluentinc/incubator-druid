@@ -87,6 +87,7 @@ public class ResetCluster extends GuiceRunnable
         binder -> {
           JsonConfigProvider.bindInstance(
               binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
               Key.get(DruidNode.class, Self.class),
               new DruidNode("tools", "localhost", false, -1, null, true, false)
           );

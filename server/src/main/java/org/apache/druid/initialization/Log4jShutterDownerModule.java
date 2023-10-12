@@ -74,6 +74,7 @@ public class Log4jShutterDownerModule implements Module
         return;
       }
       binder.bind(Log4jShutdown.class).toInstance((Log4jShutdown) registry);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       binder.bind(Key.get(Log4jShutterDowner.class, Names.named("ForTheEagerness")))
             .to(Log4jShutterDowner.class)
             .asEagerSingleton();

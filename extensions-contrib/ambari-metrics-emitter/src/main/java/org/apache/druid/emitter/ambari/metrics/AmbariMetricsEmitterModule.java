@@ -59,6 +59,7 @@ public class AmbariMetricsEmitterModule implements DruidModule
     List<Emitter> emitters = emitterConfig
         .getAlertEmitters()
         .stream()
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .map((String name) -> injector.getInstance(Key.get(Emitter.class, Names.named(name))))
         .collect(Collectors.toList());
     return new AmbariMetricsEmitter(emitterConfig, emitters);

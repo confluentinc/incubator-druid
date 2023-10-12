@@ -98,6 +98,7 @@ public class IndexerWorkerContext implements WorkerContext
         injector.getInstance(SegmentCacheManagerFactory.class)
                 .manufacturate(new File(toolbox.getIndexingTmpDir(), "segment-fetch"));
     final ServiceClientFactory serviceClientFactory =
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         injector.getInstance(Key.get(ServiceClientFactory.class, EscalatedGlobal.class));
 
     return new IndexerWorkerContext(
@@ -240,6 +241,7 @@ public class IndexerWorkerContext implements WorkerContext
   @Override
   public DruidNode selfNode()
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     return injector.getInstance(Key.get(DruidNode.class, Self.class));
   }
 

@@ -252,6 +252,7 @@ public class JavaScriptAggregatorFactory extends AggregatorFactory
   public byte[] getCacheKey()
   {
     try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       MessageDigest md = MessageDigest.getInstance("SHA-1");
       byte[] fieldNameBytes = StringUtils.toUtf8(Joiner.on(",").join(fieldNames));
       byte[] sha1 = md.digest(StringUtils.toUtf8(fnAggregate + fnReset + fnCombine));

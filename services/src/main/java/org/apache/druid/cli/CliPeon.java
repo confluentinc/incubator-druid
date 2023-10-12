@@ -351,9 +351,12 @@ public class CliPeon extends GuiceRunnable
     PolyBind.createChoice(
         binder,
         "druid.indexer.task.rowIngestionMeters.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(RowIngestionMetersFactory.class),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(DropwizardRowIngestionMetersFactory.class)
     );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     final MapBinder<String, RowIngestionMetersFactory> rowIngestionMetersHandlerProviderBinder =
         PolyBind.optionBinder(binder, Key.get(RowIngestionMetersFactory.class));
     rowIngestionMetersHandlerProviderBinder
@@ -366,8 +369,11 @@ public class CliPeon extends GuiceRunnable
   static void bindChatHandler(Binder binder)
   {
     PolyBind.createChoice(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         binder,
         "druid.indexer.task.chathandler.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(ChatHandlerProvider.class),
         Key.get(ServiceAnnouncingChatHandlerProvider.class)
     );
@@ -396,8 +402,11 @@ public class CliPeon extends GuiceRunnable
     binder.bind(DataSegmentArchiver.class).to(OmniDataSegmentArchiver.class).in(LazySingleton.class);
   }
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   private static void configureTaskActionClient(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoice(
         binder,
         "druid.peon.mode",
@@ -459,9 +468,12 @@ public class CliPeon extends GuiceRunnable
           .to(CoordinatorBasedSegmentHandoffNotifierFactory.class)
           .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(CoordinatorClient.class).in(LazySingleton.class);
   }
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   static void configureIntermediaryData(Binder binder)
   {
     PolyBind.createChoice(
@@ -469,9 +481,12 @@ public class CliPeon extends GuiceRunnable
         "druid.processing.intermediaryData.storage.type",
         Key.get(IntermediaryDataManager.class),
         Key.get(LocalIntermediaryDataManager.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     );
     final MapBinder<String, IntermediaryDataManager> intermediaryDataManagerBiddy = PolyBind.optionBinder(
         binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(IntermediaryDataManager.class)
     );
     intermediaryDataManagerBiddy.addBinding("local").to(LocalIntermediaryDataManager.class).in(LazySingleton.class);

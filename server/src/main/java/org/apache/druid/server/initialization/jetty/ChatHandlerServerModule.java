@@ -75,7 +75,10 @@ public class ChatHandlerServerModule implements Module
      * We bind {@link DruidNode} annotated with {@link RemoteChatHandler} to {@literal @}{@link Self} {@link DruidNode}
      * so that same Jetty Server is used for querying as well as ingestion.
      */
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(DruidNode.class).annotatedWith(RemoteChatHandler.class).to(Key.get(DruidNode.class, Self.class));
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(ServerConfig.class).annotatedWith(RemoteChatHandler.class).to(Key.get(ServerConfig.class));
     binder.bind(TLSServerConfig.class).annotatedWith(RemoteChatHandler.class).to(Key.get(TLSServerConfig.class));
   }
@@ -104,6 +107,7 @@ public class ChatHandlerServerModule implements Module
         injector,
         lifecycle,
         node,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         config,
         TLSServerConfig,
         injector.getExistingBinding(Key.get(SslContextFactory.Server.class)),

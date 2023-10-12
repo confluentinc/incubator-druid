@@ -83,7 +83,9 @@ public class MSQDurableStorageModule implements DruidModule
           MultiStageQuery.class
       );
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       binder.bind(Key.get(StorageConnector.class, MultiStageQuery.class))
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .toProvider(Key.get(StorageConnectorProvider.class, MultiStageQuery.class))
             .in(LazySingleton.class);
 

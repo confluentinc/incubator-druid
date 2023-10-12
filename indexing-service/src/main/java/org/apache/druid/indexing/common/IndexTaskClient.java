@@ -205,6 +205,7 @@ public abstract class IndexTaskClient implements AutoCloseable
   @VisibleForTesting
   protected void checkConnection(String host, int port) throws IOException
   {
+// Appears that this is using the network without encryption, please verify and fix. https://go/fips-compliance
     new Socket(host, port).close();
   }
 

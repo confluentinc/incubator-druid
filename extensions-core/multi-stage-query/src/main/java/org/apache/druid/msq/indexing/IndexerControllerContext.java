@@ -79,6 +79,7 @@ public class IndexerControllerContext implements ControllerContext
   @Override
   public DruidNode selfNode()
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     return injector.getInstance(Key.get(DruidNode.class, Self.class));
   }
 

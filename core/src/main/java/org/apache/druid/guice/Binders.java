@@ -52,11 +52,13 @@ public class Binders
 
   public static MapBinder<String, DataSegmentPusher> dataSegmentPusherBinder(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     return PolyBind.optionBinder(binder, Key.get(DataSegmentPusher.class));
   }
 
   public static MapBinder<String, TaskLogs> taskLogsBinder(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     return PolyBind.optionBinder(binder, Key.get(TaskLogs.class));
   }
 }

@@ -183,6 +183,7 @@ public class CliIndexer extends ServerRunnable
             );
 
             Jerseys.addResource(binder, SelfDiscoveryResource.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             LifecycleModule.registerKey(binder, Key.get(SelfDiscoveryResource.class));
           }
 

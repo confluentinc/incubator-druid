@@ -107,6 +107,7 @@ public class DiscoveryModule implements Module
    */
   public static void registerDefault(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     registerKey(binder, Key.get(new TypeLiteral<DruidNode>(){}));
   }
 
@@ -121,6 +122,7 @@ public class DiscoveryModule implements Module
    */
   public static void register(Binder binder, Annotation annotation)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     registerKey(binder, Key.get(new TypeLiteral<DruidNode>(){}, annotation));
   }
 
@@ -135,6 +137,7 @@ public class DiscoveryModule implements Module
    * @param annotation The annotation class to use in finding the DruidNode instance
    */
   public static void register(Binder binder, Class<? extends Annotation> annotation)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   {
     registerKey(binder, Key.get(new TypeLiteral<DruidNode>(){}, annotation));
   }
@@ -165,40 +168,50 @@ public class DiscoveryModule implements Module
     // Build the binder so that it will at a minimum inject an empty set.
     DruidBinders.discoveryAnnouncementBinder(binder);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     if (isZkEnabled) {
       binder.bind(ServiceAnnouncer.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .to(Key.get(CuratorServiceAnnouncer.class, Names.named(NAME)))
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .in(LazySingleton.class);
     } else {
       binder.bind(Key.get(ServiceAnnouncer.Noop.class, Names.named(NAME))).toInstance(new ServiceAnnouncer.Noop());
       binder.bind(ServiceAnnouncer.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .to(Key.get(ServiceAnnouncer.Noop.class, Names.named(NAME)))
             .in(LazySingleton.class);
     }
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     // internal discovery bindings.
     PolyBind.createChoiceWithDefault(binder, INTERNAL_DISCOVERY_PROP, Key.get(DruidNodeAnnouncer.class), CURATOR_KEY);
 
     PolyBind.createChoiceWithDefault(
         binder,
         INTERNAL_DISCOVERY_PROP,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(DruidNodeDiscoveryProvider.class),
         CURATOR_KEY
     );
 
     PolyBind.createChoiceWithDefault(
         binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         INTERNAL_DISCOVERY_PROP,
         Key.get(DruidLeaderSelector.class, Coordinator.class),
         CURATOR_KEY
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     );
 
     PolyBind.createChoiceWithDefault(
         binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         INTERNAL_DISCOVERY_PROP,
         Key.get(DruidLeaderSelector.class, IndexingService.class),
         CURATOR_KEY
     );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     PolyBind.optionBinder(binder, Key.get(DruidNodeDiscoveryProvider.class))
             .addBinding(CURATOR_KEY)
@@ -207,6 +220,7 @@ public class DiscoveryModule implements Module
 
     PolyBind.optionBinder(binder, Key.get(DruidNodeAnnouncer.class))
             .addBinding(CURATOR_KEY)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .to(CuratorDruidNodeAnnouncer.class)
             .in(LazySingleton.class);
 

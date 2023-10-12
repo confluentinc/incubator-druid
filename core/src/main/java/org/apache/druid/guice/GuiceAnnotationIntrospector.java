@@ -58,8 +58,10 @@ public class GuiceAnnotationIntrospector extends NopAnnotationIntrospector
       if (m instanceof AnnotatedMethod) {
         throw new IAE("Annotated methods don't work very well yet...");
       }
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       return Key.get(m.getGenericType());
     }
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     return Key.get(m.getGenericType(), guiceAnnotation);
   }
 

@@ -121,6 +121,7 @@ public class MSQTasks
   static StorageConnector makeStorageConnector(final Injector injector)
   {
     try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       return injector.getInstance(Key.get(StorageConnector.class, MultiStageQuery.class));
     }
     catch (Exception e) {

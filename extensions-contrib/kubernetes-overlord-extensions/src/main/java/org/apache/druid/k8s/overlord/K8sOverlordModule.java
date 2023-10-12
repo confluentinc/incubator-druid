@@ -49,10 +49,13 @@ public class K8sOverlordModule implements DruidModule
     PolyBind.createChoice(
         binder,
         "druid.indexer.runner.type",
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(TaskRunnerFactory.class),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(KubernetesTaskRunnerFactory.class)
     );
     final MapBinder<String, TaskRunnerFactory> biddy = PolyBind.optionBinder(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         binder,
         Key.get(TaskRunnerFactory.class)
     );
@@ -64,6 +67,8 @@ public class K8sOverlordModule implements DruidModule
     configureTaskLogs(binder);
   }
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   private void configureTaskLogs(Binder binder)
   {
     PolyBind.createChoice(binder, "druid.indexer.logs.type", Key.get(TaskLogs.class), Key.get(FileTaskLogs.class));

@@ -105,6 +105,7 @@ public class BasicAuthUtils
   public static byte[] hashPassword(final char[] password, final byte[] salt, final int iterations)
   {
     try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       SecretKeyFactory keyFactory = SecretKeyFactory.getInstance(ALGORITHM);
       SecretKey key = keyFactory.generateSecret(
           new PBEKeySpec(

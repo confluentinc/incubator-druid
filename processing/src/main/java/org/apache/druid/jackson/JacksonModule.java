@@ -43,6 +43,7 @@ public class JacksonModule implements Module
   @Override
   public void configure(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(ObjectMapper.class).to(Key.get(ObjectMapper.class, Json.class));
   }
 

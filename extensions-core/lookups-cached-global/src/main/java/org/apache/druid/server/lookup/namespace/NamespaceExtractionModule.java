@@ -81,15 +81,18 @@ public class NamespaceExtractionModule implements DruidModule
     JsonConfigProvider.bind(binder, "druid.lookup.namespace", NamespaceExtractionConfig.class);
 
     PolyBind
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .createChoiceWithDefault(binder, TYPE_PREFIX, Key.get(NamespaceExtractionCacheManager.class), "onHeap")
         .in(LazySingleton.class);
 
     PolyBind
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .optionBinder(binder, Key.get(NamespaceExtractionCacheManager.class))
         .addBinding("onHeap")
         .to(OnHeapNamespaceExtractionCacheManager.class)
         .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind
         .optionBinder(binder, Key.get(NamespaceExtractionCacheManager.class))
         .addBinding("offHeap")

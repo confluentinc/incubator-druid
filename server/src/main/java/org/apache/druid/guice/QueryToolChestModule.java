@@ -107,41 +107,56 @@ public class QueryToolChestModule implements Module
     PolyBind.createChoice(
         binder,
         GENERIC_QUERY_METRICS_FACTORY_PROPERTY,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(GenericQueryMetricsFactory.class),
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(DefaultGenericQueryMetricsFactory.class)
     );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind
         .optionBinder(binder, Key.get(GenericQueryMetricsFactory.class))
         .addBinding("default")
         .to(DefaultGenericQueryMetricsFactory.class);
 
     PolyBind.createChoice(
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         binder,
         GROUPBY_QUERY_METRICS_FACTORY_PROPERTY,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(GroupByQueryMetricsFactory.class),
         Key.get(DefaultGroupByQueryMetricsFactory.class)
     );
     PolyBind
         .optionBinder(binder, Key.get(GroupByQueryMetricsFactory.class))
         .addBinding("default")
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .to(DefaultGroupByQueryMetricsFactory.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoice(
         binder,
         TIMESERIES_QUERY_METRICS_FACTORY_PROPERTY,
         Key.get(TimeseriesQueryMetricsFactory.class),
         Key.get(DefaultTimeseriesQueryMetricsFactory.class)
     );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind
         .optionBinder(binder, Key.get(TimeseriesQueryMetricsFactory.class))
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .addBinding("default")
         .to(DefaultTimeseriesQueryMetricsFactory.class);
 
     PolyBind.createChoice(
         binder,
         TOPN_QUERY_METRICS_FACTORY_PROPERTY,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(TopNQueryMetricsFactory.class),
         Key.get(DefaultTopNQueryMetricsFactory.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     );
     PolyBind
         .optionBinder(binder, Key.get(TopNQueryMetricsFactory.class))

@@ -248,6 +248,7 @@ public class BasicSecurityDruidModule implements DruidModule
   {
     final String serviceName;
     try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       serviceName = injector.getInstance(Key.get(String.class, Names.named("serviceName")));
     }
     catch (Exception e) {

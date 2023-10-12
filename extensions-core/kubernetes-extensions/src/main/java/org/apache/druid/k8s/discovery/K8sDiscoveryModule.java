@@ -75,21 +75,25 @@ public class K8sDiscoveryModule implements DruidModule
     binder.bind(K8sApiClient.class).to(DefaultK8sApiClient.class).in(LazySingleton.class);
     binder.bind(K8sLeaderElectorFactory.class).to(DefaultK8sLeaderElectorFactory.class).in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(DruidNodeDiscoveryProvider.class))
             .addBinding(K8S_KEY)
             .to(K8sDruidNodeDiscoveryProvider.class)
             .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(DruidNodeAnnouncer.class))
             .addBinding(K8S_KEY)
             .to(K8sDruidNodeAnnouncer.class)
             .in(LazySingleton.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     PolyBind.optionBinder(binder, Key.get(DruidLeaderSelector.class, Coordinator.class))
             .addBinding(K8S_KEY)
             .toProvider(
                 new DruidLeaderSelectorProvider(true)
             )
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .in(LazySingleton.class);
 
     PolyBind.optionBinder(binder, Key.get(DruidLeaderSelector.class, IndexingService.class))

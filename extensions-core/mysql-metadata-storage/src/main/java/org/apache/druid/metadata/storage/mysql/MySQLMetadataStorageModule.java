@@ -69,21 +69,25 @@ public class MySQLMetadataStorageModule extends SQLMetadataStorageDruidModule im
     JsonConfigProvider.bind(binder, "druid.metadata.mysql.driver", MySQLConnectorDriverConfig.class);
 
     PolyBind
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .optionBinder(binder, Key.get(MetadataStorageProvider.class))
         .addBinding(TYPE)
         .to(NoopMetadataStorageProvider.class)
         .in(LazySingleton.class);
 
     PolyBind
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .optionBinder(binder, Key.get(MetadataStorageConnector.class))
         .addBinding(TYPE)
         .to(MySQLConnector.class)
         .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind
         .optionBinder(binder, Key.get(SQLMetadataConnector.class))
         .addBinding(TYPE)
         .to(MySQLConnector.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .in(LazySingleton.class);
 
     PolyBind.optionBinder(binder, Key.get(MetadataStorageActionHandlerFactory.class))

@@ -41,6 +41,7 @@ public class CassandraDruidModule implements DruidModule
   @Override
   public void configure(Binder binder)
   {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(DataSegmentPusher.class))
             .addBinding(SCHEME)
             .to(CassandraDataSegmentPusher.class)

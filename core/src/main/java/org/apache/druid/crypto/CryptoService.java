@@ -117,6 +117,7 @@ public class CryptoService
       // error-prone warns if the transformation is not a compile-time constant
       // since it cannot check it for insecure combinations.
       @SuppressWarnings("InsecureCryptoUsage")
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       Cipher ecipher = Cipher.getInstance(transformation);
       ecipher.init(Cipher.ENCRYPT_MODE, secret);
       return new EncryptedData(
@@ -141,6 +142,7 @@ public class CryptoService
       // error-prone warns if the transformation is not a compile-time constant
       // since it cannot check it for insecure combinations.
       @SuppressWarnings("InsecureCryptoUsage")
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       Cipher dcipher = Cipher.getInstance(transformation);
       dcipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(encryptedData.getIv()));
       return dcipher.doFinal(encryptedData.getCipher());
@@ -152,6 +154,7 @@ public class CryptoService
 
   private SecretKey getKeyFromPassword(char[] passPhrase, byte[] salt)
       throws NoSuchAlgorithmException, InvalidKeySpecException
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   {
     SecretKeyFactory factory = SecretKeyFactory.getInstance(secretKeyFactoryAlg);
     KeySpec spec = new PBEKeySpec(passPhrase, salt, iterationCount, keyLength);

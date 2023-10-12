@@ -47,6 +47,7 @@ public class PortFinder
   boolean canBind(int portNum)
   {
     try {
+// Appears that this is using the network without encryption, please verify and fix. https://go/fips-compliance
       new ServerSocket(portNum).close();
       return true;
     }

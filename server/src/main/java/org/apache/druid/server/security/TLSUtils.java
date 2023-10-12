@@ -181,8 +181,11 @@ public class TLSUtils
   {
     SSLContext sslContext;
     try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       sslContext = SSLContext.getInstance(protocol == null ? "TLSv1.2" : protocol);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       KeyStore trustStore = KeyStore.getInstance(trustStoreType == null
+
                                                ? KeyStore.getDefaultType()
                                                : trustStoreType);
       try (final InputStream trustStoreFileStream = Files.newInputStream(Paths.get(trustStorePath))) {
@@ -197,7 +200,9 @@ public class TLSUtils
       trustManagerFactory.init(trustStore);
 
       KeyManager[] keyManagers;
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       if (keyStorePath != null) {
+
         KeyStore keyStore = KeyStore.getInstance(keyStoreType == null
                                                  ? KeyStore.getDefaultType()
                                                  : keyStoreType);

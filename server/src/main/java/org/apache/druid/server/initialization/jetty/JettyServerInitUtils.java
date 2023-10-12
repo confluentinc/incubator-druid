@@ -62,6 +62,7 @@ public class JettyServerInitUtils
   public static void addQosFilters(ServletContextHandler handler, Injector injector)
   {
     final Set<JettyBindings.QosFilterHolder> filters =
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         injector.getInstance(Key.get(new TypeLiteral<Set<JettyBindings.QosFilterHolder>>() {}));
     addFilters(handler, filters);
   }
@@ -69,6 +70,7 @@ public class JettyServerInitUtils
   public static void addExtensionFilters(ServletContextHandler handler, Injector injector)
   {
     final Set<ServletFilterHolder> filters =
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         injector.getInstance(Key.get(new TypeLiteral<Set<ServletFilterHolder>>() {}));
     addFilters(handler, filters);
   }

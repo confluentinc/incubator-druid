@@ -78,6 +78,7 @@ class CoordinatorJettyServerInitializer implements JettyServerInitializer
     root.addServlet(holderPwd, "/");
 
     final AuthConfig authConfig = injector.getInstance(AuthConfig.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     final ObjectMapper jsonMapper = injector.getInstance(Key.get(ObjectMapper.class, Json.class));
     final AuthenticatorMapper authenticatorMapper = injector.getInstance(AuthenticatorMapper.class);
 

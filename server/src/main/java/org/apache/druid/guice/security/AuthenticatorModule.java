@@ -38,6 +38,7 @@ public class AuthenticatorModule implements Module
   {
     final MapBinder<String, Authenticator> authenticatorMapBinder = PolyBind.optionBinder(
         binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         Key.get(Authenticator.class)
     );
     authenticatorMapBinder.addBinding(AuthConfig.ALLOW_ALL_NAME)

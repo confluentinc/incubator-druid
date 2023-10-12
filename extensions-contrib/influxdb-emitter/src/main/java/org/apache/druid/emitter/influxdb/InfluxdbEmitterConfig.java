@@ -88,6 +88,7 @@ public class InfluxdbEmitterConfig
     this.port = port == null ? DEFAULT_PORT : port;
     this.protocol = protocol == null ? DEFAULT_PROTOCOL : protocol;
     this.trustStorePath = trustStorePath;
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     this.trustStoreType = trustStoreType == null ? KeyStore.getDefaultType() : trustStoreType;
     this.trustStorePassword = trustStorePassword;
     this.databaseName = Preconditions.checkNotNull(databaseName, "databaseName can not be null");

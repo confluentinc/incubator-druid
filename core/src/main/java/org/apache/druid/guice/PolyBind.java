@@ -175,9 +175,12 @@ public class PolyBind
 
       final Map<String, Provider<T>> implsMap;
       if (key.getAnnotation() != null) {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         implsMap = (Map<String, Provider<T>>) injector.getInstance(Key.get(mapType, key.getAnnotation()));
       } else if (key.getAnnotationType() != null) {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         implsMap = (Map<String, Provider<T>>) injector.getInstance(Key.get(mapType, key.getAnnotationType()));
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       } else {
         implsMap = (Map<String, Provider<T>>) injector.getInstance(Key.get(mapType));
       }

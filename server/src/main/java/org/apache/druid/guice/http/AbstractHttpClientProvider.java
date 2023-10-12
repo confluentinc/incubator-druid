@@ -46,11 +46,14 @@ public abstract class AbstractHttpClientProvider<HttpClientType> implements Prov
   {
     Preconditions.checkNotNull(annotation, "annotation");
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     configKey = Key.get(
+
         new TypeLiteral<Supplier<DruidHttpClientConfig>>()
         {
         }, annotation
     );
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     sslContextKey = Key.get(SSLContext.class, annotation);
   }
 

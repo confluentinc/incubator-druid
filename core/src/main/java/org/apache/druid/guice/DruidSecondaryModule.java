@@ -69,6 +69,7 @@ public class DruidSecondaryModule implements Module
     binder.install(new DruidGuiceExtensions());
     binder.bind(Properties.class).toInstance(properties);
     binder.bind(ConfigurationObjectFactory.class).toInstance(factory);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(ObjectMapper.class).to(Key.get(ObjectMapper.class, Json.class));
     binder.bind(Validator.class).toInstance(validator);
     binder.bind(JsonConfigurator.class);

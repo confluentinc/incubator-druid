@@ -112,6 +112,7 @@ public class HadoopDruidIndexerConfig
             (Module) binder -> {
               JsonConfigProvider.bindInstance(
                   binder,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                   Key.get(DruidNode.class, Self.class),
                   new DruidNode("hadoop-indexer", null, false, null, null, true, false)
               );

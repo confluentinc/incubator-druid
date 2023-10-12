@@ -72,7 +72,9 @@ public class DruidInjectorBuilder
     this.baseInjector = baseInjector;
     this.nodeRoles = nodeRoles;
     this.modulesConfig = baseInjector.getInstance(ModulesConfig.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     this.jsonMapper = baseInjector.getInstance(Key.get(ObjectMapper.class, Json.class));
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     this.smileMapper = baseInjector.getInstance(Key.get(ObjectMapper.class, Smile.class));
   }
 

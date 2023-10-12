@@ -66,6 +66,7 @@ public class HttpEmitterModule implements Module
   {
     final SSLContext context;
     try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       context = SSLContext.getDefault();
     }
     catch (NoSuchAlgorithmException e) {
@@ -119,6 +120,7 @@ public class HttpEmitterModule implements Module
     SSLContext effectiveSSLContext;
     if (sslConfig.isUseDefaultJavaContext()) {
       try {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         effectiveSSLContext = SSLContext.getDefault();
       }
       catch (NoSuchAlgorithmException nsae) {

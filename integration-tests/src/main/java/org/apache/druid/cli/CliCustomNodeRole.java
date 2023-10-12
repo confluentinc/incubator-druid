@@ -99,6 +99,7 @@ public class CliCustomNodeRole extends ServerRunnable
               DiscoverySideEffectsProvider.create()
           );
           Jerseys.addResource(binder, SelfDiscoveryResource.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
           LifecycleModule.registerKey(binder, Key.get(SelfDiscoveryResource.class));
 
         }
@@ -126,6 +127,7 @@ public class CliCustomNodeRole extends ServerRunnable
       final ServletContextHandler root = new ServletContextHandler(ServletContextHandler.SESSIONS);
       root.addServlet(new ServletHolder(new DefaultServlet()), "/*");
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       final ObjectMapper jsonMapper = injector.getInstance(Key.get(ObjectMapper.class, Json.class));
       final AuthenticatorMapper authenticatorMapper = injector.getInstance(AuthenticatorMapper.class);
 

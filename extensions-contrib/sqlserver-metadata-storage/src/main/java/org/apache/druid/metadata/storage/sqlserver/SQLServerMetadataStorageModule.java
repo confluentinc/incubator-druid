@@ -59,21 +59,25 @@ public class SQLServerMetadataStorageModule extends SQLMetadataStorageDruidModul
     super.configure(binder);
 
     PolyBind
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .optionBinder(binder, Key.get(MetadataStorageProvider.class))
         .addBinding(TYPE)
         .to(NoopMetadataStorageProvider.class)
         .in(LazySingleton.class);
 
     PolyBind
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .optionBinder(binder, Key.get(MetadataStorageConnector.class))
         .addBinding(TYPE)
         .to(SQLServerConnector.class)
         .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind
         .optionBinder(binder, Key.get(SQLMetadataConnector.class))
         .addBinding(TYPE)
         .to(SQLServerConnector.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         .in(LazySingleton.class);
 
     PolyBind.optionBinder(binder, Key.get(MetadataStorageActionHandlerFactory.class))

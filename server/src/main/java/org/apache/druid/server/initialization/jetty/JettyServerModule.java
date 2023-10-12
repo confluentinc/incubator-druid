@@ -181,6 +181,7 @@ public class JettyServerModule extends JerseyServletModule
         node,
         config,
         TLSServerConfig,
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         injector.getExistingBinding(Key.get(SslContextFactory.Server.class)),
         injector.getInstance(TLSCertificateChecker.class)
     );
@@ -310,6 +311,7 @@ public class JettyServerModule extends JerseyServletModule
             sslContextFactory.setTrustStorePath(tlsServerConfig.getTrustStorePath());
             sslContextFactory.setTrustStoreType(
                 tlsServerConfig.getTrustStoreType() == null
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
                 ? KeyStore.getDefaultType()
                 : tlsServerConfig.getTrustStoreType()
             );

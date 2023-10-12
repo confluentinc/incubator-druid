@@ -92,6 +92,7 @@ public class MetricsModule implements Module
     binder.bind(ExecutorServiceMonitor.class).in(LazySingleton.class);
 
     // Instantiate eagerly so that we get everything registered and put into the Lifecycle
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     binder.bind(Key.get(MonitorScheduler.class, Names.named("ForTheEagerness")))
           .to(MonitorScheduler.class)
           .asEagerSingleton();

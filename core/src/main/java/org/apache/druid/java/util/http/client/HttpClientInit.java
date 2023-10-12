@@ -108,12 +108,14 @@ public class HttpClientInit
   public static SSLContext sslContextWithTrustedKeyStore(final String keyStorePath, final String keyStorePassword)
   {
     try (FileInputStream in = new FileInputStream(keyStorePath)) {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
       ks.load(in, keyStorePassword.toCharArray());
       in.close();
 
       final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
       tmf.init(ks);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
       final SSLContext sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, tmf.getTrustManagers(), null);
 

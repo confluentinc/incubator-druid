@@ -28,6 +28,7 @@ import org.apache.druid.java.util.emitter.core.Event;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+// This Insecure HostnameVerifier will accept any SSL certificate without a hostname, which is insecure. Please review. https://go/fips-compliance
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -230,9 +231,11 @@ public class InfluxdbEmitter implements Emitter
       }
 
       try (FileInputStream in = new FileInputStream(new File(influxdbEmitterConfig.getTrustStorePath()))) {
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         KeyStore store = KeyStore.getInstance(influxdbEmitterConfig.getTrustStoreType());
         store.load(in, influxdbEmitterConfig.getTrustStorePassword().toCharArray());
         TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         tmf.init(store);
         sslContext = SSLContext.getInstance("TLS");
         sslContext.init(null, tmf.getTrustManagers(), null);

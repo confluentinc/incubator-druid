@@ -69,55 +69,81 @@ public class SQLMetadataStorageDruidModule implements Module
   public void createBindingChoices(Binder binder, String defaultValue)
   {
     String prop = PROPERTY;
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataStorageConnector.class), defaultValue);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataStorageProvider.class), defaultValue);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(SQLMetadataConnector.class), defaultValue);
 
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(SegmentsMetadataManager.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(SegmentsMetadataManagerProvider.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataRuleManager.class), defaultValue);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataRuleManagerProvider.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataSegmentPublisher.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataSegmentPublisherProvider.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(IndexerMetadataStorageCoordinator.class), defaultValue);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataStorageActionHandlerFactory.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataStorageUpdaterJobHandler.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(AuditManager.class), defaultValue);
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(AuditManagerProvider.class), defaultValue);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.createChoiceWithDefault(binder, prop, Key.get(MetadataSupervisorManager.class), defaultValue);
   }
 
   @Override
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
   public void configure(Binder binder)
   {
     PolyBind.optionBinder(binder, Key.get(SegmentsMetadataManager.class))
             .addBinding(type)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .to(SqlSegmentsMetadataManager.class)
             .in(LazySingleton.class);
 
     PolyBind.optionBinder(binder, Key.get(SegmentsMetadataManagerProvider.class))
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .addBinding(type)
             .to(SqlSegmentsMetadataManagerProvider.class)
             .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(MetadataRuleManager.class))
             .addBinding(type)
             .to(SQLMetadataRuleManager.class)
             .in(LazySingleton.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     PolyBind.optionBinder(binder, Key.get(MetadataRuleManagerProvider.class))
             .addBinding(type)
             .to(SQLMetadataRuleManagerProvider.class)
             .in(LazySingleton.class);
 
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
     PolyBind.optionBinder(binder, Key.get(MetadataSegmentPublisher.class))
             .addBinding(type)
             .to(SQLMetadataSegmentPublisher.class)
             .in(LazySingleton.class);
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
 
     PolyBind.optionBinder(binder, Key.get(MetadataSegmentPublisherProvider.class))
             .addBinding(type)
             .to(SQLMetadataSegmentPublisherProvider.class)
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
             .in(LazySingleton.class);
 
     PolyBind.optionBinder(binder, Key.get(IndexerMetadataStorageCoordinator.class))

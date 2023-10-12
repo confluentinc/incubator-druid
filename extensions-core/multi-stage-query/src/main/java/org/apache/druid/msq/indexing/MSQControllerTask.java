@@ -179,6 +179,7 @@ public class MSQControllerTask extends AbstractTask
   public TaskStatus runTask(final TaskToolbox toolbox) throws Exception
   {
     final ServiceClientFactory clientFactory =
+// Detected the use of a crypographic function. Please review this for compliance. https://go/fips-compliance
         injector.getInstance(Key.get(ServiceClientFactory.class, EscalatedGlobal.class));
     final OverlordClient overlordClient = injector.getInstance(OverlordClient.class)
                                                   .withRetryPolicy(StandardRetryPolicy.unlimited());
