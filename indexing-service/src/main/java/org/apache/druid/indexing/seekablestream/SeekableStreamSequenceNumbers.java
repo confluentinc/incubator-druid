@@ -32,7 +32,7 @@ import java.util.Map;
     @Type(name = "start", value = SeekableStreamStartSequenceNumbers.class),
     @Type(name = "end", value = SeekableStreamEndSequenceNumbers.class)
 })
-public interface SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType>
+public interface SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> extends Comparable<SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType>>
 {
   /**
    * Returns the stream/topic name.
@@ -51,15 +51,6 @@ public interface SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetTy
    */
   SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> plus(
       SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other
-  );
-
-  /**
-   * Return True if this is greater than other instance sequence.
-   *
-   * @see DataSourceMetadata#isGreater
-   */
-  boolean isGreater(
-          SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other
   );
 
   /**

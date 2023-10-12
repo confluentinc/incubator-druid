@@ -86,12 +86,6 @@ public class DerivativeDataSourceMetadata implements DataSourceMetadata
   }
 
   @Override
-  public boolean isGreater(DataSourceMetadata other)
-  {
-    return false;
-  }
-
-  @Override
   public DataSourceMetadata plus(DataSourceMetadata other)
   {
     throw new UnsupportedOperationException("Derivative dataSource metadata is not allowed to plus");
@@ -140,5 +134,11 @@ public class DerivativeDataSourceMetadata implements DataSourceMetadata
         ", dimensions=" + dimensions +
         ", metrics=" + metrics +
         '}';
+  }
+
+  @Override
+  public int compareTo(DataSourceMetadata o)
+  {
+    return -1;
   }
 }

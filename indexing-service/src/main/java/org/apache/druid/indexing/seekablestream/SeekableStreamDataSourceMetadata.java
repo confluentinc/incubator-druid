@@ -60,17 +60,16 @@ public abstract class SeekableStreamDataSourceMetadata<PartitionIdType, Sequence
   }
 
   @Override
-  public boolean isGreater(DataSourceMetadata other)
+  public int compareTo(DataSourceMetadata other)
   {
     if (!getClass().equals(other.getClass())) {
-      return false;
+      return -1;
     }
     final SeekableStreamDataSourceMetadata<PartitionIdType, SequenceOffsetType> that =
-            (SeekableStreamDataSourceMetadata<PartitionIdType, SequenceOffsetType>) other;
+        (SeekableStreamDataSourceMetadata<PartitionIdType, SequenceOffsetType>) other;
 
-    return seekableStreamSequenceNumbers.isGreater(that.seekableStreamSequenceNumbers);
+    return seekableStreamSequenceNumbers.compareTo(that.seekableStreamSequenceNumbers);
   }
-
 
   @Override
   public DataSourceMetadata plus(DataSourceMetadata other)

@@ -36,7 +36,7 @@ import java.util.Set;
 @JsonSubTypes(value = {
     @JsonSubTypes.Type(name = "object", value = ObjectMetadata.class)
 })
-public interface DataSourceMetadata
+public interface DataSourceMetadata extends Comparable<DataSourceMetadata>
 {
   /**
    * Returns true if this instance should be considered a valid starting point for a new dataSource that has
@@ -68,15 +68,6 @@ public interface DataSourceMetadata
    * @return true or false
    */
   boolean matches(DataSourceMetadata other);
-
-  /**
-   * Returns true if the metadata in this instance is greater than the metadata in "other"
-   *
-   * Behavior is undefined if you pass in an instance of a different class from this one.
-   *
-   * @return true or false
-   */
-  boolean isGreater(DataSourceMetadata other);
 
   /**
    * Returns a copy of this instance with "other" merged in. Any conflicts should be resolved in favor of

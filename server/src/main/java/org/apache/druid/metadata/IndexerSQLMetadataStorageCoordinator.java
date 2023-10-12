@@ -1558,16 +1558,16 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
     }
 
     final boolean startMetadataMatchesExisting;
-    final boolean startMetadataGreaterthenExisting;
+    final int startMetadataGreaterThanExisting;
 
     if (oldCommitMetadataFromDb == null) {
       startMetadataMatchesExisting = startMetadata.isValidStart();
-      startMetadataGreaterthenExisting = true;
+      startMetadataGreaterThanExisting = 1;
     } else {
       // Checking against the last committed metadata.
-      // If the new start sequence number is greater than the end sequence number of last commit.
-      // It's possible multiple tasks are publishing the sequence at around same time.
-      startMetadataGreaterthenExisting = startMetadata.asStartMetadata().isGreater(oldCommitMetadataFromDb.asStartMetadata());
+      // If the new start sequence number is greater than the end sequence number of last commit compareTo() function will return 1,
+      // -1 in other cases. It might be because  multiple tasks are publishing the sequence at around same time.
+      startMetadataGreaterThanExisting = startMetadata.asStartMetadata().compareTo(oldCommitMetadataFromDb.asStartMetadata());
 
       // Converting the last one into start metadata for checking since only the same type of metadata can be matched.
       // Even though kafka/kinesis indexing services use different sequenceNumber types for representing
@@ -1576,7 +1576,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
       startMetadataMatchesExisting = startMetadata.asStartMetadata().matches(oldCommitMetadataFromDb.asStartMetadata());
     }
 
-    if (startMetadataGreaterthenExisting && !startMetadataMatchesExisting) {
+    if (startMetadataGreaterThanExisting == 1 && !startMetadataMatchesExisting) {
       // Offset stored in StartMetadata is Greater than the last commited metadata,
       // Then retry multiple task might be trying to publish the segment for same partitions.
       log.info(

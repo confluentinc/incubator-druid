@@ -149,39 +149,6 @@ public class SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetTyp
   }
 
   @Override
-  public boolean isGreater(
-          SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other
-  )
-  {
-    if (this.getClass() != other.getClass()) {
-      throw new IAE(
-        "Expected instance of %s, got %s",
-        this.getClass().getName(),
-        other.getClass().getName()
-      );
-    }
-
-    final SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetType> otherStart =
-            (SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetType>) other;
-
-    if (stream.equals(otherStart.stream)) {
-      //Same stream, compare the offset
-      AtomicReference<Boolean> res = new AtomicReference<>(false);
-      partitionSequenceNumberMap.forEach(
-          (partitionId, sequenceOffset) -> {
-            if (otherStart.partitionSequenceNumberMap.get(partitionId) != null && Long.parseLong(String.valueOf(sequenceOffset)) > Long.parseLong(String.valueOf(otherStart.partitionSequenceNumberMap.get(partitionId)))) {
-              res.set(true);
-            }
-          }
-      );
-      return res.get();
-    } else {
-      // Different streams
-      return false;
-    }
-  }
-
-  @Override
   public SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> minus(
       SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other
   )
@@ -251,5 +218,39 @@ public class SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetTyp
            "stream='" + stream + '\'' +
            ", partitionSequenceNumberMap=" + partitionSequenceNumberMap +
            '}';
+  }
+
+  @Override
+  public int compareTo(SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other)
+  {
+    if (this.getClass() != other.getClass()) {
+      throw new IAE(
+          "Expected instance of %s, got %s",
+          this.getClass().getName(),
+          other.getClass().getName()
+      );
+    }
+
+    final SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetType> otherStart =
+        (SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetType>) other;
+
+    if (stream.equals(otherStart.stream)) {
+      //Same stream, compare the offset
+      AtomicReference<Boolean> res = new AtomicReference<>(false);
+      partitionSequenceNumberMap.forEach(
+          (partitionId, sequenceOffset) -> {
+            if (otherStart.partitionSequenceNumberMap.get(partitionId) != null && Long.parseLong(String.valueOf(sequenceOffset)) > Long.parseLong(String.valueOf(otherStart.partitionSequenceNumberMap.get(partitionId)))) {
+              res.set(true);
+            }
+          }
+      );
+      if (res.get()) {
+        return 1;
+      }
+      return -1;
+    } else {
+      // Different streams
+      return -1;
+    }
   }
 }
