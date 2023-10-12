@@ -135,4 +135,10 @@ public class DerivativeDataSourceMetadata implements DataSourceMetadata
         ", metrics=" + metrics +
         '}';
   }
+
+  @Override
+  public int compareTo(DataSourceMetadata o)
+  {
+    return -1;
+  }
 }
