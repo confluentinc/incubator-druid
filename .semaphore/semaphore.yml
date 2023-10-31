@@ -31,6 +31,7 @@ blocks:
           - echo $SEMAPHORE_WORKFLOW_ID
           - sem-version java 17
           - checkout
+          - echo 'test'
       jobs:
         - name: "Install"
           commands:
