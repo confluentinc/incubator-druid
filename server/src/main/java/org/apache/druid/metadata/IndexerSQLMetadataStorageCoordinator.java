@@ -1558,7 +1558,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
     }
 
     final boolean startMetadataMatchesExisting;
-    final int startMetadataGreaterThanExisting;
+    int startMetadataGreaterThanExisting = 0;
 
     if (oldCommitMetadataFromDb == null) {
       startMetadataMatchesExisting = startMetadata.isValidStart();
@@ -1566,8 +1566,10 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
     } else {
       // Checking against the last committed metadata.
       // If the new start sequence number is greater than the end sequence number of last commit compareTo() function will return 1,
-      // -1 in other cases. It might be because  multiple tasks are publishing the sequence at around same time.
-      startMetadataGreaterThanExisting = startMetadata.asStartMetadata().compareTo(oldCommitMetadataFromDb.asStartMetadata());
+      // 0 in all other cases. It might be because multiple tasks are publishing the sequence at around same time.
+      if (startMetadata instanceof Comparable) {
+        startMetadataGreaterThanExisting = ((Comparable) startMetadata.asStartMetadata()).compareTo(oldCommitMetadataFromDb.asStartMetadata());
+      }
 
       // Converting the last one into start metadata for checking since only the same type of metadata can be matched.
       // Even though kafka/kinesis indexing services use different sequenceNumber types for representing
@@ -1580,12 +1582,13 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
       // Offset stored in StartMetadata is Greater than the last commited metadata,
       // Then retry multiple task might be trying to publish the segment for same partitions.
       log.info(
-              "Retrying to update metadata, existing state[%s] in metadata store is behind the new start state[%s].",
-              oldCommitMetadataFromDb,
-              startMetadata
+          "Failed to update the metadata Store. The new start metadata: [%s] is ahead of last commited end state: [%s].",
+          oldCommitMetadataFromDb,
+          startMetadata
       );
       return DataStoreMetadataUpdateResult.TRY_AGAIN;
     }
+
     if (!startMetadataMatchesExisting) {
       // Not in the desired start state.
       log.error(

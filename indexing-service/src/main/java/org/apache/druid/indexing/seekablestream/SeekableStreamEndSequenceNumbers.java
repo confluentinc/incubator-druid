@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.druid.java.util.common.IAE;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -221,7 +222,7 @@ public class SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetTyp
   }
 
   @Override
-  public int compareTo(SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other)
+  public int compareTo(SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other, Comparator<SequenceOffsetType> comparator)
   {
     if (this.getClass() != other.getClass()) {
       throw new IAE(
@@ -239,7 +240,7 @@ public class SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetTyp
       AtomicReference<Boolean> res = new AtomicReference<>(false);
       partitionSequenceNumberMap.forEach(
           (partitionId, sequenceOffset) -> {
-            if (otherStart.partitionSequenceNumberMap.get(partitionId) != null && Long.parseLong(String.valueOf(sequenceOffset)) > Long.parseLong(String.valueOf(otherStart.partitionSequenceNumberMap.get(partitionId)))) {
+            if (otherStart.partitionSequenceNumberMap.get(partitionId) != null && comparator.compare(sequenceOffset, otherStart.partitionSequenceNumberMap.get(partitionId)) > 0) {
               res.set(true);
             }
           }
@@ -247,10 +248,7 @@ public class SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetTyp
       if (res.get()) {
         return 1;
       }
-      return -1;
-    } else {
-      // Different streams
-      return -1;
     }
+    return 0;
   }
 }

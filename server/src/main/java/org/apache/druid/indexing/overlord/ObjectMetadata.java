@@ -96,10 +96,4 @@ public final class ObjectMetadata implements DataSourceMetadata
            "theObject=" + theObject +
            '}';
   }
-
-  @Override
-  public int compareTo(DataSourceMetadata o)
-  {
-    return -1;
-  }
 }
