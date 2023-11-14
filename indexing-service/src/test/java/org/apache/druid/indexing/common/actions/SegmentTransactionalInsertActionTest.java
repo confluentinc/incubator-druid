@@ -174,53 +174,52 @@ public class SegmentTransactionalInsertActionTest
     // With different start and end offsets. Segment2 -> {1 - 2}, Segment1 -> {null - 1}
     Future<SegmentPublishResult> result2Future = CompletableFuture.supplyAsync(() -> {
       return SegmentTransactionalInsertAction.appendAction(
-              ImmutableSet.of(SEGMENT2),
-              new ObjectMetadata(ImmutableList.of(1)),
-              new ObjectMetadata(ImmutableList.of(2))
+          ImmutableSet.of(SEGMENT2),
+          new ObjectMetadata(ImmutableList.of(1)),
+          new ObjectMetadata(ImmutableList.of(2))
       ).perform(
-              task2,
-              new TaskActionToolbox(
-                      taskLockbox2,
-                      taskActionToolbox.getTaskStorage(),
-                      taskActionToolbox.getIndexerMetadataStorageCoordinator(),
-                      new SegmentAllocationQueue(
-                              taskLockbox2,
-                              taskLockConfig,
-                              taskActionToolbox.getIndexerMetadataStorageCoordinator(),
-                              taskActionToolbox.getEmitter(),
-                              ScheduledExecutors::fixed
-                      ),
-                      taskActionToolbox.getEmitter(),
-                      EasyMock.createMock(SupervisorManager.class),
-                      taskActionToolbox.getJsonMapper()
-              )
+          task2,
+          new TaskActionToolbox(
+              taskLockbox2,
+              taskActionToolbox.getTaskStorage(),
+              taskActionToolbox.getIndexerMetadataStorageCoordinator(),
+              new SegmentAllocationQueue(
+                  taskLockbox2,
+                  taskLockConfig,
+                  taskActionToolbox.getIndexerMetadataStorageCoordinator(),
+                  taskActionToolbox.getEmitter(),
+                  ScheduledExecutors::fixed
+              ),
+              taskActionToolbox.getEmitter(),
+              EasyMock.createMock(SupervisorManager.class),
+              taskActionToolbox.getJsonMapper()
+          )
       );
     });
 
 
     Future<SegmentPublishResult> result1Future = CompletableFuture.supplyAsync(() -> {
       return SegmentTransactionalInsertAction.appendAction(
-              ImmutableSet.of(SEGMENT1),
-              new ObjectMetadata(null),
-              new ObjectMetadata(ImmutableList.of(1))
+          ImmutableSet.of(SEGMENT1),
+          new ObjectMetadata(null),
+          new ObjectMetadata(ImmutableList.of(1))
       ).perform(
-              task1,
-              new TaskActionToolbox(
-                      taskLockbox1,
-                      taskActionToolbox.getTaskStorage(),
-                      taskActionToolbox.getIndexerMetadataStorageCoordinator(),
-                      new SegmentAllocationQueue(
-                              taskLockbox1,
-                              taskLockConfig,
-                              taskActionToolbox.getIndexerMetadataStorageCoordinator(),
-                              taskActionToolbox.getEmitter(),
-                              ScheduledExecutors::fixed
-                      ),
-                      taskActionToolbox.getEmitter(),
-                      EasyMock.createMock(SupervisorManager.class),
-                      taskActionToolbox.getJsonMapper()
-              )
-
+          task1,
+          new TaskActionToolbox(
+              taskLockbox1,
+              taskActionToolbox.getTaskStorage(),
+              taskActionToolbox.getIndexerMetadataStorageCoordinator(),
+              new SegmentAllocationQueue(
+                  taskLockbox1,
+                  taskLockConfig,
+                  taskActionToolbox.getIndexerMetadataStorageCoordinator(),
+                  taskActionToolbox.getEmitter(),
+                  ScheduledExecutors::fixed
+              ),
+              taskActionToolbox.getEmitter(),
+              EasyMock.createMock(SupervisorManager.class),
+              taskActionToolbox.getJsonMapper()
+          )
       );
     });
 
@@ -231,13 +230,13 @@ public class SegmentTransactionalInsertActionTest
     Assert.assertEquals(SegmentPublishResult.ok(ImmutableSet.of(SEGMENT2)), result2);
 
     Assertions.assertThat(
-            actionTestKit.getMetadataStorageCoordinator()
-                    .retrieveUsedSegmentsForInterval(DATA_SOURCE, INTERVAL, Segments.ONLY_VISIBLE)
+        actionTestKit.getMetadataStorageCoordinator()
+            .retrieveUsedSegmentsForInterval(DATA_SOURCE, INTERVAL, Segments.ONLY_VISIBLE)
     ).containsExactlyInAnyOrder(SEGMENT1, SEGMENT2);
 
     Assert.assertEquals(
-            new ObjectMetadata(ImmutableList.of(2)),
-            actionTestKit.getMetadataStorageCoordinator().retrieveDataSourceMetadata(DATA_SOURCE)
+        new ObjectMetadata(ImmutableList.of(2)),
+        actionTestKit.getMetadataStorageCoordinator().retrieveDataSourceMetadata(DATA_SOURCE)
     );
   }
 
