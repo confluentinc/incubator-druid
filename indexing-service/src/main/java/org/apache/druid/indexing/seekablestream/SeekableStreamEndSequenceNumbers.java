@@ -25,10 +25,12 @@ import com.google.common.base.Preconditions;
 import org.apache.druid.java.util.common.IAE;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Represents the end sequenceNumber per partition of a sequence. Note that end sequenceNumbers are always
@@ -217,5 +219,36 @@ public class SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetTyp
            "stream='" + stream + '\'' +
            ", partitionSequenceNumberMap=" + partitionSequenceNumberMap +
            '}';
+  }
+
+  @Override
+  public int compareTo(SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other, Comparator<SequenceOffsetType> comparator)
+  {
+    if (this.getClass() != other.getClass()) {
+      throw new IAE(
+          "Expected instance of %s, got %s",
+          this.getClass().getName(),
+          other.getClass().getName()
+      );
+    }
+
+    final SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetType> otherStart =
+        (SeekableStreamEndSequenceNumbers<PartitionIdType, SequenceOffsetType>) other;
+
+    if (stream.equals(otherStart.stream)) {
+      //Same stream, compare the offset
+      AtomicReference<Boolean> res = new AtomicReference<>(false);
+      partitionSequenceNumberMap.forEach(
+          (partitionId, sequenceOffset) -> {
+            if (otherStart.partitionSequenceNumberMap.get(partitionId) != null && comparator.compare(sequenceOffset, otherStart.partitionSequenceNumberMap.get(partitionId)) > 0) {
+              res.set(true);
+            }
+          }
+      );
+      if (res.get()) {
+        return 1;
+      }
+    }
+    return 0;
   }
 }
