@@ -26,12 +26,14 @@ import org.apache.druid.java.util.common.IAE;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Represents the start sequenceNumber per partition of a sequence. This class keeps an additional set of
@@ -238,5 +240,36 @@ public class SeekableStreamStartSequenceNumbers<PartitionIdType, SequenceOffsetT
            ", partitionSequenceNumberMap=" + partitionSequenceNumberMap +
            ", exclusivePartitions=" + exclusivePartitions +
            '}';
+  }
+
+  @Override
+  public int compareTo(SeekableStreamSequenceNumbers<PartitionIdType, SequenceOffsetType> other, Comparator<SequenceOffsetType> comparator)
+  {
+    if (this.getClass() != other.getClass()) {
+      throw new IAE(
+          "Expected instance of %s, got %s",
+          this.getClass().getName(),
+          other.getClass().getName()
+      );
+    }
+
+    final SeekableStreamStartSequenceNumbers<PartitionIdType, SequenceOffsetType> otherStart =
+        (SeekableStreamStartSequenceNumbers<PartitionIdType, SequenceOffsetType>) other;
+
+    if (stream.equals(otherStart.stream)) {
+      //Same stream, compare the offset
+      AtomicReference<Boolean> res = new AtomicReference<>(false);
+      partitionSequenceNumberMap.forEach(
+          (partitionId, sequenceOffset) -> {
+            if (otherStart.partitionSequenceNumberMap.get(partitionId) != null && comparator.compare(sequenceOffset, otherStart.partitionSequenceNumberMap.get(partitionId)) > 0) {
+              res.set(true);
+            }
+          }
+      );
+      if (res.get()) {
+        return 1;
+      }
+    }
+    return 0;
   }
 }
