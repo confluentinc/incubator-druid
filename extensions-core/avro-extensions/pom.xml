@@ -314,6 +314,10 @@
               <groupId>org.slf4j</groupId>
               <artifactId>slf4j-api</artifactId>
             </exclusion>
+            <exclusion>
+              <groupId>net.java.dev.jets3t</groupId>
+              <artifactId>jets3t</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
       </dependencies>
