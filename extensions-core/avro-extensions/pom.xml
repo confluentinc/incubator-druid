@@ -292,6 +292,11 @@
               <groupId>org.apache.avro</groupId>
               <artifactId>avro</artifactId>
             </exclusion>
+            <!-- Following are excluded to remove security vulnerabilities: -->
+            <exclusion>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
         <dependency>
@@ -303,6 +308,11 @@
               <groupId>org.slf4j</groupId>
               <artifactId>slf4j-api</artifactId>
             </exclusion>
+            <!-- Following are excluded to remove security vulnerabilities: -->
+            <exclusion>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
         <dependency>
@@ -313,6 +323,11 @@
             <exclusion>
               <groupId>org.slf4j</groupId>
               <artifactId>slf4j-api</artifactId>
+            </exclusion>
+            <!-- Following are excluded to remove security vulnerabilities: -->
+            <exclusion>
+              <groupId>log4j</groupId>
+              <artifactId>log4j</artifactId>
             </exclusion>
           </exclusions>
         </dependency>

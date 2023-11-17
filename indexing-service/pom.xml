@@ -302,12 +302,24 @@
                             <groupId>javax.servlet</groupId>
                             <artifactId>servlet-api</artifactId>
                         </exclusion>
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
+                        </exclusion>
                     </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-common</artifactId>
                     <scope>provided</scope>
+                    <exclusions>
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>org.apache.hadoop</groupId>
@@ -318,6 +330,11 @@
                         <exclusion>
                             <groupId>org.apache.avro</groupId>
                             <artifactId>avro</artifactId>
+                        </exclusion>
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
