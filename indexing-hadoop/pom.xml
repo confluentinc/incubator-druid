@@ -198,6 +198,11 @@
                     <artifactId>hadoop-common</artifactId>
                     <scope>provided</scope>
                     <exclusions>
+                        <!-- Excluded to remove security vulnerability -->
+                        <exclusion>
+                            <groupId>net.java.dev.jets3t</groupId>
+                            <artifactId>jets3t</artifactId>
+                        </exclusion>
                         <exclusion>
                             <groupId>javax.servlet</groupId>
                             <artifactId>servlet-api</artifactId>
@@ -221,6 +226,13 @@
                     <version>${hadoop.compile.version}</version>
                     <classifier>tests</classifier>
                     <scope>test</scope>
+                    <exclusions>
+                        <!-- Excluded to remove security vulnerability -->
+                        <exclusion>
+                            <groupId>net.java.dev.jets3t</groupId>
+                            <artifactId>jets3t</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
             </dependencies>
         </profile>
