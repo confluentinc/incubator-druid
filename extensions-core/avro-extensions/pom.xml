@@ -314,6 +314,7 @@
               <groupId>org.slf4j</groupId>
               <artifactId>slf4j-api</artifactId>
             </exclusion>
+            <!-- Excluded to remove security vulnerability -->
             <exclusion>
               <groupId>net.java.dev.jets3t</groupId>
               <artifactId>jets3t</artifactId>

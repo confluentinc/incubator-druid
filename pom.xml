@@ -1180,9 +1180,10 @@
             <version>${hadoop.compile.version}</version>
             <scope>provided</scope>
             <exclusions>
+                <!-- Excluded to remove security vulnerability -->
                 <exclusion>
-                <groupId>net.java.dev.jets3t</groupId>
-                <artifactId>jets3t</artifactId>
+                    <groupId>net.java.dev.jets3t</groupId>
+                    <artifactId>jets3t</artifactId>
                 </exclusion>
             </exclusions>
           </dependency>
