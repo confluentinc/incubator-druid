@@ -314,6 +314,11 @@
               <groupId>org.slf4j</groupId>
               <artifactId>slf4j-api</artifactId>
             </exclusion>
+            <!-- Following are excluded to remove security vulnerabilities: -->
+            <exclusion>
+              <groupId>com.nimbusds</groupId>
+              <artifactId>nimbus-jose-jwt</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
       </dependencies>

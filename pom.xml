@@ -1179,6 +1179,13 @@
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.compile.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <!-- Following are excluded to remove security vulnerabilities: -->
+                <exclusion>
+                    <groupId>com.nimbusds</groupId>
+                    <artifactId>nimbus-jose-jwt</artifactId>
+                </exclusion>
+            </exclusions>
           </dependency>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
