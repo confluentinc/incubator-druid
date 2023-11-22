@@ -189,7 +189,11 @@
                             <groupId>javax.servlet</groupId>
                             <artifactId>servlet-api</artifactId>
                         </exclusion>
-
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
+                        </exclusion>
                     </exclusions>
 
                 </dependency>
@@ -201,6 +205,11 @@
                         <exclusion>
                             <groupId>javax.servlet</groupId>
                             <artifactId>servlet-api</artifactId>
+                        </exclusion>
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
                         </exclusion>
                     </exclusions>
                 </dependency>
@@ -213,6 +222,11 @@
                             <groupId>javax.servlet</groupId>
                             <artifactId>servlet-api</artifactId>
                         </exclusion>
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
+                        </exclusion>
                     </exclusions>
                 </dependency>
                 <dependency>
@@ -221,6 +235,13 @@
                     <version>${hadoop.compile.version}</version>
                     <classifier>tests</classifier>
                     <scope>test</scope>
+                    <exclusions>
+                        <!-- Following are excluded to remove security vulnerabilities: -->
+                        <exclusion>
+                            <groupId>log4j</groupId>
+                            <artifactId>log4j</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
             </dependencies>
         </profile>
@@ -249,12 +270,6 @@
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-client-minicluster</artifactId>
                     <version>${hadoop.compile.version}</version>
-                    <scope>test</scope>
-                </dependency>
-                <dependency>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                    <version>1.2.17</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
