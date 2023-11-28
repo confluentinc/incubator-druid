@@ -120,8 +120,7 @@ public class KafkaInputFormat implements InputFormat
             temporaryDirectory
         ),
         keyColumnName,
-        timestampColumnName,
-        topicColumnName
+        timestampColumnName
     );
   }
 

@@ -79,15 +79,16 @@
         <apache.kafka.version>3.5.1</apache.kafka.version>
         <apache.ranger.version>2.0.0</apache.ranger.version>
         <apache.ranger.gson.version>2.2.4</apache.ranger.gson.version>
-        <scala.library.version>2.13.11</scala.library.version>
+        <scala.library.version>2.13.9</scala.library.version>
         <avatica.version>1.23.0</avatica.version>
-        <avro.version>1.11.1</avro.version>
-        <!-- When updating Calcite, also propagate updates to these files which we've copied and modified:
-             default_config.fmpp
-          -->
+        <avro.version>1.11.3</avro.version>
+        <!-- sql/src/main/codegen/config.fmpp is based on a file from calcite-core, and needs to be
+          updated when upgrading Calcite. Refer to the top-level comments in that file for details.
+          Also, CalcitePlanner is a clone of Calcite's PlannerImpl and may require updates when
+          Calcite is upgrade. -->
         <calcite.version>1.35.0</calcite.version>
         <datasketches.version>4.2.0</datasketches.version>
-        <datasketches.memory.version>2.2.0</datasketches.memory.version>
+        <datasketches.memory.version>2.0.0</datasketches.memory.version>
         <derby.version>10.14.2.0</derby.version>
         <dropwizard.metrics.version>4.2.19</dropwizard.metrics.version>
         <errorprone.version>2.20.0</errorprone.version>
@@ -133,6 +134,7 @@
         <repoOrgId>maven.org</repoOrgId>
         <repoOrgName>Maven Central Repository</repoOrgName>
         <repoOrgUrl>https://repo1.maven.org/maven2/</repoOrgUrl>
+        <opentelemetry.proto.version>0.19.0-alpha</opentelemetry.proto.version>
 
         <!-- Allow the handful of flaky tests with transient failures to pass. -->
         <surefire.rerunFailingTestsCount>3</surefire.rerunFailingTestsCount>
@@ -227,6 +229,9 @@
         <module>extensions-contrib/opentelemetry-emitter</module>
         <module>extensions-contrib/kubernetes-overlord-extensions</module>
         <module>extensions-contrib/druid-iceberg-extensions</module>
+        <module>extensions-contrib/opencensus-extensions</module>
+        <module>extensions-contrib/confluent-extensions</module>
+        <module>extensions-contrib/opentelemetry-extensions</module>
         <!-- distribution packaging -->
         <module>distribution</module>
         <!-- Revised integration tests -->
@@ -810,11 +815,16 @@
             <dependency>
                 <groupId>org.xerial.snappy</groupId>
                 <artifactId>snappy-java</artifactId>
-                <version>1.1.10.4</version>
+                <version>1.1.8.4</version>
             </dependency>
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
                 <version>${protobuf.version}</version>
             </dependency>
             <dependency>
@@ -1301,6 +1311,11 @@
               </exclusion>
             </exclusions>
           </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.proto</groupId>
+                <artifactId>opentelemetry-proto</artifactId>
+                <version>${opentelemetry.proto.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
