@@ -39,12 +39,10 @@ export interface RefreshButtonProps {
 }
 
 export const RefreshButton = React.memo(function RefreshButton(props: RefreshButtonProps) {
-  const { onRefresh, localStorageKey, defaultDelay = 30000 } = props;
-
   return (
     <TimedButton
       className="refresh-button"
-      defaultDelay={defaultDelay}
+      defaultDelay={30000}
       label="Auto refresh every"
       delays={DELAYS}
       icon={IconNames.REFRESH}

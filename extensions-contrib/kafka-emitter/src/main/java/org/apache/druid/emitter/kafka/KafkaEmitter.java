@@ -66,10 +66,10 @@ public class KafkaEmitter implements Emitter
   private final KafkaEmitterConfig config;
   private final Producer<String, String> producer;
   private final ObjectMapper jsonMapper;
-  private final MemoryBoundLinkedBlockingQueue<String> metricQueue;
-  private final MemoryBoundLinkedBlockingQueue<String> alertQueue;
-  private final MemoryBoundLinkedBlockingQueue<String> requestQueue;
-  private final MemoryBoundLinkedBlockingQueue<String> segmentMetadataQueue;
+  private final MemoryBoundLinkedBlockingQueue<byte[]> metricQueue;
+  private final MemoryBoundLinkedBlockingQueue<byte[]> alertQueue;
+  private final MemoryBoundLinkedBlockingQueue<byte[]> requestQueue;
+  private final MemoryBoundLinkedBlockingQueue<byte[]> segmentMetadataQueue;
   private final ScheduledExecutorService scheduler;
 
   protected int sendInterval = DEFAULT_SEND_INTERVAL_SECONDS;
@@ -173,13 +173,13 @@ public class KafkaEmitter implements Emitter
     sendToKafka(config.getSegmentMetadataTopic(), segmentMetadataQueue, setProducerCallback(segmentMetadataLost));
   }
 
-  private void sendToKafka(final String topic, MemoryBoundLinkedBlockingQueue<String> recordQueue, Callback callback)
+  private void sendToKafka(final String topic, MemoryBoundLinkedBlockingQueue<byte[]> recordQueue, Callback callback)
   {
-    ObjectContainer<String> objectToSend;
+    ObjectContainer<byte[]> objectToSend;
     try {
       while (true) {
         objectToSend = recordQueue.take();
-        producer.send(new ProducerRecord<>(topic, objectToSend.getData()), callback);
+        producer.send(new ProducerRecord<>(topic, objectToSend.getData().toString()), callback);
       }
     }
     catch (Throwable e) {
