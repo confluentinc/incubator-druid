@@ -6,6 +6,7 @@ package io.confluent.druid.transform;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
+import org.apache.druid.data.input.Row;
 import org.apache.druid.segment.transform.RowFunction;
 import org.apache.druid.segment.transform.Transform;
 
@@ -43,15 +44,20 @@ public class ExtractTenantTopicTransform implements Transform
   @Override
   public RowFunction getRowFunction()
   {
-    return row -> {
-      Object existing = row.getRaw(name);
-      // do not overwrite existing values if present
-      if (existing != null) {
-        return existing;
-      }
+    return new RowFunction()
+    {
+      @Override
+      public Object eval(Row row)
+      {
+        Object existing = row.getRaw(name);
+        // do not overwrite existing values if present
+        if (existing != null) {
+          return existing;
+        }
 
-      Object value = row.getRaw(fieldName);
-      return value == null ? null : TenantUtils.extractTenantTopic(value.toString());
+        Object value = row.getRaw(fieldName);
+        return value == null ? null : TenantUtils.extractTenantTopic(value.toString());
+      }
     };
   }
 
