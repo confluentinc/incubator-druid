@@ -35,6 +35,7 @@ const DELAYS: DelayLabel[] = [
 export interface RefreshButtonProps {
   onRefresh(auto: boolean): void;
   localStorageKey?: LocalStorageKeys;
+  defaultDelay?: number;
 }
 
 export const RefreshButton = React.memo(function RefreshButton(props: RefreshButtonProps) {
