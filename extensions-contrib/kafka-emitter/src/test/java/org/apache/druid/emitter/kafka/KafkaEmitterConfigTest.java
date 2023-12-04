@@ -60,7 +60,7 @@ public class KafkaEmitterConfigTest
   public void testSerDeserKafkaEmitterConfigNullRequestTopic() throws IOException
   {
     KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", null, "metricTest",
-        "alertTest", null, "metadataTest",null,
+        "alertTest", null, "metadataTest", null,
         "clusterNameTest", ImmutableMap.<String, String>builder()
         .put("testKey", "testValue").build()
     );
