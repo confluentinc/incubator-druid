@@ -58,7 +58,12 @@ public class KafkaEmitterConfig
     @JsonCreator
     public static EventType fromString(String name)
     {
-      return valueOf(StringUtils.toUpperCase(name));
+      for (EventType eventType : EventType.values()) {
+        if (eventType.toString().equalsIgnoreCase(name)) {
+          return eventType;
+        }
+      }
+      throw new IllegalArgumentException("Invalid EventType value: " + name);
     }
   }
 
