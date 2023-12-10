@@ -2168,19 +2168,5 @@
             <jacoco.skip>true</jacoco.skip>
           </properties>
         </profile>
-        <profile>
-            <id>hadoop3</id>
-            <activation>
-                <property>
-                    <name>hadoop3.enabled</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <properties>
-                <hadoop.compile.version>3.3.1</hadoop.compile.version>
-                <hibernate-validator.version>5.3.6.Final</hibernate-validator.version>
-                <httpclient.version>4.5.13</httpclient.version>
-            </properties>
-        </profile>
     </profiles>
 </project>
