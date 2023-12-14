@@ -52,7 +52,6 @@ export const RefreshButton = React.memo(function RefreshButton(props: RefreshBut
       onRefresh={onRefresh}
       foregroundOnly
       localStorageKey={localStorageKey}
-      {...props}
     />
   );
 });
