@@ -64,7 +64,7 @@ public class KafkaEmitter implements Emitter
   private final AtomicLong invalidLost;
 
   private final KafkaEmitterConfig config;
-  private final Producer<String, String> producer;
+  private final Producer<String, byte[]> producer;
   private final ObjectMapper jsonMapper;
   private final MemoryBoundLinkedBlockingQueue<byte[]> metricQueue;
   private final MemoryBoundLinkedBlockingQueue<byte[]> alertQueue;
@@ -105,7 +105,7 @@ public class KafkaEmitter implements Emitter
   }
 
   @VisibleForTesting
-  protected Producer<String, String> setKafkaProducer()
+  protected Producer<String, byte[]> setKafkaProducer()
   {
     ClassLoader currCtxCl = Thread.currentThread().getContextClassLoader();
     try {
@@ -179,7 +179,7 @@ public class KafkaEmitter implements Emitter
     try {
       while (true) {
         objectToSend = recordQueue.take();
-        producer.send(new ProducerRecord<>(topic, objectToSend.getData().toString()), callback);
+        producer.send(new ProducerRecord<>(topic, objectToSend.getData()), callback);
       }
     }
     catch (Throwable e) {

@@ -102,7 +102,7 @@ public class KafkaEmitterTest
     final CountDownLatch countDownSentEvents = new CountDownLatch(
         requestTopic == null ? totalEventsExcludingRequestLogEvents : totalEvents);
 
-    final KafkaProducer<String, String> producer = mock(KafkaProducer.class);
+    final KafkaProducer<String, byte[]> producer = mock(KafkaProducer.class);
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JodaModule());
     final KafkaEmitter kafkaEmitter = new KafkaEmitter(
@@ -111,7 +111,7 @@ public class KafkaEmitterTest
     )
     {
       @Override
-      protected Producer<String, String> setKafkaProducer()
+      protected Producer<String, byte[]> setKafkaProducer()
       {
         // override send interval to 1 second
         sendInterval = 1;
