@@ -49,7 +49,9 @@ export const RefreshButton = React.memo(function RefreshButton(props: RefreshBut
       delays={DELAYS}
       icon={IconNames.REFRESH}
       text="Refresh"
+      onRefresh={onRefresh}
       foregroundOnly
+      localStorageKey={localStorageKey}
       {...props}
     />
   );
