@@ -46,7 +46,7 @@ public class KafkaEmitterConfigTest
   public void testSerDeserKafkaEmitterConfig() throws IOException
   {
     KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", null, "metricTest",
-        "alertTest", "requestTest", "metadataTest", null,
+        "alertTest", "requestTest", "metadataTest",
         "clusterNameTest", ImmutableMap.<String, String>builder()
         .put("testKey", "testValue").build()
     );
@@ -60,7 +60,7 @@ public class KafkaEmitterConfigTest
   public void testSerDeserKafkaEmitterConfigNullRequestTopic() throws IOException
   {
     KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", null, "metricTest",
-        "alertTest", null, "metadataTest", null,
+        "alertTest", null, "metadataTest",
         "clusterNameTest", ImmutableMap.<String, String>builder()
         .put("testKey", "testValue").build()
     );
@@ -76,7 +76,7 @@ public class KafkaEmitterConfigTest
     Set<KafkaEmitterConfig.EventType> eventTypeSet = new HashSet<KafkaEmitterConfig.EventType>();
     eventTypeSet.add(KafkaEmitterConfig.EventType.SEGMENT_METADATA);
     KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("hostname", eventTypeSet, null,
-        null, null, "metadataTest", null,
+        null, null, "metadataTest",
         "clusterNameTest", ImmutableMap.<String, String>builder()
         .put("testKey", "testValue").build()
     );
@@ -90,8 +90,7 @@ public class KafkaEmitterConfigTest
   public void testSerDeNotRequiredKafkaProducerConfig()
   {
     KafkaEmitterConfig kafkaEmitterConfig = new KafkaEmitterConfig("localhost:9092", null, "metricTest",
-
-        "alertTest", null, "metadataTest", null,
+        "alertTest", null, "metadataTest",
         "clusterNameTest", null
     );
     try {
@@ -106,9 +105,9 @@ public class KafkaEmitterConfigTest
   @Test
   public void testDeserializeEventTypesWithDifferentCase() throws JsonProcessingException
   {
-    Assert.assertEquals(KafkaEmitterConfig.EventType.SEGMENT_METADATA, mapper.readValue("\"segmentMetadata\"", KafkaEmitterConfig.EventType.class));
+    Assert.assertEquals(KafkaEmitterConfig.EventType.SEGMENT_METADATA, mapper.readValue("\"segment_metadata\"", KafkaEmitterConfig.EventType.class));
     Assert.assertEquals(KafkaEmitterConfig.EventType.ALERTS, mapper.readValue("\"alerts\"", KafkaEmitterConfig.EventType.class));
-    Assert.assertThrows(ValueInstantiationException.class, () -> mapper.readValue("\"segment_metadata\"", KafkaEmitterConfig.EventType.class));
+    Assert.assertThrows(ValueInstantiationException.class, () -> mapper.readValue("\"segmentMetadata\"", KafkaEmitterConfig.EventType.class));
   }
 
   @Test

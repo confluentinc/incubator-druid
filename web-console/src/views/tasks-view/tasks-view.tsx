@@ -584,7 +584,6 @@ ORDER BY
           </ButtonGroup>
           <RefreshButton
             localStorageKey={LocalStorageKeys.TASKS_REFRESH_RATE}
-            defaultDelay={0}
             onRefresh={auto => {
               if (auto && hasPopoverOpen()) return;
               this.taskQueryManager.rerunLastQuery(auto);
