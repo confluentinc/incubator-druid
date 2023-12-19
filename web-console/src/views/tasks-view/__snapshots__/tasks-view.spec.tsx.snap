@@ -43,6 +43,7 @@ exports[`TasksView matches snapshot 1`] = `
       </Blueprint4.Button>
     </Blueprint4.ButtonGroup>
     <Memo(RefreshButton)
+      defaultDelay={0}
       localStorageKey="task-refresh-rate"
       onRefresh={[Function]}
     />
