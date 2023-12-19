@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import org.apache.druid.common.config.NullHandling;
@@ -368,7 +369,7 @@ public class ProtobufInputFormatTest
     InputRow row = transformingReader.read().next();
 
     Assert.assertEquals(
-        ImmutableList.of(
+        ImmutableSet.of(
             "someOtherId",
             "someIntColumn",
             "isValid",
@@ -381,7 +382,7 @@ public class ProtobufInputFormatTest
             "id",
             "someBytesColumn"
         ),
-        row.getDimensions()
+        ImmutableSet.copyOf(row.getDimensions())
     );
 
     Assert.assertEquals(ImmutableMap.of("bar", "baz"), row.getRaw("foo"));
