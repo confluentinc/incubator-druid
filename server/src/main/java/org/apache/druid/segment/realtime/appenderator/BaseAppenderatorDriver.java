@@ -38,6 +38,7 @@ import org.apache.druid.data.input.Committer;
 import org.apache.druid.data.input.InputRow;
 import org.apache.druid.indexing.overlord.SegmentPublishResult;
 import org.apache.druid.java.util.common.ISE;
+import org.apache.druid.java.util.common.RetryUtils;
 import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.common.concurrent.Execs;
 import org.apache.druid.java.util.common.logger.Logger;
@@ -61,6 +62,7 @@ import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -565,8 +567,7 @@ public abstract class BaseAppenderatorDriver implements Closeable
       SegmentsAndCommitMetadata segmentsAndCommitMetadata,
       TransactionalSegmentPublisher publisher,
       java.util.function.Function<Set<DataSegment>, Set<DataSegment>> outputSegmentsAnnotateFunction
-  )
-  {
+  ) throws Exception {
     final Set<DataSegment> pushedAndTombstones = new HashSet<>(segmentsAndCommitMetadata.getSegments());
     if (tombstones != null) {
       pushedAndTombstones.addAll(tombstones);
@@ -595,93 +596,104 @@ public abstract class BaseAppenderatorDriver implements Closeable
     final Object callerMetadata = metadata == null
                                   ? null
                                   : ((AppenderatorDriverMetadata) metadata).getCallerMetadata();
-    return executor.submit(
-        () -> {
-          try {
-            final ImmutableSet<DataSegment> ourSegments = ImmutableSet.copyOf(pushedAndTombstones);
-            final SegmentPublishResult publishResult = publisher.publishSegments(
-                segmentsToBeOverwritten,
-                segmentsToBeDropped,
-                ourSegments,
-                outputSegmentsAnnotateFunction,
-                callerMetadata
-            );
-
-            if (publishResult.isSuccess()) {
-              log.info(
-                  "Published [%s] segments with commit metadata [%s]",
-                  segmentsAndCommitMetadata.getSegments().size(),
+    return RetryUtils.retry(
+        () -> executor.submit(
+          () -> {
+            try {
+              final ImmutableSet<DataSegment> ourSegments = ImmutableSet.copyOf(pushedAndTombstones);
+              final SegmentPublishResult publishResult = publisher.publishSegments(
+                  segmentsToBeOverwritten,
+                  segmentsToBeDropped,
+                  ourSegments,
+                  outputSegmentsAnnotateFunction,
                   callerMetadata
               );
-              log.infoSegments(segmentsAndCommitMetadata.getSegments(), "Published segments");
-            } else {
-              // Publishing didn't affirmatively succeed. However, segments with our identifiers may still be active
-              // now after all, for two possible reasons:
-              //
-              // 1) A replica may have beat us to publishing these segments. In this case we want to delete the
-              //    segments we pushed (if they had unique paths) to avoid wasting space on deep storage.
-              // 2) We may have actually succeeded, but not realized it due to missing the confirmation response
-              //    from the overlord. In this case we do not want to delete the segments we pushed, since they are
-              //    now live!
 
-              final Set<SegmentIdWithShardSpec> segmentsIdentifiers = segmentsAndCommitMetadata
-                  .getSegments()
-                  .stream()
-                  .map(SegmentIdWithShardSpec::fromDataSegment)
-                  .collect(Collectors.toSet());
-
-              final Set<DataSegment> activeSegments = usedSegmentChecker.findUsedSegments(segmentsIdentifiers);
-
-              if (activeSegments.equals(ourSegments)) {
+              if (publishResult.isSuccess()) {
                 log.info(
-                    "Could not publish [%s] segments, but checked and found them already published; continuing.",
-                    ourSegments.size()
+                    "Published [%s] segments with commit metadata [%s]",
+                    segmentsAndCommitMetadata.getSegments().size(),
+                    callerMetadata
                 );
-                log.infoSegments(
-                    segmentsAndCommitMetadata.getSegments(),
-                    "Could not publish segments"
-                );
-
-                // Clean up pushed segments if they are physically disjoint from the published ones (this means
-                // they were probably pushed by a replica, and with the unique paths option).
-                final boolean physicallyDisjoint = Sets.intersection(
-                    activeSegments.stream().map(DataSegment::getLoadSpec).collect(Collectors.toSet()),
-                    ourSegments.stream().map(DataSegment::getLoadSpec).collect(Collectors.toSet())
-                ).isEmpty();
-
-                if (physicallyDisjoint) {
-                  segmentsAndCommitMetadata.getSegments().forEach(dataSegmentKiller::killQuietly);
-                }
+                log.infoSegments(segmentsAndCommitMetadata.getSegments(), "Published segments");
               } else {
-                // Our segments aren't active. Publish failed for some reason. Clean them up and then throw an error.
-                segmentsAndCommitMetadata.getSegments().forEach(dataSegmentKiller::killQuietly);
+                // Publishing didn't affirmatively succeed. However, segments with our identifiers may still be active
+                // now after all, for two possible reasons:
+                //
+                // 1) A replica may have beat us to publishing these segments. In this case we want to delete the
+                //    segments we pushed (if they had unique paths) to avoid wasting space on deep storage.
+                // 2) We may have actually succeeded, but not realized it due to missing the confirmation response
+                //    from the overlord. In this case we do not want to delete the segments we pushed, since they are
+                //    now live!
 
-                if (publishResult.getErrorMsg() != null) {
-                  log.errorSegments(ourSegments, "Failed to publish segments");
-                  throw new ISE(
-                      "Failed to publish segments because of [%s]",
-                      publishResult.getErrorMsg()
+                final Set<SegmentIdWithShardSpec> segmentsIdentifiers = segmentsAndCommitMetadata
+                    .getSegments()
+                    .stream()
+                    .map(SegmentIdWithShardSpec::fromDataSegment)
+                    .collect(Collectors.toSet());
+
+                final Set<DataSegment> activeSegments = usedSegmentChecker.findUsedSegments(segmentsIdentifiers);
+
+                if (activeSegments.equals(ourSegments)) {
+                  log.info(
+                      "Could not publish [%s] segments, but checked and found them already published; continuing.",
+                      ourSegments.size()
                   );
+                  log.infoSegments(
+                      segmentsAndCommitMetadata.getSegments(),
+                      "Could not publish segments"
+                  );
+
+                  // Clean up pushed segments if they are physically disjoint from the published ones (this means
+                  // they were probably pushed by a replica, and with the unique paths option).
+                  final boolean physicallyDisjoint = Sets.intersection(
+                      activeSegments.stream().map(DataSegment::getLoadSpec).collect(Collectors.toSet()),
+                      ourSegments.stream().map(DataSegment::getLoadSpec).collect(Collectors.toSet())
+                  ).isEmpty();
+
+                  if (physicallyDisjoint) {
+                    segmentsAndCommitMetadata.getSegments().forEach(dataSegmentKiller::killQuietly);
+                  }
                 } else {
                   log.errorSegments(ourSegments, "Failed to publish segments");
-                  throw new ISE("Failed to publish segments");
+                  if (publishResult.getErrorMsg() != null && publishResult.getErrorMsg().contains(("Aborting transaction!"))) {
+                    throw new ISE(publishResult.getErrorMsg());
+                  }
+                  // Our segments aren't active. Publish failed for some reason. Clean them up and then throw an error.
+                  segmentsAndCommitMetadata.getSegments().forEach(dataSegmentKiller::killQuietly);
+
+                  if (publishResult.getErrorMsg() != null) {
+                    throw new ISE(
+                        "Failed to publish segments because of [%s]",
+                        publishResult.getErrorMsg()
+                    );
+                  } else {
+                    log.errorSegments(ourSegments, "Failed to publish segments");
+                    throw new ISE("Failed to publish segments");
+                  }
                 }
               }
             }
+            catch (Exception e) {
+              // Must not remove segments here, we aren't sure if our transaction succeeded or not.
+              log.noStackTrace().warn(e, "Failed publish");
+              log.warnSegments(
+                  segmentsAndCommitMetadata.getSegments(),
+                  "Failed publish, not removing segments"
+              );
+              if (e.getMessage() != null && e.getMessage().contains("Aborting transaction!")) {
+                // we can recover from this error.
+                throw new ExecutionException(e);
+              } else {
+                Throwables.propagateIfPossible(e);
+                throw new RuntimeException(e);
+              }
+            }
+            return segmentsAndCommitMetadata;
           }
-          catch (Exception e) {
-            // Must not remove segments here, we aren't sure if our transaction succeeded or not.
-            log.noStackTrace().warn(e, "Failed publish");
-            log.warnSegments(
-                segmentsAndCommitMetadata.getSegments(),
-                "Failed publish, not removing segments"
-            );
-            Throwables.propagateIfPossible(e);
-            throw new RuntimeException(e);
-          }
-
-          return segmentsAndCommitMetadata;
-        }
+        ),
+        e -> (e instanceof ExecutionException),
+        RetryUtils.DEFAULT_MAX_TRIES
     );
   }
 
