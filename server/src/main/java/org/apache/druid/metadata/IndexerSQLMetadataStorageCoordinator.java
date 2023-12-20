@@ -1586,7 +1586,7 @@ public class IndexerSQLMetadataStorageCoordinator implements IndexerMetadataStor
           oldCommitMetadataFromDb,
           startMetadata
       );
-      return DataStoreMetadataUpdateResult.TRY_AGAIN;
+      return DataStoreMetadataUpdateResult.FAILURE;
     }
 
     if (!startMetadataMatchesExisting) {
