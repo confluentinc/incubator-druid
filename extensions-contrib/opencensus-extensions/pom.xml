@@ -47,7 +47,16 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <exclusion>
+              <groupId>io.grpc</groupId>
+              <artifactId>grpc-protobuf</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-protobuf</artifactId>
+      <version>1.60.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.druid</groupId>
