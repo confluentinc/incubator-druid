@@ -820,7 +820,7 @@ public class ParserTest extends InitializedNullHandlingTest
     }
     final Expr.BindingAnalysis deets = parsed.analyzeInputs();
     Assert.assertEquals(expression, expected, parsed.toString());
-    Assert.assertEquals(expression, identifiers, deets.getRequiredBindingsList());
+    Assert.assertEquals(expression, ImmutableSet.copyOf(identifiers), ImmutableSet.copyOf(deets.getRequiredBindingsList()));
     Assert.assertEquals(expression, scalars, deets.getScalarVariables());
     Assert.assertEquals(expression, arrays, deets.getArrayVariables());
 
@@ -828,7 +828,7 @@ public class ParserTest extends InitializedNullHandlingTest
     final Expr roundTrip = Parser.parse(parsedNoFlatten.stringify(), ExprMacroTable.nil());
     Assert.assertEquals(parsed.stringify(), roundTrip.stringify());
     final Expr.BindingAnalysis roundTripDeets = roundTrip.analyzeInputs();
-    Assert.assertEquals(expression, identifiers, roundTripDeets.getRequiredBindingsList());
+    Assert.assertEquals(expression, ImmutableSet.copyOf(identifiers), ImmutableSet.copyOf(roundTripDeets.getRequiredBindingsList()));
     Assert.assertEquals(expression, scalars, roundTripDeets.getScalarVariables());
     Assert.assertEquals(expression, arrays, roundTripDeets.getArrayVariables());
   }

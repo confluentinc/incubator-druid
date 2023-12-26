@@ -72,23 +72,6 @@
   </suppress>
 
   <suppress>
-    <!--
-      the suppressions here aren't currently applicable, but can be resolved once we update the version
-      -->
-    <notes><![CDATA[
-   file name: jackson-databind-2.10.5.1.jar
-   ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-    <!-- CVE-2022-42003 and CVE-2022-42004 are related to UNWRAP_SINGLE_VALUE_ARRAYS which we do not use
-    https://nvd.nist.gov/vuln/detail/CVE-2022-42003
-    https://nvd.nist.gov/vuln/detail/CVE-2022-42004
-     -->
-    <cve>CVE-2022-42003</cve>
-    <cve>CVE-2022-42004</cve>
-  </suppress>
-
-
-  <suppress>
     <!-- Not much for us to do as a user of the client lib, and no patch is available,
      see https://github.com/kubernetes/kubernetes/issues/97076 -->
     <notes><![CDATA[
@@ -232,12 +215,23 @@
     <cve>CVE-2023-1436</cve>
   </suppress>
   <suppress>
-    <!-- We need to wait for 17.0.0 of https://github.com/kubernetes-client/java/releases -->
-    <!-- We need to update several other components to move to Snakeyaml 2.0 to address CVE-2022-1471 -->
-    <!-- Snakeyaml 1.33 added to dependencyManagement in main pom file -->
+    <!-- The main use of snakeyaml in Druid is coming in test scope from:
+     com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.12.7
+     (version 1.27)
+     The contrib extension: druid-cassandra-storage uses version 1.6 in compile
+     scope
+     The integration tests use version 1.27 in compile scope.
+     Previous pinning of version to 1.33 forced the usage of the version across
+     all the modules, downgrading the version for some of them.
+     The removal of the pin in the main POM allows the modules choose which version
+     to be used, enabling the users to disable contrib extensions and use the
+     CVE free version of Snakeyaml in core extensions.
+      -->
+
     <notes><![CDATA[
-    file name: snakeyaml-1.33.jar
+    file name: snakeyaml-1.27.jar snakeyaml-1.33.jar
     ]]></notes>
+    <!-- Snakeyaml is used only in test scope in Druid core with trusted inputs -->
     <cve>CVE-2022-1471</cve>
     <!-- false positive -->
     <cve>CVE-2023-2251</cve>
@@ -547,15 +541,7 @@
     <cve>CVE-2015-7430</cve>
     <cve>CVE-2017-3162</cve>
   </suppress>
-
-  <suppress>
-    <!-- Suppress avro cves that are only applicable to .NET SDK-->
-    <notes><![CDATA[
-    file name: avro-1.9.2.jar or avro-ipc-jetty-1.9.2.jar
-    ]]></notes>
-    <cve>CVE-2021-43045</cve>
-  </suppress>
-
+  
   <suppress>
     <!-- False alarm for the Async javascript library (https://github.com/caolan/async) which is a dev dependency for the web console -->
     <notes><![CDATA[
@@ -602,9 +588,11 @@
   </suppress>
 
   <suppress>
-    <!-- pac4j-core-3.8.3 -->
+    <!-- 4.5.5 is a fixed version as per https://nvd.nist.gov/vuln/detail/CVE-2021-44878. -->
+    <!-- However, vulnerability scan still shows this CVE. Pac4j release notes mention 5.3.1 as "fully fixed" version. -->
+    <!-- Remove suppression once upgraded to 5.3.1. -->
     <notes><![CDATA[
-   file name: pac4j-core-3.8.3.jar
+   file name: pac4j-core-4.5.7.jar
    ]]></notes>
     <cve>CVE-2021-44878</cve>
   </suppress>
@@ -789,6 +777,7 @@
     <cve>CVE-2021-4277</cve>
   </suppress>
 
+<!-- the remaining uses of vulnerable okio are in contrib-extensions -->
   <suppress>
     <notes><![CDATA[
       file name: okio-1.17.2.jar, okio-1.15.0.jar
