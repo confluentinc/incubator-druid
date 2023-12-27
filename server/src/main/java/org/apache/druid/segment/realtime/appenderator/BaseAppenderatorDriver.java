@@ -567,7 +567,8 @@ public abstract class BaseAppenderatorDriver implements Closeable
       SegmentsAndCommitMetadata segmentsAndCommitMetadata,
       TransactionalSegmentPublisher publisher,
       java.util.function.Function<Set<DataSegment>, Set<DataSegment>> outputSegmentsAnnotateFunction
-  ) throws Exception {
+  ) throws Exception
+  {
     final Set<DataSegment> pushedAndTombstones = new HashSet<>(segmentsAndCommitMetadata.getSegments());
     if (tombstones != null) {
       pushedAndTombstones.addAll(tombstones);
