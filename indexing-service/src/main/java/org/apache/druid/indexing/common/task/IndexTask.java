@@ -844,7 +844,8 @@ public class IndexTask extends AbstractBatchIndexTask implements ChatHandler
       final InputSource inputSource,
       final File tmpDir,
       final PartitionAnalysis partitionAnalysis
-  ) throws Exception {
+  ) throws Exception
+  {
     final FireDepartment fireDepartmentForMetrics =
         new FireDepartment(dataSchema, new RealtimeIOConfig(null, null), null);
     FireDepartmentMetrics buildSegmentsFireDepartmentMetrics = fireDepartmentForMetrics.getMetrics();
