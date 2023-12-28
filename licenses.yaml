@@ -1616,13 +1616,13 @@ libraries:
 
 ---
 
-name: Spymemcached
+name: aws-elasticache-cluster-client-memcached-for-java
 license_category: binary
 module: java-core
 license_name: Apache License version 2.0
-version: 2.12.3
+version: 1.2.0
 libraries:
-  - net.spy: spymemcached
+  - com.amazonaws: elasticache-java-cluster-client
 
 ---
 
@@ -3608,7 +3608,7 @@ libraries:
 ---
 
 name: Apache Velocity Engine
-version: 2.2
+version: 2.3
 license_category: binary
 module: extensions/druid-avro-extensions
 license_name: Apache License version 2.0
@@ -3626,7 +3626,7 @@ name: Apache Avro
 license_category: binary
 module: extensions/druid-avro-extensions
 license_name: Apache License version 2.0
-version: 1.9.2
+version: 1.11.3
 libraries:
   - org.apache.avro: avro
   - org.apache.avro: avro-mapred
