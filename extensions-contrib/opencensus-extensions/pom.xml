@@ -149,7 +149,10 @@
               <artifactId>maven-dependency-plugin</artifactId>
               <configuration>
               <!-- analyze incorrectly flags this dependency as missing when omitted, and unused when declared -->
-                <ignoredDependencies>io.grpc:grpc-protobuf:1.60.0</ignoredDependencies>
+                <ignoredDependencies>io.grpc:grpc-protobuf</ignoredDependencies>
+                <!-- Transitive dependencies from opentelemetry but explicitly added to be shadowed -->
+                <ignoredUnusedDeclaredDependency>io.grpc:grpc-netty-shaded</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>com.google.guava:guava</ignoredUnusedDeclaredDependency>
               </configuration>
           </plugin>
         </plugins>
