@@ -47,6 +47,9 @@ import org.apache.druid.java.util.common.concurrent.Execs;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStart;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStop;
 import org.apache.druid.java.util.emitter.EmittingLogger;
+import org.apache.druid.java.util.emitter.service.ServiceEmitter;
+import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
+import org.apache.druid.query.DruidMetrics;
 import org.apache.druid.java.util.http.client.response.StringFullResponseHolder;
 import org.apache.druid.server.coordination.ChangeRequestHistory;
 import org.apache.druid.server.coordination.ChangeRequestsSnapshot;
@@ -105,6 +108,8 @@ public class WorkerTaskManager
   private final AtomicBoolean disabled = new AtomicBoolean(false);
 
   private final DruidLeaderClient overlordClient;
+
+  private final ServiceEmitter emitter = new ServiceEmitter("", "", null);
 
   @Inject
   public WorkerTaskManager(
@@ -238,6 +243,14 @@ public class WorkerTaskManager
   private void addRunningTask(final Task task, final ListenableFuture<TaskStatus> future)
   {
     runningTasks.put(task.getId(), new TaskDetails(task));
+
+    emitter.emit(
+            ServiceMetricEvent.builder()
+                    .setDimension(DruidMetrics.DATASOURCE,task.getDataSource()) // get datasource here
+                    .setDimension("host", taskRunner.getTaskLocation(task.getId()))
+                    .setMetric("worker/task/running/count", 1)
+    );
+
     Futures.addCallback(
         future,
         new FutureCallback<TaskStatus>()
@@ -287,6 +300,13 @@ public class WorkerTaskManager
             }
         );
         assignedTasks.put(task.getId(), task);
+
+        emitter.emit(
+                ServiceMetricEvent.builder()
+                        .setDimension(DruidMetrics.DATASOURCE,task.getDataSource()) // get datasource here
+                        .setDimension("host", taskRunner.getTaskLocation(task.getId()))
+                        .setMetric("worker/task/assigned/count", 1)
+        );
       }
       catch (IOException ex) {
         log.error(ex, "Error while trying to persist assigned task[%s]", task.getId());
