@@ -109,7 +109,6 @@ public class WorkerTaskManager
 
   private final DruidLeaderClient overlordClient;
 
-  private final ServiceEmitter emitter = new ServiceEmitter("", "", null);
 
   @Inject
   public WorkerTaskManager(
@@ -184,6 +183,8 @@ public class WorkerTaskManager
     return completedTasks;
   }
 
+  public Map<String, TaskDetails> getRunningTasks() { return runningTasks; }
+
   private void submitNoticeToExec(Notice notice)
   {
     exec.execute(
@@ -244,13 +245,6 @@ public class WorkerTaskManager
   {
     runningTasks.put(task.getId(), new TaskDetails(task));
 
-    emitter.emit(
-            ServiceMetricEvent.builder()
-                    .setDimension(DruidMetrics.DATASOURCE,task.getDataSource()) // get datasource here
-                    .setDimension("host", taskRunner.getTaskLocation(task.getId()))
-                    .setMetric("worker/task/running/count", 1)
-    );
-
     Futures.addCallback(
         future,
         new FutureCallback<TaskStatus>()
@@ -300,13 +294,6 @@ public class WorkerTaskManager
             }
         );
         assignedTasks.put(task.getId(), task);
-
-        emitter.emit(
-                ServiceMetricEvent.builder()
-                        .setDimension(DruidMetrics.DATASOURCE,task.getDataSource()) // get datasource here
-                        .setDimension("host", taskRunner.getTaskLocation(task.getId()))
-                        .setMetric("worker/task/assigned/count", 1)
-        );
       }
       catch (IOException ex) {
         log.error(ex, "Error while trying to persist assigned task[%s]", task.getId());
@@ -622,7 +609,7 @@ public class WorkerTaskManager
     return !disabled.get();
   }
 
-  private static class TaskDetails
+  protected static class TaskDetails
   {
     private final Task task;
     private final long startTime;
@@ -635,6 +622,10 @@ public class WorkerTaskManager
       this.startTime = System.currentTimeMillis();
       this.status = TaskStatus.running(task.getId());
       this.location = TaskLocation.unknown();
+    }
+
+    public String getDatasource() {
+      return task.getDataSource();
     }
   }
 
