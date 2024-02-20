@@ -47,6 +47,9 @@ import org.apache.druid.java.util.common.concurrent.Execs;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStart;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStop;
 import org.apache.druid.java.util.emitter.EmittingLogger;
+import org.apache.druid.java.util.emitter.service.ServiceEmitter;
+import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
+import org.apache.druid.query.DruidMetrics;
 import org.apache.druid.java.util.http.client.response.StringFullResponseHolder;
 import org.apache.druid.server.coordination.ChangeRequestHistory;
 import org.apache.druid.server.coordination.ChangeRequestsSnapshot;
@@ -105,6 +108,7 @@ public class WorkerTaskManager
   private final AtomicBoolean disabled = new AtomicBoolean(false);
 
   private final DruidLeaderClient overlordClient;
+
 
   @Inject
   public WorkerTaskManager(
@@ -179,6 +183,8 @@ public class WorkerTaskManager
     return completedTasks;
   }
 
+  public Map<String, TaskDetails> getRunningTasks() { return runningTasks; }
+
   private void submitNoticeToExec(Notice notice)
   {
     exec.execute(
@@ -238,6 +244,7 @@ public class WorkerTaskManager
   private void addRunningTask(final Task task, final ListenableFuture<TaskStatus> future)
   {
     runningTasks.put(task.getId(), new TaskDetails(task));
+
     Futures.addCallback(
         future,
         new FutureCallback<TaskStatus>()
@@ -602,7 +609,7 @@ public class WorkerTaskManager
     return !disabled.get();
   }
 
-  private static class TaskDetails
+  protected static class TaskDetails
   {
     private final Task task;
     private final long startTime;
@@ -615,6 +622,10 @@ public class WorkerTaskManager
       this.startTime = System.currentTimeMillis();
       this.status = TaskStatus.running(task.getId());
       this.location = TaskLocation.unknown();
+    }
+
+    public String getDatasource() {
+      return task.getDataSource();
     }
   }
 
