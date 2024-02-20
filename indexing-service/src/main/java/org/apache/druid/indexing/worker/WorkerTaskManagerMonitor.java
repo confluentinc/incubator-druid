@@ -5,12 +5,9 @@ import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import org.apache.druid.java.util.metrics.AbstractMonitor;
 import org.apache.druid.query.DruidMetrics;
-
 import javax.annotation.Nonnull;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class WorkerTaskManagerMonitor extends AbstractMonitor {
 
