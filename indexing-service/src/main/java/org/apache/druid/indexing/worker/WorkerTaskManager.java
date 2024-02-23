@@ -181,6 +181,8 @@ public class WorkerTaskManager
 
   public Map<String, TaskDetails> getRunningTasks() { return runningTasks; }
 
+  public Map<String, Task> getAssignedTasks() { return assignedTasks; }
+
   private void submitNoticeToExec(Notice notice)
   {
     exec.execute(
@@ -619,7 +621,7 @@ public class WorkerTaskManager
       this.location = TaskLocation.unknown();
     }
 
-    public String getDatasource() {
+    public String getDataSource() {
       return task.getDataSource();
     }
   }
