@@ -28,7 +28,7 @@ public class WorkerTaskManagerMonitor extends AbstractMonitor {
     @Override
     public boolean doMonitor(ServiceEmitter emitter) {
         final Map<String, Integer> runningTasks, assignedTasks, completedTasks;
-        
+
         runningTasks = getDataSourceTasks(workerTaskManager.getRunningTasks(), WorkerTaskManager.TaskDetails::getDataSource);
         assignedTasks = getDataSourceTasks(workerTaskManager.getAssignedTasks(), Task::getDataSource);
         completedTasks = getDataSourceTasks(workerTaskManager.getCompletedTasks(), TaskAnnouncement::getTaskDataSource);
