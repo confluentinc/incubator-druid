@@ -9,6 +9,7 @@ import org.apache.druid.query.DruidMetrics;
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class WorkerTaskManagerMonitor extends AbstractMonitor {
 
@@ -27,9 +28,10 @@ public class WorkerTaskManagerMonitor extends AbstractMonitor {
     @Override
     public boolean doMonitor(ServiceEmitter emitter) {
         final Map<String, Integer> runningTasks, assignedTasks, completedTasks;
-        runningTasks = getRunningDatasourceTasks(workerTaskManager.getRunningTasks());
-        assignedTasks = getAssignedDataSourceTasks(workerTaskManager.getAssignedTasks());
-        completedTasks = getCompletedDataSourceTaskMap(workerTaskManager.getCompletedTasks());
+        
+        runningTasks = getDataSourceTasks(workerTaskManager.getRunningTasks(), WorkerTaskManager.TaskDetails::getDataSource);
+        assignedTasks = getDataSourceTasks(workerTaskManager.getAssignedTasks(), Task::getDataSource);
+        completedTasks = getDataSourceTasks(workerTaskManager.getCompletedTasks(), TaskAnnouncement::getTaskDataSource);
 
         final ServiceMetricEvent.Builder builder = new ServiceMetricEvent.Builder();
         emitWorkerTaskMetric(builder, emitter, WorkerRunningTaskCountMetric, runningTasks);
@@ -45,39 +47,14 @@ public class WorkerTaskManagerMonitor extends AbstractMonitor {
         }
     }
 
-    @Nonnull
-    private Map<String, Integer> getRunningDatasourceTasks(Map<String, WorkerTaskManager.TaskDetails> taskMap) {
+    private <T> Map<String, Integer> getDataSourceTasks(Map<String, T> taskMap, Function<T, String> getDataSourceFunc) {
         String dataSource;
         final Map<String, Integer> dataSourceTaskMap = new HashMap<>();
 
-        for (Map.Entry<String, WorkerTaskManager.TaskDetails> task : taskMap.entrySet()) {
-            dataSource = task.getValue().getDataSource();
+        for (Map.Entry<String, T> task : taskMap.entrySet()) {
+            dataSource = getDataSourceFunc.apply(task.getValue());
             dataSourceTaskMap.putIfAbsent(dataSource, 0);
-            dataSourceTaskMap.put(dataSource, dataSourceTaskMap.get(dataSource)+1);
-        }
-        return dataSourceTaskMap;
-    }
-
-    private Map<String, Integer> getAssignedDataSourceTasks(Map<String, Task> taskMap) {
-        String dataSource;
-        final Map<String, Integer> dataSourceTaskMap = new HashMap<>();
-
-        for (Map.Entry<String, Task> task : taskMap.entrySet()) {
-            dataSource = task.getValue().getDataSource();
-            dataSourceTaskMap.putIfAbsent(dataSource, 0);
-            dataSourceTaskMap.put(dataSource, dataSourceTaskMap.get(dataSource)+1);
-        }
-        return dataSourceTaskMap;
-    }
-
-    private Map<String, Integer> getCompletedDataSourceTaskMap(Map<String, TaskAnnouncement> taskMap) {
-        String dataSource;
-        final Map<String, Integer> dataSourceTaskMap = new HashMap<>();
-
-        for (Map.Entry<String, TaskAnnouncement> task : taskMap.entrySet()) {
-            dataSource = task.getValue().getTaskDataSource();
-            dataSourceTaskMap.putIfAbsent(dataSource, 0);
-            dataSourceTaskMap.put(dataSource, dataSourceTaskMap.get(dataSource)+1);
+            dataSourceTaskMap.put(dataSource, dataSourceTaskMap.get(dataSource) + 1);
         }
         return dataSourceTaskMap;
     }
