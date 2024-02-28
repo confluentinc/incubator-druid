@@ -179,6 +179,16 @@ public class WorkerTaskManager
     return completedTasks;
   }
 
+  public Map<String, TaskDetails> getRunningTasks()
+  {
+    return runningTasks;
+  }
+
+  public Map<String, Task> getAssignedTasks()
+  {
+    return assignedTasks;
+  }
+
   private void submitNoticeToExec(Notice notice)
   {
     exec.execute(
@@ -602,7 +612,7 @@ public class WorkerTaskManager
     return !disabled.get();
   }
 
-  private static class TaskDetails
+  protected static class TaskDetails
   {
     private final Task task;
     private final long startTime;
@@ -615,6 +625,11 @@ public class WorkerTaskManager
       this.startTime = System.currentTimeMillis();
       this.status = TaskStatus.running(task.getId());
       this.location = TaskLocation.unknown();
+    }
+
+    public String getDataSource()
+    {
+      return task.getDataSource();
     }
   }
 
