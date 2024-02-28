@@ -179,9 +179,15 @@ public class WorkerTaskManager
     return completedTasks;
   }
 
-  public Map<String, TaskDetails> getRunningTasks() { return runningTasks; }
+  public Map<String, TaskDetails> getRunningTasks()
+  {
+    return runningTasks;
+  }
 
-  public Map<String, Task> getAssignedTasks() { return assignedTasks; }
+  public Map<String, Task> getAssignedTasks()
+  {
+    return assignedTasks;
+  }
 
   private void submitNoticeToExec(Notice notice)
   {
@@ -621,7 +627,8 @@ public class WorkerTaskManager
       this.location = TaskLocation.unknown();
     }
 
-    public String getDataSource() {
+    public String getDataSource()
+    {
       return task.getDataSource();
     }
   }
