@@ -50,7 +50,22 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-     file name: json-path-2.9.0.jar jackson-core-2.12.7.jar
+   file name: openstack-keystone-1.9.1.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
+    <!-- These CVEs are for the python SDK, but Druid uses the Java SDK -->
+    <cve>CVE-2015-7546</cve>
+    <cve>CVE-2020-12689</cve>
+    <cve>CVE-2020-12690</cve>
+    <cve>CVE-2020-12691</cve>
+
+    <!-- This CVE affects the server -->
+    <cve>CVE-2021-3563</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+     file name: json-path-2.9.0.jar
      ]]></notes>
     <packageUrl regex="true">^pkg:maven/net\.minidev/json\-path@.*$</packageUrl>
     <cve>CVE-2022-45688</cve>
