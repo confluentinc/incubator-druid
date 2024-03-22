@@ -90,8 +90,8 @@ public class WorkerTaskCountStatsMonitor extends AbstractMonitor
     for (Map.Entry<String, Long> dataSourceTaskCount : dataSourceTaskMap.entrySet()) {
       if (dataSourceTaskCount.getValue() != null) {
         ServiceMetricEvent.Builder builder = new ServiceMetricEvent.Builder();
-        builder.setDimension(DruidMetrics.DATASOURCE, dataSourceTaskCount.getKey());
-        emitter.emit(builder.setMetric(metricName, dataSourceTaskCount.getValue()));
+        builder.setDimension("dataSource", dataSourceTaskCount.getKey());
+        emitter.emit(builder.build(metricName, dataSourceTaskCount.getValue()));
       }
     }
   }
