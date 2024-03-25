@@ -51,9 +51,9 @@ import org.apache.druid.java.util.http.client.response.StringFullResponseHolder;
 import org.apache.druid.server.coordination.ChangeRequestHistory;
 import org.apache.druid.server.coordination.ChangeRequestsSnapshot;
 import org.apache.druid.server.metrics.IndexerTaskCountStatsProvider;
+import org.apache.druid.utils.CollectionUtils;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.apache.druid.utils.CollectionUtils;
 
 import javax.ws.rs.core.MediaType;
 import java.io.File;
