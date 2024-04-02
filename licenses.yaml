@@ -505,7 +505,7 @@ name: Apache Commons Codec
 license_category: binary
 module: java-core
 license_name: Apache License version 2.0
-version: 1.13
+version: 1.16.1
 libraries:
   - commons-codec: commons-codec
 notices:
@@ -630,7 +630,7 @@ name: Apache Commons Compress
 license_category: binary
 module: java-core
 license_name: Apache License version 2.0
-version: 1.24.0
+version: 1.26.0
 libraries:
   - org.apache.commons: commons-compress
 notices:
@@ -963,7 +963,7 @@ name: org.bitbucket.b_c jose4j
 license_category: binary
 module: extensions/druid-kubernetes-extensions
 license_name: Apache License version 2.0
-version: 0.9.3
+version: 0.9.6
 libraries:
   - org.bitbucket.b_c: jose4j
 
@@ -3441,7 +3441,7 @@ name: PostgreSQL JDBC Driver
 license_category: binary
 module: extensions/druid-lookups-cached-single
 license_name: BSD-2-Clause License
-version: 42.6.0
+version: 42.7.2
 copyright: PostgreSQL Global Development Group
 license_file_path: licenses/bin/postgresql.BSD2
 libraries:
@@ -3453,7 +3453,7 @@ name: PostgreSQL JDBC Driver
 license_category: binary
 module: extensions/druid-lookups-cached-global
 license_name: BSD-2-Clause License
-version: 42.6.0
+version: 42.7.2
 copyright: PostgreSQL Global Development Group
 license_file_path: licenses/bin/postgresql.BSD2
 libraries:
@@ -3465,7 +3465,7 @@ name: PostgreSQL JDBC Driver
 license_category: binary
 module: extensions/postgresql-metadata-storage
 license_name: BSD-2-Clause License
-version: 42.6.0
+version: 42.7.2
 copyright: PostgreSQL Global Development Group
 license_file_path: licenses/bin/postgresql.BSD2
 libraries:
