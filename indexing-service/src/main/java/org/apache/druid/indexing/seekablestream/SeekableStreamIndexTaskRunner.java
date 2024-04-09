@@ -729,12 +729,8 @@ public abstract class SeekableStreamIndexTaskRunner<PartitionIdType, SequenceOff
           }
 
           if (System.currentTimeMillis() > nextCheckpointTime) {
-<<<<<<< Updated upstream
-            sequenceToCheckpoint = getLastSequenceMetadata();
-=======
             sequenceToCheckpoint = getLastSequenceMetadata().isCheckpointed() ? null : getLastSequenceMetadata();
             log.info("Next checkpoint time, updating sequenceToCheckpoint, SequenceToCheckpoint: [%s]", sequenceToCheckpoint);
->>>>>>> Stashed changes
           }
 
           if (sequenceToCheckpoint != null && stillReading) {
