@@ -45,6 +45,7 @@ import org.apache.druid.server.DruidNode;
 import org.apache.druid.server.coordinator.CoordinatorOverlordServiceConfig;
 import org.apache.druid.server.metrics.TaskCountStatsProvider;
 import org.apache.druid.server.metrics.TaskSlotCountStatsProvider;
+import org.apache.druid.java.util.common.Pair;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -308,7 +309,7 @@ public class TaskMaster implements TaskCountStatsProvider, TaskSlotCountStatsPro
   }
 
   @Override
-  public Map<String, Long> getSuccessfulTaskCount()
+  public Map<Pair<String,String>, Long> getSuccessfulTaskCount()
   {
     Optional<TaskQueue> taskQueue = getTaskQueue();
     if (taskQueue.isPresent()) {
@@ -319,7 +320,7 @@ public class TaskMaster implements TaskCountStatsProvider, TaskSlotCountStatsPro
   }
 
   @Override
-  public Map<String, Long> getFailedTaskCount()
+  public Map<Pair<String,String>, Long> getFailedTaskCount()
   {
     Optional<TaskQueue> taskQueue = getTaskQueue();
     if (taskQueue.isPresent()) {
@@ -330,7 +331,7 @@ public class TaskMaster implements TaskCountStatsProvider, TaskSlotCountStatsPro
   }
 
   @Override
-  public Map<String, Long> getRunningTaskCount()
+  public Map<Pair<String,String>, Long> getRunningTaskCount()
   {
     Optional<TaskQueue> taskQueue = getTaskQueue();
     if (taskQueue.isPresent()) {
@@ -341,7 +342,7 @@ public class TaskMaster implements TaskCountStatsProvider, TaskSlotCountStatsPro
   }
 
   @Override
-  public Map<String, Long> getPendingTaskCount()
+  public Map<Pair<String,String>, Long> getPendingTaskCount()
   {
     Optional<TaskQueue> taskQueue = getTaskQueue();
     if (taskQueue.isPresent()) {
@@ -352,7 +353,7 @@ public class TaskMaster implements TaskCountStatsProvider, TaskSlotCountStatsPro
   }
 
   @Override
-  public Map<String, Long> getWaitingTaskCount()
+  public Map<Pair<String,String>, Long> getWaitingTaskCount()
   {
     Optional<TaskQueue> taskQueue = getTaskQueue();
     if (taskQueue.isPresent()) {

@@ -20,31 +20,32 @@
 package org.apache.druid.server.metrics;
 
 import java.util.Map;
+import org.apache.druid.java.util.common.Pair;
 
 public interface TaskCountStatsProvider
 {
   /**
    * Return the number of successful tasks for each datasource during emission period.
    */
-  Map<String, Long> getSuccessfulTaskCount();
+  Map<Pair<String,String>, Long> getSuccessfulTaskCount();
 
   /**
    * Return the number of failed tasks for each datasource during emission period.
    */
-  Map<String, Long> getFailedTaskCount();
+  Map<Pair<String,String>, Long> getFailedTaskCount();
 
   /**
    * Return the number of current running tasks for each datasource.
    */
-  Map<String, Long> getRunningTaskCount();
+  Map<Pair<String,String>, Long> getRunningTaskCount();
 
   /**
    * Return the number of current pending tasks for each datasource.
    */
-  Map<String, Long> getPendingTaskCount();
+  Map<Pair<String,String>, Long> getPendingTaskCount();
 
   /**
    * Return the number of current waiting tasks for each datasource.
    */
-  Map<String, Long> getWaitingTaskCount();
+  Map<Pair<String,String>, Long> getWaitingTaskCount();
 }
