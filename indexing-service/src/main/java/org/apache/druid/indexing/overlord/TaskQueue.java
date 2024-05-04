@@ -54,7 +54,7 @@ import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import org.apache.druid.metadata.EntryExistsException;
 import org.apache.druid.utils.CollectionUtils;
-import org.apache.calcite.util.Pair;
+import org.apache.druid.java.util.common.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -20,7 +20,7 @@
 package org.apache.druid.server.metrics;
 
 import java.util.Map;
-import org.apache.calcite.util.Pair;
+import org.apache.druid.java.util.common.Pair;
 
 public interface TaskCountStatsProvider
 {

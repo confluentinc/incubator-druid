@@ -24,7 +24,7 @@ import org.apache.druid.java.util.metrics.StubServiceEmitter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.apache.calcite.util.Pair;
+import org.apache.druid.java.util.common.Pair;
 
 import java.util.Map;
 

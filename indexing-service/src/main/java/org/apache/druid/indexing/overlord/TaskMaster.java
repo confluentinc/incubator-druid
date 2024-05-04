@@ -45,7 +45,7 @@ import org.apache.druid.server.DruidNode;
 import org.apache.druid.server.coordinator.CoordinatorOverlordServiceConfig;
 import org.apache.druid.server.metrics.TaskCountStatsProvider;
 import org.apache.druid.server.metrics.TaskSlotCountStatsProvider;
-import org.apache.calcite.util.Pair;
+import org.apache.druid.java.util.common.Pair;
 
 import javax.annotation.Nullable;
 import java.util.Map;

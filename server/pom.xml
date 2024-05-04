@@ -442,10 +442,6 @@
             <artifactId>commons-text</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-core</artifactId>
-        </dependency>
     </dependencies>
 
     <build>

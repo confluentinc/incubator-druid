@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import org.apache.druid.java.util.metrics.AbstractMonitor;
-import org.apache.calcite.util.Pair;
+import org.apache.druid.java.util.common.Pair;
 
 import java.util.Map;
 
@@ -55,8 +55,8 @@ public class TaskCountStatsMonitor extends AbstractMonitor
     final ServiceMetricEvent.Builder builder = new ServiceMetricEvent.Builder();
     if (counts != null) {
       counts.forEach((k, v) -> {
-        builder.setDimension("dataSource", k.getKey());
-        builder.setDimension("taskType", k.getValue());
+        builder.setDimension("dataSource", k.lhs);
+        builder.setDimension("taskType", k.rhs);
         emitter.emit(builder.build(key, v));
       });
     }
