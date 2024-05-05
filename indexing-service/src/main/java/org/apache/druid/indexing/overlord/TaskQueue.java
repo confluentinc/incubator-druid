@@ -45,6 +45,7 @@ import org.apache.druid.indexing.overlord.config.DefaultTaskConfig;
 import org.apache.druid.indexing.overlord.config.TaskLockConfig;
 import org.apache.druid.indexing.overlord.config.TaskQueueConfig;
 import org.apache.druid.java.util.common.ISE;
+import org.apache.druid.java.util.common.Pair;
 import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.common.concurrent.ScheduledExecutors;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStart;
@@ -54,7 +55,6 @@ import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 import org.apache.druid.metadata.EntryExistsException;
 import org.apache.druid.utils.CollectionUtils;
-import org.apache.druid.java.util.common.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -129,12 +129,12 @@ public class TaskQueue
 
   private static final EmittingLogger log = new EmittingLogger(TaskQueue.class);
 
-  private final ConcurrentHashMap<Pair<String,String>, AtomicLong> totalSuccessfulTaskCount = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<Pair<String,String>, AtomicLong> totalFailedTaskCount = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<Pair<String, String>, AtomicLong> totalSuccessfulTaskCount = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<Pair<String, String>, AtomicLong> totalFailedTaskCount = new ConcurrentHashMap<>();
   @GuardedBy("totalSuccessfulTaskCount")
-  private Map<Pair<String,String>, Long> prevTotalSuccessfulTaskCount = new HashMap<>();
+  private Map<Pair<String, String>, Long> prevTotalSuccessfulTaskCount = new HashMap<>();
   @GuardedBy("totalFailedTaskCount")
-  private Map<Pair<String,String>, Long> prevTotalFailedTaskCount = new HashMap<>();
+  private Map<Pair<String, String>, Long> prevTotalFailedTaskCount = new HashMap<>();
 
   public TaskQueue(
       TaskLockConfig lockConfig,
@@ -735,9 +735,9 @@ public class TaskQueue
                 );
 
                 if (status.isSuccess()) {
-                  Counters.incrementAndGetLong(totalSuccessfulTaskCount, Pair.of(task.getDataSource(),task.getType()));
+                  Counters.incrementAndGetLong(totalSuccessfulTaskCount, Pair.of(task.getDataSource(), task.getType()));
                 } else {
-                  Counters.incrementAndGetLong(totalFailedTaskCount, Pair.of(task.getDataSource(),task.getType()));
+                  Counters.incrementAndGetLong(totalFailedTaskCount, Pair.of(task.getDataSource(), task.getType()));
                 }
               }
             }
@@ -815,34 +815,34 @@ public class TaskQueue
     return rv;
   }
 
-  private Map<Pair<String,String>, Long> getDeltaValues(Map<Pair<String,String>, Long> total, Map<Pair<String,String>, Long> prev)
+  private Map<Pair<String, String>, Long> getDeltaValues(Map<Pair<String, String>, Long> total, Map<Pair<String, String>, Long> prev)
   {
     return total.entrySet()
                 .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue() - prev.getOrDefault(e.getKey(), 0L)));
   }
 
-  public Map<Pair<String,String>, Long> getSuccessfulTaskCount()
+  public Map<Pair<String, String>, Long> getSuccessfulTaskCount()
   {
-    Map<Pair<String,String>, Long> total = CollectionUtils.mapValues(totalSuccessfulTaskCount, AtomicLong::get);
+    Map<Pair<String, String>, Long> total = CollectionUtils.mapValues(totalSuccessfulTaskCount, AtomicLong::get);
     synchronized (totalSuccessfulTaskCount) {
-      Map<Pair<String,String>, Long> delta = getDeltaValues(total, prevTotalSuccessfulTaskCount);
+      Map<Pair<String, String>, Long> delta = getDeltaValues(total, prevTotalSuccessfulTaskCount);
       prevTotalSuccessfulTaskCount = total;
       return delta;
     }
   }
 
-  public Map<Pair<String,String>, Long> getFailedTaskCount()
+  public Map<Pair<String, String>, Long> getFailedTaskCount()
   {
-    Map<Pair<String,String>, Long> total = CollectionUtils.mapValues(totalFailedTaskCount, AtomicLong::get);
+    Map<Pair<String, String>, Long> total = CollectionUtils.mapValues(totalFailedTaskCount, AtomicLong::get);
     synchronized (totalFailedTaskCount) {
-      Map<Pair<String,String>, Long> delta = getDeltaValues(total, prevTotalFailedTaskCount);
+      Map<Pair<String, String>, Long> delta = getDeltaValues(total, prevTotalFailedTaskCount);
       prevTotalFailedTaskCount = total;
       return delta;
     }
   }
 
-  Map<String, Pair<String,String>> getCurrentTaskDatasources()
+  Map<String, Pair<String, String>> getCurrentTaskDatasources()
   {
     giant.lock();
     try {
@@ -853,31 +853,31 @@ public class TaskQueue
     }
   }
 
-  public Map<Pair<String,String>, Long> getRunningTaskCount()
+  public Map<Pair<String, String>, Long> getRunningTaskCount()
   {
-    Map<String, Pair<String,String>> taskDatasources = getCurrentTaskDatasources();
+    Map<String, Pair<String, String>> taskDatasources = getCurrentTaskDatasources();
     return taskRunner.getRunningTasks()
                      .stream()
                      .collect(Collectors.toMap(
-                         e -> taskDatasources.getOrDefault(e.getTaskId(), Pair.of("","")),
+                         e -> taskDatasources.getOrDefault(e.getTaskId(), Pair.of("", "")),
                          e -> 1L,
                          Long::sum
                      ));
   }
 
-  public Map<Pair<String,String>, Long> getPendingTaskCount()
+  public Map<Pair<String, String>, Long> getPendingTaskCount()
   {
-    Map<String, Pair<String,String>> taskDatasources = getCurrentTaskDatasources();
+    Map<String, Pair<String, String>> taskDatasources = getCurrentTaskDatasources();
     return taskRunner.getPendingTasks()
                      .stream()
                      .collect(Collectors.toMap(
-                         e -> taskDatasources.getOrDefault(e.getTaskId(), Pair.of("","")),
+                         e -> taskDatasources.getOrDefault(e.getTaskId(), Pair.of("", "")),
                          e -> 1L,
                          Long::sum
                      ));
   }
 
-  public Map<Pair<String,String>, Long> getWaitingTaskCount()
+  public Map<Pair<String, String>, Long> getWaitingTaskCount()
   {
     Set<String> runnerKnownTaskIds = taskRunner.getKnownTasks()
                                                .stream()
