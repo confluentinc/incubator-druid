@@ -82,19 +82,26 @@ public class StringDimensionIndexer extends DictionaryEncodedColumnIndexer<int[]
   public EncodedKeyComponent<int[]> processRowValsToUnsortedEncodedKeyComponent(@Nullable Object dimValues, boolean reportParseExceptions)
   {
     final int[] encodedDimensionValues;
-    final int oldDictSize = dimLookup.size();
+    boolean dictionaryChanged = false;
     final long oldDictSizeInBytes = useMaxMemoryEstimates ? 0 : dimLookup.sizeInBytes();
 
     if (dimValues == null) {
       final int nullId = dimLookup.getId(null);
-      encodedDimensionValues = nullId == DimensionDictionary.ABSENT_VALUE_ID ? new int[]{dimLookup.add(null)} : new int[]{nullId};
+      if (nullId == DimensionDictionary.ABSENT_VALUE_ID) {
+        encodedDimensionValues = new int[]{dimLookup.add(null)};
+        dictionaryChanged = true;
+      } else {
+          encodedDimensionValues = new int[]{nullId};
+      }
     } else if (dimValues instanceof List) {
       List<Object> dimValuesList = (List<Object>) dimValues;
       if (dimValuesList.isEmpty()) {
         dimLookup.add(null);
+        dictionaryChanged = true;
         encodedDimensionValues = IntArrays.EMPTY_ARRAY;
       } else if (dimValuesList.size() == 1) {
         encodedDimensionValues = new int[]{dimLookup.add(emptyToNullIfNeeded(dimValuesList.get(0)))};
+        dictionaryChanged = true;
       } else {
         hasMultipleValues = true;
         final String[] dimensionValues = new String[dimValuesList.size()];
@@ -126,12 +133,14 @@ public class StringDimensionIndexer extends DictionaryEncodedColumnIndexer<int[]
     } else if (dimValues instanceof byte[]) {
       encodedDimensionValues =
           new int[]{dimLookup.add(emptyToNullIfNeeded(StringUtils.encodeBase64String((byte[]) dimValues)))};
+      dictionaryChanged = true;
     } else {
       encodedDimensionValues = new int[]{dimLookup.add(emptyToNullIfNeeded(dimValues))};
+      dictionaryChanged = true;
     }
 
     // If dictionary size has changed, the sorted lookup is no longer valid.
-    if (oldDictSize != dimLookup.size()) {
+    if (dictionaryChanged) {
       sortedLookup = null;
     }
 
