@@ -120,9 +120,11 @@ public class StringDimensionIndexer extends DictionaryEncodedColumnIndexer<int[]
         for (String dimensionValue : dimensionValues) {
           if (multiValueHandling != MultiValueHandling.SORTED_SET) {
             retVal[pos++] = dimLookup.add(dimensionValue);
+            dictionaryChanged = true;
             continue;
           }
           int index = dimLookup.add(dimensionValue);
+          dictionaryChanged = true;
           if (index != prevId) {
             prevId = retVal[pos++] = index;
           }
