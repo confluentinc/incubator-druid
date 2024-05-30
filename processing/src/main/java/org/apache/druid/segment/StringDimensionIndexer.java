@@ -82,7 +82,7 @@ public class StringDimensionIndexer extends DictionaryEncodedColumnIndexer<int[]
   public EncodedKeyComponent<int[]> processRowValsToUnsortedEncodedKeyComponent(@Nullable Object dimValues, boolean reportParseExceptions)
   {
     final int[] encodedDimensionValues;
-    boolean dictionaryChanged = false;
+    volatile boolean dictionaryChanged = false;
     final long oldDictSizeInBytes = useMaxMemoryEstimates ? 0 : dimLookup.sizeInBytes();
 
     if (dimValues == null) {
@@ -120,9 +120,11 @@ public class StringDimensionIndexer extends DictionaryEncodedColumnIndexer<int[]
         for (String dimensionValue : dimensionValues) {
           if (multiValueHandling != MultiValueHandling.SORTED_SET) {
             retVal[pos++] = dimLookup.add(dimensionValue);
+            dictionaryChanged = true;
             continue;
           }
           int index = dimLookup.add(dimensionValue);
+          dictionaryChanged = true;
           if (index != prevId) {
             prevId = retVal[pos++] = index;
           }
