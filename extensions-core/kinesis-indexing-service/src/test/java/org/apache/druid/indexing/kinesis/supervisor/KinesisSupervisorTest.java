@@ -2634,7 +2634,6 @@ public class KinesisSupervisorTest extends EasyMockSupport
 
     supervisor.resetInternal(null);
     verifyAll();
-
   }
 
   @Test
