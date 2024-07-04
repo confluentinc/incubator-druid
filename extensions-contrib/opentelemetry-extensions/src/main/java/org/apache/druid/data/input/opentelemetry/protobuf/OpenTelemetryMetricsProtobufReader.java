@@ -100,8 +100,8 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
 
   List<InputRow> readAsList()
   {
+    ByteBuffer buffer = source.getEntity().getBuffer();
     try {
-      ByteBuffer buffer = source.getEntity().getBuffer();
       List<InputRow> rows = parseMetricsData(MetricsData.parseFrom(buffer));
       // Explicitly move the position assuming that all the remaining bytes have been consumed because the protobuf
       // parser does not update the position itself
@@ -109,6 +109,7 @@ public class OpenTelemetryMetricsProtobufReader implements InputEntityReader
       return rows;
     }
     catch (InvalidProtocolBufferException e) {
+      buffer.position(buffer.limit());
       throw new ParseException(null, e, "Protobuf message could not be parsed");
     }
   }
