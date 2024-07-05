@@ -51,6 +51,7 @@ import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -354,7 +355,7 @@ public class OpenCensusProtobufReaderTest
     entity.setEntity(new KafkaRecordEntity(consumerRecord));
     try (CloseableIterator<InputRow> rows = reader.read()) {
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
-      Assert.assertThrows(ParseException.class, () -> rows.next());
+      Assert.assertThrows(NoSuchElementException.class, () -> rows.next());
     }
   }
 
