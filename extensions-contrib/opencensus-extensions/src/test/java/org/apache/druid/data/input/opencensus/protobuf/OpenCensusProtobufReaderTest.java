@@ -62,6 +62,9 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static org.mockito.Mockito.mock;
+
+
 public class OpenCensusProtobufReaderTest
 {
   private static final long TIMESTAMP = TimeUnit.MILLISECONDS.toNanos(Instant.parse("2019-07-12T09:30:01.123Z").toEpochMilli());
@@ -364,6 +367,68 @@ public class OpenCensusProtobufReaderTest
       Assert.assertThrows(ParseException.class, () -> rows.hasNext());
       Assert.assertThrows(NoSuchElementException.class, () -> rows.next());
     }
+  }
+
+  @Test
+  public void testMultipleInvalidProtobuf() throws IOException
+  {
+    byte[] invalidProtobuf = new byte[] {0x00, 0x01};
+    byte[] validProtobuf = new byte[] {};
+    ConsumerRecord<byte[], byte[]> invalidConsumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET, TS, TSTYPE, -1, -1,
+            null, invalidProtobuf, HEADERS, Optional.empty());
+    ConsumerRecord<byte[], byte[]> validConsumerRecord = new ConsumerRecord<>(TOPIC, PARTITION, OFFSET + 1, TS, TSTYPE, -1, -1,
+            null, validProtobuf, HEADERS, Optional.empty());
+    List<OrderedPartitionableRecord<Integer, Long, KafkaRecordEntity>> records = new ArrayList<>();
+    records.add(new OrderedPartitionableRecord<>(
+            invalidConsumerRecord.topic(),
+            invalidConsumerRecord.partition(),
+            invalidConsumerRecord.offset(),
+            ImmutableList.of(new KafkaRecordEntity(invalidConsumerRecord))
+    ));
+    records.add(new OrderedPartitionableRecord<>(
+            validConsumerRecord.topic(),
+            validConsumerRecord.partition(),
+            validConsumerRecord.offset(),
+            ImmutableList.of(new KafkaRecordEntity(validConsumerRecord))
+    ));
+    int recordsProcessed = 0;
+    OpenCensusProtobufInputFormat inputFormat = new OpenCensusProtobufInputFormat("metric.name",
+            null,
+            "descriptor.",
+            "custom.");
+    for (OrderedPartitionableRecord<Integer, Long, KafkaRecordEntity> record : records) {
+
+      SettableByteEntity<ByteEntity> entity = new SettableByteEntity<>();
+      OpenCensusProtobufReader readR = new OpenCensusProtobufReader(
+              dimensionsSpec,
+              entity,
+              "metric.name",
+              "descriptor.",
+              "custom."
+
+      );
+      InputEntityReader reader = inputFormat.createReader(new InputRowSchema(
+              new TimestampSpec("timestamp", "iso", null),
+              dimensionsSpec,
+              ColumnsFilter.all()
+      ), entity, null);
+      System.out.println("Processing record " + record.getSequenceNumber());
+      final List<InputRow> rows = new ArrayList<>();
+      for (ByteEntity byteEntity : record.getData()) {
+        System.out.println("Processing byte entity " + record.getData().indexOf(byteEntity));
+        entity.setEntity(byteEntity);
+        try ( FilteringCloseableInputRowIterator rowIterator = new FilteringCloseableInputRowIterator(
+                readR.read(),
+                mock(Predicate.class),
+                mock(RowIngestionMeters.class),
+                mock(ParseExceptionHandler.class)
+        )) {
+          rowIterator.forEachRemaining(rows::add);
+        }
+      }
+      recordsProcessed += 1;
+    }
+    Assert.assertEquals(recordsProcessed, 2);
   }
 
   @Test
