@@ -416,7 +416,7 @@ public class OpenCensusProtobufReaderTest
       for (ByteEntity byteEntity : record.getData()) {
         System.out.println("Processing byte entity " + record.getData().indexOf(byteEntity));
         entity.setEntity(byteEntity);
-        try ( FilteringCloseableInputRowIterator rowIterator = new FilteringCloseableInputRowIterator(
+        try (FilteringCloseableInputRowIterator rowIterator = new FilteringCloseableInputRowIterator(
                 readR.read(),
                 mock(Predicate.class),
                 mock(RowIngestionMeters.class),
