@@ -96,6 +96,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.Locale;
 
 public class QueryResourceTest
 {
@@ -249,6 +250,8 @@ public class QueryResourceTest
         testServletRequest
     );
     Assert.assertNotNull(response);
+    Assert.assertTrue(String.format(Locale.ENGLISH, "Successful query response must have header %s", QueryResource.QUERY_SEGMENT_COUNT_HEADER),
+            response.getMetadata().containsKey(QueryResource.QUERY_SEGMENT_COUNT_HEADER));
   }
 
   @Test
