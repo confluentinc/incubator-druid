@@ -291,7 +291,7 @@ public class DefaultQueryMetrics<QueryType extends Query<?>> implements QueryMet
   @Override
   public QueryMetrics<QueryType> reportBitmapConstructionTime(long timeNs)
   {
-    return reportMillisTimeMetric("query/node/bitmapconstructiontime", timeNs);
+    return reportMillisTimeMetric("query/node/bitmapConstructionTime", timeNs);
   }
 
   @Override
@@ -303,13 +303,13 @@ public class DefaultQueryMetrics<QueryType extends Query<?>> implements QueryMet
   @Override
   public QueryMetrics<QueryType> reportPreFilteredRows(long numRows)
   {
-    return reportMetric("query/prefiltered/rows", numRows);
+    return reportMetric("query/preFiltered/rows", numRows);
   }
 
   @Override
   public QueryMetrics<QueryType> reportParallelMergeParallelism(int parallelism)
   {
-    return reportMetric("query/parallelmerge/parallelism", parallelism);
+    return reportMetric("query/parallelMerge/parallelism", parallelism);
   }
 
   @Override
@@ -321,26 +321,25 @@ public class DefaultQueryMetrics<QueryType extends Query<?>> implements QueryMet
   @Override
   public QueryMetrics<QueryType> reportParallelMergeInputRows(long numRows)
   {
-    // Don't emit by default.
-    return reportMetric("query/parallelMerge/inputrows", numRows);
+    return reportMetric("query/parallelMerge/inputRows", numRows);
   }
 
   @Override
   public QueryMetrics<QueryType> reportParallelMergeOutputRows(long numRows)
   {
-    return reportMetric("query/parallelMerge/outputrows", numRows);
+    return reportMetric("query/parallelMerge/outputRows", numRows);
   }
 
   @Override
   public QueryMetrics<QueryType> reportParallelMergeTaskCount(long numTasks)
   {
-    return reportMetric("query/parallelMerge/taskcount", numTasks);
+    return reportMetric("query/parallelMerge/taskCount", numTasks);
   }
 
   @Override
   public QueryMetrics<QueryType> reportParallelMergeTotalCpuTime(long timeNs)
   {
-    return reportMillisTimeMetric("query/parallelmerge/totalcputime", timeNs);
+    return reportMillisTimeMetric("query/parallelMerge/totalCpuTime", timeNs);
   }
 
   @Override
