@@ -40,6 +40,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
+import javax.inject.Provider;
 import javax.net.ssl.SSLContext;
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -51,7 +52,6 @@ import java.util.concurrent.TimeUnit;
 public class JettyHttpClientModule implements Module
 {
   private static final long CLIENT_CONNECT_TIMEOUT_MILLIS = TimeUnit.MILLISECONDS.toMillis(500);
-  private static QueuedThreadPool httpClientThreadPool = null;
 
   public static JettyHttpClientModule global()
   {
@@ -81,6 +81,8 @@ public class JettyHttpClientModule implements Module
 
   public static class HttpClientProvider extends AbstractHttpClientProvider<HttpClient>
   {
+    private QueuedThreadPool threadPool;
+
     public HttpClientProvider(Class<? extends Annotation> annotation)
     {
       super(annotation);
@@ -106,10 +108,9 @@ public class JettyHttpClientModule implements Module
       httpClient.setMaxRequestsQueuedPerDestination(config.getNumRequestsQueued());
       httpClient.setConnectTimeout(CLIENT_CONNECT_TIMEOUT_MILLIS);
       httpClient.setRequestBufferSize(config.getRequestBuffersize());
-      final QueuedThreadPool pool = new QueuedThreadPool(config.getNumMaxThreads());
-      pool.setName(JettyHttpClientModule.class.getSimpleName() + "-threadPool-" + pool.hashCode());
-      httpClient.setExecutor(pool);
-      httpClientThreadPool = pool;
+      threadPool = new QueuedThreadPool(config.getNumMaxThreads());
+      threadPool.setName(JettyHttpClientModule.class.getSimpleName() + "-threadPool-" + threadPool.hashCode());
+      httpClient.setExecutor(threadPool);
 
       final Lifecycle lifecycle = getLifecycleProvider().get();
 
@@ -145,18 +146,20 @@ public class JettyHttpClientModule implements Module
 
   @Provides
   @Singleton
-  public JettyHttpClientModule.JettyMonitor getJettyMonitor(DataSourceTaskIdHolder dataSourceTaskIdHolder)
+  public JettyHttpClientModule.JettyMonitor getJettyMonitor(DataSourceTaskIdHolder dataSourceTaskIdHolder, Provider<HttpClientProvider> httpClientProvider)
   {
-    return new JettyHttpClientModule.JettyMonitor(dataSourceTaskIdHolder.getDataSource(), dataSourceTaskIdHolder.getTaskId());
+    return new JettyHttpClientModule.JettyMonitor(dataSourceTaskIdHolder.getDataSource(), dataSourceTaskIdHolder.getTaskId(), httpClientProvider.get().threadPool);
   }
 
   public static class JettyMonitor extends AbstractMonitor
   {
     private final Map<String, String[]> dimensions;
+    private final QueuedThreadPool threadPool;
 
-    public JettyMonitor(String dataSource, String taskId)
+    public JettyMonitor(String dataSource, String taskId, QueuedThreadPool threadPool)
     {
       this.dimensions = MonitorsConfig.mapOfDatasourceAndTaskID(dataSource, taskId);
+      this.threadPool = threadPool;
     }
 
     @Override
@@ -164,8 +167,8 @@ public class JettyHttpClientModule implements Module
     {
       final ServiceMetricEvent.Builder builder = new ServiceMetricEvent.Builder();
       MonitorUtils.addDimensionsToBuilder(builder, dimensions);
-      if (httpClientThreadPool != null) {
-        emitter.emit(builder.build("jetty/httpClient/threadpool/queueSize", httpClientThreadPool.getQueueSize()));
+      if (threadPool != null) {
+        emitter.emit(builder.build("jetty/httpClient/threadpool/queueSize", threadPool.getQueueSize()));
       }
       return true;
     }
