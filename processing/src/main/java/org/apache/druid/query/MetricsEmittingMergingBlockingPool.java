@@ -41,7 +41,9 @@ public class MetricsEmittingMergingBlockingPool<T> extends DefaultBlockingPool<T
   @Override
   public void emitMetrics(ServiceEmitter emitter, ServiceMetricEvent.Builder metricBuilder)
   {
-    emitter.emit(metricBuilder.setMetric("query/merge/buffersUsed", getUsedBufferCount()));
-    emitter.emit(metricBuilder.setMetric("query/merge/totalBuffers", maxSize()));
+    emitter.emit(ServiceMetricEvent.builder()
+                                   .build("query/merge/buffersUsed", getUsedBufferCount()));
+    emitter.emit(ServiceMetricEvent.builder()
+                                   .build("query/merge/totalBuffers", getUsedBufferCount()));
   }
 }
