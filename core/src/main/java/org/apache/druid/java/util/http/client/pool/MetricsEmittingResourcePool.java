@@ -19,6 +19,7 @@
 
 package org.apache.druid.java.util.http.client.pool;
 
+import com.google.common.base.Preconditions;
 import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 
@@ -29,6 +30,7 @@ public class MetricsEmittingResourcePool<K, V> extends ResourcePool<K, V>
   public MetricsEmittingResourcePool(ResourceFactory factory, ResourcePoolConfig config, boolean eagerInitialization, ServiceEmitter emitter)
   {
     super(factory, config, eagerInitialization);
+    Preconditions.checkNotNull(emitter, "emitter cannot be null");
     this.emitter = emitter;
   }
 

@@ -30,6 +30,7 @@ import org.apache.druid.java.util.common.StringUtils;
 import org.apache.druid.java.util.common.lifecycle.Lifecycle;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.emitter.core.NoopEmitter;
+import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.http.client.CredentialedHttpClient;
 import org.apache.druid.java.util.http.client.HttpClient;
 import org.apache.druid.java.util.http.client.HttpClientConfig;
@@ -394,7 +395,7 @@ public class ITTLSTest
     HttpClient client = HttpClientInit.createClient(
         builder.build(),
         lifecycle,
-        new NoopEmitter()
+        new ServiceEmitter("", "", new NoopEmitter())
     );
 
     HttpClient adminClient = new CredentialedHttpClient(
@@ -422,7 +423,7 @@ public class ITTLSTest
     HttpClient client = HttpClientInit.createClient(
         builder.build(),
         lifecycle,
-        new NoopEmitter()
+        new ServiceEmitter("", "", new NoopEmitter())
     );
 
     HttpClient adminClient = new CredentialedHttpClient(
