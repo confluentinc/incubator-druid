@@ -19,13 +19,10 @@
 
 package org.apache.druid.java.util.emitter.core;
 
-import org.apache.druid.java.util.emitter.service.ServiceEmitter;
-
 /**
  */
 public class NoopEmitter implements Emitter
 {
-
   @Override
   public void start()
   {
