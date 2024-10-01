@@ -23,13 +23,16 @@ import com.google.common.base.Preconditions;
 import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 
-public class MetricsEmittingResourcePool<K, V> extends ResourcePool<K, V>
-{
-  private final ServiceEmitter emitter;
+import java.io.IOException;
 
-  public MetricsEmittingResourcePool(ResourceFactory factory, ResourcePoolConfig config, boolean eagerInitialization, ServiceEmitter emitter)
+public class MetricsEmittingResourcePoolImpl<K, V> implements ResourcePool<K, V>
+{
+  final ServiceEmitter emitter;
+  final ResourcePool<K, V> resourcePool;
+
+  public MetricsEmittingResourcePoolImpl(ResourcePool<K, V> resourcePool, ServiceEmitter emitter)
   {
-    super(factory, config, eagerInitialization);
+    this.resourcePool = resourcePool;
     Preconditions.checkNotNull(emitter, "emitter cannot be null");
     this.emitter = emitter;
   }
@@ -38,10 +41,15 @@ public class MetricsEmittingResourcePool<K, V> extends ResourcePool<K, V>
   public ResourceContainer<V> take(final K key)
   {
     long startTime = System.nanoTime();
-    ResourceContainer<V> retVal = super.take(key);
+    ResourceContainer<V> retVal = resourcePool.take(key);
     long totalduration = System.nanoTime() - startTime;
     emitter.emit(ServiceMetricEvent.builder().setDimension("server", key.toString()).build("httpClient/channelAcquire/timeNs", totalduration));
     return retVal;
   }
 
+  @Override
+  public void close() throws IOException
+  {
+    this.resourcePool.close();
+  }
 }
