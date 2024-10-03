@@ -256,7 +256,8 @@ public class DirectDruidClient<T> implements QueryRunner<T>
             if (response.headers().get(QueryResource.QUERY_CPU_TIME) != null) {
               try {
                 cpuTime = Long.parseLong(response.headers().get(QueryResource.QUERY_CPU_TIME));
-              } catch (NumberFormatException ex) {
+              }
+              catch (NumberFormatException ex) {
                 log.warn("Unexpected Cpu-Time header [%s] in response from url [%s] for query [%s]. Exception: [%s]",
                         response.headers().get(QueryResource.QUERY_CPU_TIME),
                         url,
