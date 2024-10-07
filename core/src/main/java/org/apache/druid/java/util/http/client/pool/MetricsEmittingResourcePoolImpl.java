@@ -27,8 +27,8 @@ import java.io.IOException;
 
 public class MetricsEmittingResourcePoolImpl<K, V> implements ResourcePool<K, V>
 {
-  final ServiceEmitter emitter;
-  final ResourcePool<K, V> resourcePool;
+  private final ServiceEmitter emitter;
+  private final ResourcePool<K, V> resourcePool;
 
   public MetricsEmittingResourcePoolImpl(ResourcePool<K, V> resourcePool, ServiceEmitter emitter)
   {
