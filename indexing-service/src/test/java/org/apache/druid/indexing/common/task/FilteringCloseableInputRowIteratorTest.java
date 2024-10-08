@@ -352,7 +352,8 @@ public class FilteringCloseableInputRowIteratorTest
   }
 
   @Test
-  public void testNoInfiniteLoopForExceptionInHasNext() {
+  public void testNoInfiniteLoopForExceptionInHasNext()
+  {
 
     int maxAllowedParseExceptions = 3;
 
@@ -362,23 +363,26 @@ public class FilteringCloseableInputRowIteratorTest
 
     // This iterator throws ParseException always in hasNext().
     final FilteringCloseableInputRowIterator rowIterator = new FilteringCloseableInputRowIterator(
-            new CloseableIterator<InputRow>() {
-              @Override
-              public void close() {
-              }
+        new CloseableIterator<InputRow>() {
+            @Override
+            public void close() 
+            {
+            }
 
-              @Override
-              public boolean hasNext() {
-                throw new ParseException("test", "abcd", "");
-              }
+            @Override
+            public boolean hasNext() 
+            {
+              throw new ParseException("test", "abcd", "");
+            }
 
-              @Override
-              public InputRow next() {
-                return null;
-              }
-            },
-            row -> true,
-            rowIngestionMeters, mockedExceptionHandler
+            @Override
+            public InputRow next() 
+            {
+              return null;
+            }
+        },
+        row -> true,
+        rowIngestionMeters, mockedExceptionHandler
     );
 
     Assert.assertThrows(RE.class, () -> rowIterator.next());
