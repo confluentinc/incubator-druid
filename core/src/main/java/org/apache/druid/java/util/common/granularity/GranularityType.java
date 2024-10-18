@@ -238,6 +238,12 @@ public enum GranularityType
           return GranularityType.TEN_MINUTE;
         } else if (vals[index] == 5) {
           return GranularityType.FIVE_MINUTE;
+        } else if (vals[index] == 4) {
+          return GranularityType.FOUR_MINUTE;
+        } else if (vals[index] == 3) {
+          return GranularityType.THREE_MINUTE;
+        } else if (vals[index] == 2) {
+          return GranularityType.TWO_MINUTE;
         } else if (vals[index] == 1) {
           return GranularityType.MINUTE;
         }
