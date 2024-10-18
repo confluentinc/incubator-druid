@@ -83,6 +83,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @LazySingleton
@@ -99,6 +100,9 @@ public class QueryResource implements QueryCountStatsProvider
   public static final String HEADER_RESPONSE_CONTEXT = "X-Druid-Response-Context";
   public static final String HEADER_IF_NONE_MATCH = "If-None-Match";
   public static final String QUERY_ID_RESPONSE_HEADER = "X-Druid-Query-Id";
+  public static final String QUERY_SEGMENT_COUNT_HEADER = "X-Druid-Query-Segment-Count";
+  public static final String BROKER_QUERY_TIME_RESPONSE_HEADER = "X-Broker-Query-Time";
+  public static final String QUERY_CPU_TIME = "X-Druid-Query-Cpu-Time";
   public static final String HEADER_ETAG = "ETag";
 
   protected final QueryLifecycleFactory queryLifecycleFactory;
@@ -184,6 +188,7 @@ public class QueryResource implements QueryCountStatsProvider
     final ResourceIOReaderWriter ioReaderWriter = createResourceIOReaderWriter(req, pretty != null);
 
     final String currThreadName = Thread.currentThread().getName();
+    long startTime = System.nanoTime();
     try {
       final Query<?> query = readQuery(req, in, ioReaderWriter);
       queryLifecycle.initialize(query);
@@ -253,7 +258,17 @@ public class QueryResource implements QueryCountStatsProvider
                 },
                 ioReaderWriter.getResponseWriter().getResponseType()
             )
-            .header(QUERY_ID_RESPONSE_HEADER, queryId);
+            .header(QUERY_ID_RESPONSE_HEADER, queryId)
+            .header(QUERY_SEGMENT_COUNT_HEADER,
+                    responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) != null ?
+                            responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) : 0)
+            .header(BROKER_QUERY_TIME_RESPONSE_HEADER,
+                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime))
+            // Emit Cpu time as a response header. Note that it doesn't include Cpu spent on serializing the response.
+            // Druid streams the output which results in the header being sent out before the response is fully serialized and sent to the client.
+            .header(QUERY_CPU_TIME,
+                responseContext.get(Keys.CPU_CONSUMED_NANOS) != null ?
+                        responseContext.get(Keys.CPU_CONSUMED_NANOS) : 0);
 
         attachResponseContextToHttpResponse(queryId, responseContext, responseBuilder, jsonMapper,
                                             responseContextConfig, selfNode

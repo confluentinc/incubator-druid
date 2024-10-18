@@ -19,30 +19,29 @@
 
 package org.apache.druid.query;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.base.Supplier;
+import org.apache.druid.collections.DefaultBlockingPool;
 import org.apache.druid.java.util.emitter.service.ServiceEmitter;
 import org.apache.druid.java.util.emitter.service.ServiceMetricEvent;
 
-public class MetricsEmittingQueryProcessingPool extends ForwardingQueryProcessingPool
+public class MetricsEmittingMergingBlockingPool<T> extends DefaultBlockingPool<T>
     implements ExecutorServiceMonitor.MetricEmitter
 {
 
-  public MetricsEmittingQueryProcessingPool(
-      ListeningExecutorService delegate,
+  public MetricsEmittingMergingBlockingPool(
+      Supplier<T> generator,
+      int limit,
       ExecutorServiceMonitor executorServiceMonitor
   )
   {
-    super(delegate);
+    super(generator, limit);
     executorServiceMonitor.add(this);
   }
 
   @Override
   public void emitMetrics(ServiceEmitter emitter, ServiceMetricEvent.Builder metricBuilder)
   {
-    if (delegate() instanceof PrioritizedExecutorService) {
-      emitter.emit(metricBuilder.build("segment/scan/pending", ((PrioritizedExecutorService) delegate()).getQueueSize()));
-      emitter.emit(metricBuilder.build("segment/scan/active", ((PrioritizedExecutorService) delegate()).getActiveTasks()));
-    }
+    emitter.emit(metricBuilder.build("query/merge/buffersUsed", getUsedBufferCount()));
+    emitter.emit(metricBuilder.build("query/merge/totalBuffers", maxSize()));
   }
-
 }

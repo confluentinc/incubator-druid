@@ -132,6 +132,12 @@ public class TestBufferPool implements NonBlockingPool<ByteBuffer>, BlockingPool
     }
   }
 
+  @Override
+  public long getPendingRequests()
+  {
+    return 0;
+  }
+
   public long getOutstandingObjectCount()
   {
     return takenFromMap.size();
@@ -140,5 +146,11 @@ public class TestBufferPool implements NonBlockingPool<ByteBuffer>, BlockingPool
   public Collection<RuntimeException> getOutstandingExceptionsCreated()
   {
     return takenFromMap.values();
+  }
+
+  @Override
+  public int getUsedBufferCount()
+  {
+    return takenFromMap.size();
   }
 }

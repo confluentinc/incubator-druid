@@ -102,6 +102,14 @@ Latest default metrics mapping can be found [here] (https://github.com/apache/dr
     "type": "timer",
     "timeUnit": "MILLISECONDS"
   },
+  "query/planningTime": {
+    "dimensions": [
+      "dataSource",
+      "type"
+    ],
+    "type": "timer",
+    "timeUnit": "MILLISECONDS"
+  },
   "query/node/time": {
     "dimensions": [
       "server"
@@ -134,6 +142,10 @@ Latest default metrics mapping can be found [here] (https://github.com/apache/dr
     "timeUnit": "MILLISECONDS"
   },
   "segment/scan/pending": {
+    "dimensions": [],
+    "type": "gauge"
+  },
+  "segment/scan/active": {
     "dimensions": [],
     "type": "gauge"
   },
