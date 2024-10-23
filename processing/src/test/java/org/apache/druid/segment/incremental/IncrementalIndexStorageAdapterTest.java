@@ -163,7 +163,7 @@ public class IncrementalIndexStorageAdapterTest extends InitializedNullHandlingT
                       .build(),
           new IncrementalIndexStorageAdapter(index),
           null,
-              null
+              responseContext
       );
 
       final List<Row> results = rows.toList();
