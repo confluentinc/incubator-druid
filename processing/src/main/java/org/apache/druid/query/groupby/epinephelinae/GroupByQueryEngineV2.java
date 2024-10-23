@@ -36,6 +36,7 @@ import org.apache.druid.query.ColumnSelectorPlus;
 import org.apache.druid.query.DruidProcessingConfig;
 import org.apache.druid.query.aggregation.AggregatorAdapters;
 import org.apache.druid.query.aggregation.AggregatorFactory;
+import org.apache.druid.query.context.ResponseContext;
 import org.apache.druid.query.dimension.ColumnSelectorStrategyFactory;
 import org.apache.druid.query.dimension.DimensionSpec;
 import org.apache.druid.query.filter.Filter;
@@ -65,6 +66,7 @@ import org.apache.druid.segment.ColumnValueSelector;
 import org.apache.druid.segment.Cursor;
 import org.apache.druid.segment.DimensionHandlerUtils;
 import org.apache.druid.segment.DimensionSelector;
+import org.apache.druid.segment.RowCountingCursorDecorator;
 import org.apache.druid.segment.StorageAdapter;
 import org.apache.druid.segment.column.ColumnCapabilities;
 import org.apache.druid.segment.column.ColumnType;
@@ -92,7 +94,7 @@ import java.util.stream.Stream;
  * This code runs on data servers, like Historicals.
  *
  * Used by
- * {@link GroupByStrategyV2#process(GroupByQuery, StorageAdapter, GroupByQueryMetrics)}.
+ * {@link GroupByStrategyV2#process(GroupByQuery, StorageAdapter, GroupByQueryMetrics, ResponseContext)}.
  */
 public class GroupByQueryEngineV2
 {
@@ -123,7 +125,8 @@ public class GroupByQueryEngineV2
       final NonBlockingPool<ByteBuffer> intermediateResultsBufferPool,
       final GroupByQueryConfig querySpecificConfig,
       final DruidProcessingConfig processingConfig,
-      @Nullable final GroupByQueryMetrics groupByQueryMetrics
+      @Nullable final GroupByQueryMetrics groupByQueryMetrics,
+      ResponseContext responseContext
   )
   {
     if (storageAdapter == null) {
@@ -167,7 +170,8 @@ public class GroupByQueryEngineV2
             interval,
             querySpecificConfig,
             processingConfig,
-            groupByQueryMetrics
+            groupByQueryMetrics,
+            responseContext
         );
       } else {
         result = processNonVectorized(
@@ -179,7 +183,8 @@ public class GroupByQueryEngineV2
             processingConfig,
             filter,
             interval,
-            groupByQueryMetrics
+            groupByQueryMetrics,
+            responseContext
         );
       }
 
@@ -200,7 +205,8 @@ public class GroupByQueryEngineV2
       final DruidProcessingConfig processingConfig,
       @Nullable final Filter filter,
       final Interval interval,
-      @Nullable final GroupByQueryMetrics groupByQueryMetrics
+      @Nullable final GroupByQueryMetrics groupByQueryMetrics,
+      ResponseContext responseContext
   )
   {
     final Sequence<Cursor> cursors = storageAdapter.makeCursors(
@@ -238,12 +244,13 @@ public class GroupByQueryEngineV2
                     processingBuffer
                 );
 
+                RowCountingCursorDecorator rowCountingCursorDecorator = new RowCountingCursorDecorator(cursor, responseContext);
                 if (cardinalityForArrayAggregation >= 0) {
                   return new ArrayAggregateIterator(
                       query,
                       querySpecificConfig,
                       processingConfig,
-                      cursor,
+                      rowCountingCursorDecorator,
                       processingBuffer,
                       fudgeTimestamp,
                       dims,
@@ -255,7 +262,7 @@ public class GroupByQueryEngineV2
                       query,
                       querySpecificConfig,
                       processingConfig,
-                      cursor,
+                      rowCountingCursorDecorator,
                       processingBuffer,
                       fudgeTimestamp,
                       dims,
@@ -462,7 +469,7 @@ public class GroupByQueryEngineV2
   {
     protected final GroupByQuery query;
     protected final GroupByQueryConfig querySpecificConfig;
-    protected final Cursor cursor;
+    protected final RowCountingCursorDecorator cursor;
     protected final ByteBuffer buffer;
     protected final Grouper.KeySerde<ByteBuffer> keySerde;
     protected final GroupByColumnSelectorPlus[] dims;
@@ -478,7 +485,7 @@ public class GroupByQueryEngineV2
         final GroupByQuery query,
         final GroupByQueryConfig querySpecificConfig,
         final DruidProcessingConfig processingConfig,
-        final Cursor cursor,
+        final RowCountingCursorDecorator cursor,
         final ByteBuffer buffer,
         @Nullable final DateTime fudgeTimestamp,
         final GroupByColumnSelectorPlus[] dims,
@@ -642,7 +649,7 @@ public class GroupByQueryEngineV2
         GroupByQuery query,
         GroupByQueryConfig querySpecificConfig,
         DruidProcessingConfig processingConfig,
-        Cursor cursor,
+        RowCountingCursorDecorator cursor,
         ByteBuffer buffer,
         @Nullable DateTime fudgeTimestamp,
         GroupByColumnSelectorPlus[] dims,
@@ -742,9 +749,9 @@ public class GroupByQueryEngineV2
         for (GroupByColumnSelectorPlus dim : dims) {
           final GroupByColumnSelectorStrategy strategy = dim.getColumnSelectorStrategy();
           selectorInternalFootprint += strategy.writeToKeyBuffer(
-              dim.getKeyBufferPosition(),
-              dim.getSelector(),
-              keyBuffer
+                  dim.getKeyBufferPosition(),
+                  dim.getSelector(),
+                  keyBuffer
           );
         }
         keyBuffer.rewind();
@@ -781,16 +788,16 @@ public class GroupByQueryEngineV2
           for (int i = 0; i < dims.length; i++) {
             GroupByColumnSelectorStrategy strategy = dims[i].getColumnSelectorStrategy();
             selectorInternalFootprint += strategy.initColumnValues(
-                dims[i].getSelector(),
-                i,
-                valuess
+                    dims[i].getSelector(),
+                    i,
+                    valuess
             );
             strategy.initGroupingKeyColumnValue(
-                dims[i].getKeyBufferPosition(),
-                i,
-                valuess[i],
-                keyBuffer,
-                stack
+                    dims[i].getKeyBufferPosition(),
+                    i,
+                    valuess[i],
+                    keyBuffer,
+                    stack
             );
           }
         }
@@ -811,10 +818,10 @@ public class GroupByQueryEngineV2
 
           if (stackPointer >= 0) {
             doAggregate = dims[stackPointer].getColumnSelectorStrategy().checkRowIndexAndAddValueToGroupingKey(
-                dims[stackPointer].getKeyBufferPosition(),
-                valuess[stackPointer],
-                stack[stackPointer],
-                keyBuffer
+                    dims[stackPointer].getKeyBufferPosition(),
+                    valuess[stackPointer],
+                    stack[stackPointer],
+                    keyBuffer
             );
 
             if (doAggregate) {
@@ -824,11 +831,11 @@ public class GroupByQueryEngineV2
               stack[stackPointer]++;
               for (int i = stackPointer + 1; i < stack.length; i++) {
                 dims[i].getColumnSelectorStrategy().initGroupingKeyColumnValue(
-                    dims[i].getKeyBufferPosition(),
-                    i,
-                    valuess[i],
-                    keyBuffer,
-                    stack
+                        dims[i].getKeyBufferPosition(),
+                        i,
+                        valuess[i],
+                        keyBuffer,
+                        stack
                 );
               }
               stackPointer = stack.length - 1;
@@ -881,7 +888,7 @@ public class GroupByQueryEngineV2
         GroupByQuery query,
         GroupByQueryConfig querySpecificConfig,
         DruidProcessingConfig processingConfig,
-        Cursor cursor,
+        RowCountingCursorDecorator cursor,
         ByteBuffer buffer,
         @Nullable DateTime fudgeTimestamp,
         GroupByColumnSelectorPlus[] dims,
