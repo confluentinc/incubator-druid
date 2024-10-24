@@ -218,7 +218,7 @@ public class GroupByQueryEngineV2
         groupByQueryMetrics
     );
 
-    return cursors.flatMap(
+    return cursors.map(cursor -> new RowCountingCursorDecorator(cursor, responseContext)).flatMap(
         cursor -> new BaseSequence<>(
             new BaseSequence.IteratorMaker<ResultRow, GroupByEngineIterator<?>>()
             {
@@ -244,13 +244,12 @@ public class GroupByQueryEngineV2
                     processingBuffer
                 );
 
-                RowCountingCursorDecorator rowCountingCursorDecorator = new RowCountingCursorDecorator(cursor, responseContext);
                 if (cardinalityForArrayAggregation >= 0) {
                   return new ArrayAggregateIterator(
                       query,
                       querySpecificConfig,
                       processingConfig,
-                      rowCountingCursorDecorator,
+                      cursor,
                       processingBuffer,
                       fudgeTimestamp,
                       dims,
@@ -262,7 +261,7 @@ public class GroupByQueryEngineV2
                       query,
                       querySpecificConfig,
                       processingConfig,
-                      rowCountingCursorDecorator,
+                      cursor,
                       processingBuffer,
                       fudgeTimestamp,
                       dims,
@@ -469,7 +468,7 @@ public class GroupByQueryEngineV2
   {
     protected final GroupByQuery query;
     protected final GroupByQueryConfig querySpecificConfig;
-    protected final RowCountingCursorDecorator cursor;
+    protected final Cursor cursor;
     protected final ByteBuffer buffer;
     protected final Grouper.KeySerde<ByteBuffer> keySerde;
     protected final GroupByColumnSelectorPlus[] dims;
@@ -485,7 +484,7 @@ public class GroupByQueryEngineV2
         final GroupByQuery query,
         final GroupByQueryConfig querySpecificConfig,
         final DruidProcessingConfig processingConfig,
-        final RowCountingCursorDecorator cursor,
+        final Cursor cursor,
         final ByteBuffer buffer,
         @Nullable final DateTime fudgeTimestamp,
         final GroupByColumnSelectorPlus[] dims,
@@ -649,7 +648,7 @@ public class GroupByQueryEngineV2
         GroupByQuery query,
         GroupByQueryConfig querySpecificConfig,
         DruidProcessingConfig processingConfig,
-        RowCountingCursorDecorator cursor,
+        Cursor cursor,
         ByteBuffer buffer,
         @Nullable DateTime fudgeTimestamp,
         GroupByColumnSelectorPlus[] dims,
@@ -888,7 +887,7 @@ public class GroupByQueryEngineV2
         GroupByQuery query,
         GroupByQueryConfig querySpecificConfig,
         DruidProcessingConfig processingConfig,
-        RowCountingCursorDecorator cursor,
+        Cursor cursor,
         ByteBuffer buffer,
         @Nullable DateTime fudgeTimestamp,
         GroupByColumnSelectorPlus[] dims,
