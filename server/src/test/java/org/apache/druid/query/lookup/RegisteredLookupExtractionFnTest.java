@@ -21,6 +21,7 @@ package org.apache.druid.query.lookup;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import org.apache.druid.common.config.NullHandling;
 import org.apache.druid.jackson.DefaultObjectMapper;
 import org.apache.druid.java.util.common.jackson.JacksonUtils;
 import org.apache.druid.query.extraction.ExtractionFn;
@@ -38,6 +39,10 @@ import java.util.Optional;
 
 public class RegisteredLookupExtractionFnTest
 {
+  static {
+    NullHandling.initializeForTests();
+  }
+
   private static Map<String, String> MAP = ImmutableMap.of(
       "foo", "bar",
       "bat", "baz"
