@@ -30,7 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class HttpEmitterTest
@@ -57,8 +56,8 @@ public class HttpEmitterTest
       @Override
       protected ListenableFuture<Response> go(Request request)
       {
-        Duration timeout = request.getRequestTimeout();
-        timeoutUsed.set(timeout.toMillis());
+        int timeout = request.getRequestTimeout();
+        timeoutUsed.set(timeout);
         return GoHandlers.immediateFuture(EmitterTest.okResponse());
       }
     });

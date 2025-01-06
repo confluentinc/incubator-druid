@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,7 +81,7 @@ public class AsyncHttpClientTest
       requestStart = System.currentTimeMillis();
       Future<?> future = client
           .prepareGet(StringUtils.format("http://localhost:%d/", serverSocket.getLocalPort()))
-          .setRequestTimeout(Duration.ofMillis(2000))
+          .setRequestTimeout(2000)
           .execute();
       System.out.println("created future in: " + (System.currentTimeMillis() - requestStart));
       future.get(3000, TimeUnit.MILLISECONDS);
@@ -104,7 +103,7 @@ public class AsyncHttpClientTest
     try {
       Future<?> future = client
           .prepareGet(StringUtils.format("http://localhost:%d/", serverSocket.getLocalPort()))
-          .setRequestTimeout(Duration.ofMillis(100))
+          .setRequestTimeout(100)
           .execute();
       future.get();
     }
