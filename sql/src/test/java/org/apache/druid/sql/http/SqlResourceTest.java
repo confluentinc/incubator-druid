@@ -129,6 +129,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -362,6 +363,17 @@ public class SqlResourceTest extends CalciteTestBase
     }
     Assert.assertEquals(1, testRequestLogger.getSqlQueryLogs().size());
     Assert.assertTrue(lifecycleManager.getAll("id").isEmpty());
+  }
+
+  @Test
+  public void testGoodQuery() throws Exception
+  {
+    final Response response = resource.doPost(createSimpleQueryWithId("id", "SELECT COUNT(*) AS cnt, 'foo' AS TheFoo FROM druid.foo"), req);
+    Assert.assertNotNull(response);
+    Assert.assertTrue(String.format(Locale.ENGLISH, "Successful query response must have header %s", QueryResource.QUERY_SEGMENT_COUNT_HEADER),
+            response.getMetadata().containsKey(QueryResource.QUERY_SEGMENT_COUNT_HEADER));
+    Assert.assertTrue(String.format(Locale.ENGLISH, "Successful query response must have header %s", QueryResource.BROKER_QUERY_TIME_RESPONSE_HEADER),
+            response.getMetadata().containsKey(QueryResource.BROKER_QUERY_TIME_RESPONSE_HEADER));
   }
 
   @Test

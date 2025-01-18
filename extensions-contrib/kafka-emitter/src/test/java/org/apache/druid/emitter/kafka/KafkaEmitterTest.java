@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -146,6 +147,7 @@ public class KafkaEmitterTest
         "alerts",
         "requests",
         "segments",
+        null,
         "clusterName",
         ImmutableMap.of("clusterId", "cluster-101"),
         null,
@@ -241,6 +243,7 @@ public class KafkaEmitterTest
         "alerts",
         "requests",
         "segment_metadata",
+        null,
         "clusterName",
         null,
         null,
@@ -289,6 +292,7 @@ public class KafkaEmitterTest
         "alerts",
         "requests",
         "segment_metadata",
+        null,
         "clusterName",
         null,
         null,
@@ -349,6 +353,7 @@ public class KafkaEmitterTest
         null,
         null,
         null,
+        null,
         null
     );
 
@@ -395,6 +400,7 @@ public class KafkaEmitterTest
         KafkaEmitterConfig.DEFAULT_EVENT_TYPES,
         "topic",
         "topic",
+        null,
         null,
         null,
         "cluster-102",
