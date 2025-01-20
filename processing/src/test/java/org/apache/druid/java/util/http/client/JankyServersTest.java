@@ -304,7 +304,7 @@ public class JankyServersTest
     final Lifecycle lifecycle = new Lifecycle();
     try {
       final HttpClientConfig config = HttpClientConfig.builder().withSslContext(SSLContext.getDefault()).build();
-      final HttpClient client = HttpClientInit.createClient(config, lifecycle);
+      final HttpClient client = HttpClientInit.createClient(config, lifecycle, new ServiceEmitter("", "", new NoopEmitter()));
 
       // Need to select a port that isn't being listened to. This approach finds an unused port in a racey way.
       // Hopefully it works most of the time.
@@ -340,7 +340,7 @@ public class JankyServersTest
     final Lifecycle lifecycle = new Lifecycle();
     try {
       final HttpClientConfig config = HttpClientConfig.builder().withSslContext(SSLContext.getDefault()).build();
-      final HttpClient client = HttpClientInit.createClient(config, lifecycle);
+      final HttpClient client = HttpClientInit.createClient(config, lifecycle, new ServiceEmitter("", "", new NoopEmitter()));
 
       // Need to select a port that isn't being listened to. This approach finds an unused port in a racey way.
       // Hopefully it works most of the time.
