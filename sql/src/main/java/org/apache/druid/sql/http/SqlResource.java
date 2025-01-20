@@ -64,6 +64,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.apache.druid.server.QueryResource.QUERY_START_TIME_ATTRIBUTE;
+
 @Path("/druid/v2/sql/")
 public class SqlResource
 {
@@ -110,11 +112,13 @@ public class SqlResource
       @Context final HttpServletRequest req
   )
   {
+    final long queryStartTime = System.nanoTime();
     final HttpStatement stmt = sqlStatementFactory.httpStatement(sqlQuery, req);
     final String sqlQueryId = stmt.sqlQueryId();
     final String currThreadName = Thread.currentThread().getName();
 
     try {
+      req.setAttribute(QUERY_START_TIME_ATTRIBUTE, queryStartTime);
       Thread.currentThread().setName(StringUtils.format("sql[%s]", sqlQueryId));
 
       QueryResultPusher pusher = makePusher(req, stmt, sqlQuery);
@@ -311,6 +315,11 @@ public class SqlResource
         public void recordSuccess(long numBytes)
         {
           stmt.reporter().succeeded(numBytes);
+        }
+
+        @Override
+        public void recordSuccess(long numBytes, long numRowsScanned, long cpuTimeInMillis) {
+          stmt.reporter().succeeded(numBytes, numRowsScanned, cpuTimeInMillis);
         }
 
         @Override
