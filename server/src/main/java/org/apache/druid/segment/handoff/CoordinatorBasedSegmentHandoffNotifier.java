@@ -94,7 +94,7 @@ public class CoordinatorBasedSegmentHandoffNotifier implements SegmentHandoffNot
           Boolean handOffComplete =
               FutureUtils.getUnchecked(coordinatorClient.isHandoffComplete(dataSource, descriptor), true);
           if (Boolean.TRUE.equals(handOffComplete)) {
-              log.debug("Segment handoff complete for dataSource[%s] segment[%s] for task[%s]", dataSource, descriptor, taskId);
+            log.debug("Segment handoff complete for dataSource[%s] segment[%s] for task[%s]", dataSource, descriptor, taskId);
             entry.getValue().lhs.execute(entry.getValue().rhs);
             itr.remove();
           }

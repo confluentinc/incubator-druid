@@ -132,14 +132,14 @@ public class SqlExecutionReporter
         ));
       }
 
-      if(numRowsScanned >= 0){
+      if (numRowsScanned >= 0) {
         emitter.emit(metricBuilder.setMetric(
                 "query/rowsScanned",
                 numRowsScanned
         ));
       }
 
-      if(cpuTimeInMillis >= 0){
+      if (cpuTimeInMillis >= 0) {
         emitter.emit(metricBuilder.setMetric(
                 "query/cpu/time",
                 cpuTimeInMillis

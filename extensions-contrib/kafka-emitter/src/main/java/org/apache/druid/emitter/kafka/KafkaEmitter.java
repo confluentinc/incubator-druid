@@ -21,12 +21,11 @@ package org.apache.druid.emitter.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.druid.java.util.common.MemoryBoundLinkedBlockingQueue;
-import org.apache.druid.java.util.common.StringUtils;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import org.apache.druid.emitter.kafka.KafkaEmitterConfig.EventType;
 import org.apache.druid.emitter.proto.DruidSegmentEvent;
+import org.apache.druid.java.util.common.MemoryBoundLinkedBlockingQueue;
 import org.apache.druid.java.util.common.lifecycle.LifecycleStop;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.emitter.core.Emitter;
@@ -203,11 +202,10 @@ public class KafkaEmitter implements Emitter
         EventMap map = event.toMap();
         map = addExtraDimensionsToEvent(map);
 
-        String resultJson = jsonMapper.writeValueAsString(map);
-
+        byte[] resultBytes = jsonMapper.writeValueAsBytes(map);
         MemoryBoundLinkedBlockingQueue.ObjectContainer<byte[]> objectContainer = new MemoryBoundLinkedBlockingQueue.ObjectContainer<>(
-            resultJson,
-            StringUtils.toUtf8(resultJson).length
+            resultBytes,
+            resultBytes.length
         );
 
         Set<EventType> eventTypes = config.getEventTypes();
@@ -230,7 +228,7 @@ public class KafkaEmitter implements Emitter
             switch (config.getSegmentMetadataTopicFormat()) {
               case PROTOBUF:
                 resultBytes = convertMetadataEventToProto((SegmentMetadataEvent) event, segmentMetadataLost);
-                objectContainer = new ObjectContainer<>(
+                objectContainer = new MemoryBoundLinkedBlockingQueue.ObjectContainer<>(
                     resultBytes,
                     resultBytes.length
                 );
@@ -271,30 +269,30 @@ public class KafkaEmitter implements Emitter
     return map;
   }
 
-    private byte[] convertMetadataEventToProto(SegmentMetadataEvent event, AtomicLong segmentMetadataLost)
-    {
-      try {
-          Timestamp createdTimeTs = Timestamps.fromMillis(event.getCreatedTime().getMillis());
-          Timestamp startTimeTs = Timestamps.fromMillis(event.getStartTime().getMillis());
-          Timestamp endTimeTs = Timestamps.fromMillis(event.getEndTime().getMillis());
+  private byte[] convertMetadataEventToProto(SegmentMetadataEvent event, AtomicLong segmentMetadataLost)
+  {
+    try {
+      Timestamp createdTimeTs = Timestamps.fromMillis(event.getCreatedTime().getMillis());
+      Timestamp startTimeTs = Timestamps.fromMillis(event.getStartTime().getMillis());
+      Timestamp endTimeTs = Timestamps.fromMillis(event.getEndTime().getMillis());
 
-          DruidSegmentEvent.Builder druidSegmentEventBuilder = DruidSegmentEvent.newBuilder()
-                  .setDataSource(event.getDataSource())
-                  .setCreatedTime(createdTimeTs)
-                  .setStartTime(startTimeTs)
-                  .setEndTime(endTimeTs)
-                  .setVersion(event.getVersion())
-                  .setIsCompacted(event.isCompacted());
-          if (config.getClusterName() != null) {
-              druidSegmentEventBuilder.setClusterName(config.getClusterName());
-          }
-          DruidSegmentEvent druidSegmentEvent = druidSegmentEventBuilder.build();
-          return druidSegmentEvent.toByteArray();
+      DruidSegmentEvent.Builder druidSegmentEventBuilder = DruidSegmentEvent.newBuilder()
+              .setDataSource(event.getDataSource())
+              .setCreatedTime(createdTimeTs)
+              .setStartTime(startTimeTs)
+              .setEndTime(endTimeTs)
+              .setVersion(event.getVersion())
+              .setIsCompacted(event.isCompacted());
+      if (config.getClusterName() != null) {
+        druidSegmentEventBuilder.setClusterName(config.getClusterName());
       }
-      catch (Exception e) {
-          log.warn(e, "Exception while serializing SegmentMetadataEvent");
-          throw e;
-      }
+      DruidSegmentEvent druidSegmentEvent = druidSegmentEventBuilder.build();
+      return druidSegmentEvent.toByteArray();
+    }
+    catch (Exception e) {
+      log.warn(e, "Exception while serializing SegmentMetadataEvent");
+      throw e;
+    }
   }
 
   @Override

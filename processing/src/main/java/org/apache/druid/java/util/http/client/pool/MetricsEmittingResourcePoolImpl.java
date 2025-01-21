@@ -43,7 +43,7 @@ public class MetricsEmittingResourcePoolImpl<K, V> implements ResourcePool<K, V>
     long startTime = System.nanoTime();
     ResourceContainer<V> retVal = resourcePool.take(key);
     long totalduration = System.nanoTime() - startTime;
-    emitter.emit(ServiceMetricEvent.builder().setDimension("server", key.toString()).build("httpClient/channelAcquire/timeNs", String.valueOf(totalduration)));
+    emitter.emit(ServiceMetricEvent.builder().setDimension("server", key.toString()).setMetric("httpClient/channelAcquire/timeNs", totalduration));
     return retVal;
   }
 

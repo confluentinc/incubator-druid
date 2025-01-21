@@ -570,7 +570,8 @@ public class QueryResource implements QueryCountStatsProvider
         }
 
         @Override
-        public void recordSuccess(long numBytes) {
+        public void recordSuccess(long numBytes)
+        {
 
         }
 

@@ -49,7 +49,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,7 +62,7 @@ import static org.mockito.Mockito.when;
 
 public class KafkaEmitterTest
 {
-  private KafkaProducer<String, String> producer;
+  private KafkaProducer<String, byte[]> producer;
 
   @Before
   public void setup()
@@ -193,7 +192,8 @@ public class KafkaEmitterTest
         "alerts",
         "requests",
         "segments",
-        null,
+        KafkaEmitterConfig.SegmentMetadataTopicFormat.PROTOBUF,
+        "clusterName",
         ImmutableMap.of("clusterId", "cluster-101", "env", "staging"),
         null,
         null
@@ -496,7 +496,8 @@ public class KafkaEmitterTest
         "alerts",
         "requests",
         "segments",
-        null,
+        KafkaEmitterConfig.SegmentMetadataTopicFormat.PROTOBUF,
+        "clusterName",
         extraDimensions,
         ImmutableMap.of(ProducerConfig.BUFFER_MEMORY_CONFIG, String.valueOf(totalBufferSize)),
         null
@@ -528,7 +529,7 @@ public class KafkaEmitterTest
     )
     {
       @Override
-      protected Producer<String, String> setKafkaProducer()
+      protected Producer<String, byte[]> setKafkaProducer()
       {
         // override send interval to 1 second
         sendInterval = 1;

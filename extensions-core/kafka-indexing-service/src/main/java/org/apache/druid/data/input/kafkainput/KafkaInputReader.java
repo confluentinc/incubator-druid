@@ -55,6 +55,7 @@ public class KafkaInputReader implements InputEntityReader
   private final InputEntityReader valueParser;
   private final String keyColumnName;
   private final String timestampColumnName;
+  private final String topicColumnName;
 
   /**
    *
@@ -73,7 +74,8 @@ public class KafkaInputReader implements InputEntityReader
       @Nullable Function<KafkaRecordEntity, InputEntityReader> keyParserSupplier,
       InputEntityReader valueParser,
       String keyColumnName,
-      String timestampColumnName
+      String timestampColumnName,
+      String topicColumnName
   )
   {
     this.inputRowSchema = inputRowSchema;
@@ -83,6 +85,7 @@ public class KafkaInputReader implements InputEntityReader
     this.valueParser = valueParser;
     this.keyColumnName = keyColumnName;
     this.timestampColumnName = timestampColumnName;
+    this.topicColumnName = topicColumnName;
   }
 
   private List<String> getFinalDimensionList(HashSet<String> newDimensions)
@@ -161,6 +164,8 @@ public class KafkaInputReader implements InputEntityReader
 
     // Add kafka record timestamp to the mergelist, we will skip record timestamp if the same key exists already in the header list
     mergeMap.putIfAbsent(timestampColumnName, record.getRecord().timestamp());
+
+    mergeMap.putIfAbsent(topicColumnName, record.getRecord().topic());
 
     InputEntityReader keyParser = (keyParserSupplier == null) ? null : keyParserSupplier.apply(record);
     if (keyParser != null) {
