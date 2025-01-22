@@ -131,6 +131,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -368,12 +369,12 @@ public class SqlResourceTest extends CalciteTestBase
   @Test
   public void testGoodQuery() throws Exception
   {
-    final Response response = resource.doPost(createSimpleQueryWithId("id", "SELECT COUNT(*) AS cnt, 'foo' AS TheFoo FROM druid.foo"), req);
+    final MockHttpServletResponse response = postForAsyncResponse(createSimpleQueryWithId("id", "SELECT COUNT(*) AS cnt, 'foo' AS TheFoo FROM druid.foo"), req.mimic());
     Assert.assertNotNull(response);
     Assert.assertTrue(String.format(Locale.ENGLISH, "Successful query response must have header %s", QueryResource.QUERY_SEGMENT_COUNT_HEADER),
-            response.getMetadata().containsKey(QueryResource.QUERY_SEGMENT_COUNT_HEADER));
+            Objects.nonNull(response.getHeader(QueryResource.QUERY_SEGMENT_COUNT_HEADER)));
     Assert.assertTrue(String.format(Locale.ENGLISH, "Successful query response must have header %s", QueryResource.BROKER_QUERY_TIME_RESPONSE_HEADER),
-            response.getMetadata().containsKey(QueryResource.BROKER_QUERY_TIME_RESPONSE_HEADER));
+            Objects.nonNull(response.getHeader(QueryResource.BROKER_QUERY_TIME_RESPONSE_HEADER)));
   }
 
   @Test

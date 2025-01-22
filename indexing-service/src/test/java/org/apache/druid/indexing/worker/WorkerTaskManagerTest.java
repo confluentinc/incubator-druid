@@ -489,6 +489,9 @@ public class WorkerTaskManagerTest
   @Test
   public void getWorkerTaskStatsTest() throws Exception
   {
+    EasyMock.expect(overlordClient.withRetryPolicy(EasyMock.anyObject())).andReturn(overlordClient).anyTimes();
+    EasyMock.replay(overlordClient);
+
     Task task1 = createNoopTask("task1", "wikipedia");
     Task task2 = createNoopTask("task2", "wikipedia");
     Task task3 = createNoopTask("task3", "animals");
