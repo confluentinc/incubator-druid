@@ -152,7 +152,7 @@ public abstract class QueryResultPusher
               (long) responseContext.get(ResponseContext.Keys.CPU_CONSUMED_NANOS) : 0);
       long querySegmentCount = responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) != null ?
               (long) responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) : 0;
-      long brokerQueryTime = TimeUnit.NANOSECONDS.toMillis(startTime != null ? System.nanoTime() - (long) startTime : -1);
+      long brokerQueryTime = TimeUnit.NANOSECONDS.toMillis(startTime != null ? System.nanoTime() - (Long) startTime : -1);
 
       response.setHeader(QueryResource.NUM_SCANNED_ROWS, String.valueOf(rowsScanned));
       // Emit Cpu time as a response header. Note that it doesn't include Cpu spent on serializing the response.
