@@ -50,6 +50,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public abstract class QueryResultPusher
 {
@@ -143,14 +144,31 @@ public abstract class QueryResultPusher
         response.setHeader(entry.getKey(), entry.getValue());
       }
 
-      accumulator = new StreamingHttpResponseAccumulator(queryResponse.getResponseContext(), resultsWriter);
+      ResponseContext responseContext = queryResponse.getResponseContext();
+      Object startTime = request.getAttribute(QueryResource.QUERY_START_TIME_ATTRIBUTE);
+      long rowsScanned = responseContext.get(ResponseContext.Keys.NUM_SCANNED_ROWS) != null ?
+              (long) responseContext.get(ResponseContext.Keys.NUM_SCANNED_ROWS) : 0;
+      long cpuConsumedMillis = TimeUnit.NANOSECONDS.toMillis(responseContext.get(ResponseContext.Keys.CPU_CONSUMED_NANOS) != null ?
+              (long) responseContext.get(ResponseContext.Keys.CPU_CONSUMED_NANOS) : 0);
+      long querySegmentCount = responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) != null ?
+              (long) responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) : 0;
+      long brokerQueryTime = TimeUnit.NANOSECONDS.toMillis(startTime != null ? System.nanoTime() - (Long) startTime : -1);
+
+      response.setHeader(QueryResource.NUM_SCANNED_ROWS, String.valueOf(rowsScanned));
+      // Emit Cpu time as a response header. Note that it doesn't include Cpu spent on serializing the response.
+      // Druid streams the output which results in the header being sent out before the response is fully serialized and sent to the client.
+      response.setHeader(QueryResource.QUERY_CPU_TIME, String.valueOf(cpuConsumedMillis));
+      response.setHeader(QueryResource.QUERY_SEGMENT_COUNT_HEADER, String.valueOf(querySegmentCount));
+      response.setHeader(QueryResource.BROKER_QUERY_TIME_RESPONSE_HEADER, String.valueOf(brokerQueryTime));
+
+      accumulator = new StreamingHttpResponseAccumulator(responseContext, resultsWriter);
 
       results.accumulate(null, accumulator);
       accumulator.flush();
 
       counter.incrementSuccess();
       accumulator.close();
-      resultsWriter.recordSuccess(accumulator.getNumBytesSent());
+      resultsWriter.recordSuccess(accumulator.getNumBytesSent(), rowsScanned, cpuConsumedMillis);
     }
     catch (DruidException e) {
       // Less than ideal. But, if we return the result as JSON, this is
@@ -305,6 +323,8 @@ public abstract class QueryResultPusher
     Writer makeWriter(OutputStream out) throws IOException;
 
     void recordSuccess(long numBytes);
+
+    void recordSuccess(long numBytes, long numRowsScanned, long cpuTimeInMillis);
 
     void recordFailure(Exception e);
   }
