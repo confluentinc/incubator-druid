@@ -416,6 +416,13 @@ public abstract class ResponseContext
     };
 
     /**
+     * Query Segment Count.
+     */
+    public static final Key QUERY_SEGMENT_COUNT = new LongKey(
+            "querySegmentCount",
+            false);
+
+    /**
      * Query fail time (current time + timeout).
      */
     public static final Key QUERY_FAIL_DEADLINE_MILLIS = new LongKey(
@@ -476,21 +483,21 @@ public abstract class ResponseContext
     private final ConcurrentMap<String, Key> registeredKeys = new ConcurrentSkipListMap<>();
 
     static {
-      instance().registerKeys(
-          new Key[]{
-              UNCOVERED_INTERVALS,
-              UNCOVERED_INTERVALS_OVERFLOWED,
-              REMAINING_RESPONSES_FROM_QUERY_SERVERS,
-              MISSING_SEGMENTS,
-              ETAG,
-              QUERY_TOTAL_BYTES_GATHERED,
-              QUERY_FAIL_DEADLINE_MILLIS,
-              TIMEOUT_AT,
-              NUM_SCANNED_ROWS,
-              CPU_CONSUMED_NANOS,
-              TRUNCATED,
-              }
-      );
+      instance().registerKeys(new Key[]
+      {
+          UNCOVERED_INTERVALS,
+          UNCOVERED_INTERVALS_OVERFLOWED,
+          REMAINING_RESPONSES_FROM_QUERY_SERVERS,
+          MISSING_SEGMENTS,
+          ETAG,
+          QUERY_TOTAL_BYTES_GATHERED,
+          QUERY_FAIL_DEADLINE_MILLIS,
+          TIMEOUT_AT,
+          NUM_SCANNED_ROWS,
+          CPU_CONSUMED_NANOS,
+          TRUNCATED,
+          QUERY_SEGMENT_COUNT,
+      });
     }
 
     /**
@@ -696,6 +703,11 @@ public abstract class ResponseContext
   public Long getCpuNanos()
   {
     return (Long) get(Keys.CPU_CONSUMED_NANOS);
+  }
+
+  public Long getQuerySegmentCount()
+  {
+    return (Long) get(Keys.QUERY_SEGMENT_COUNT);
   }
 
   public Object remove(Key key)
