@@ -50,6 +50,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public abstract class QueryResultPusher
@@ -146,13 +147,11 @@ public abstract class QueryResultPusher
 
       ResponseContext responseContext = queryResponse.getResponseContext();
       Object startTime = request.getAttribute(QueryResource.QUERY_START_TIME_ATTRIBUTE);
-      long rowsScanned = responseContext.get(ResponseContext.Keys.NUM_SCANNED_ROWS) != null ?
-              (long) responseContext.get(ResponseContext.Keys.NUM_SCANNED_ROWS) : 0;
-      long cpuConsumedMillis = TimeUnit.NANOSECONDS.toMillis(responseContext.get(ResponseContext.Keys.CPU_CONSUMED_NANOS) != null ?
-              (long) responseContext.get(ResponseContext.Keys.CPU_CONSUMED_NANOS) : 0);
-      long querySegmentCount = responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) != null ?
-              (long) responseContext.get(ResponseContext.Keys.QUERY_SEGMENT_COUNT) : 0;
-      long brokerQueryTime = TimeUnit.NANOSECONDS.toMillis(startTime != null ? System.nanoTime() - (Long) startTime : -1);
+
+      Long rowsScanned = Objects.nonNull(responseContext.getRowScanCount()) ? responseContext.getRowScanCount() : 0L;
+      Long cpuConsumedMillis = TimeUnit.NANOSECONDS.toMillis(Objects.nonNull(responseContext.getCpuNanos()) ? responseContext.getCpuNanos() : 0L);
+      Long querySegmentCount = Objects.nonNull(responseContext.getQuerySegmentCount()) ? responseContext.getQuerySegmentCount() : 0L;
+      Long brokerQueryTime = TimeUnit.NANOSECONDS.toMillis(Objects.nonNull(startTime) ? System.nanoTime() - (Long) startTime : -1L);
 
       response.setHeader(QueryResource.NUM_SCANNED_ROWS, String.valueOf(rowsScanned));
       // Emit Cpu time as a response header. Note that it doesn't include Cpu spent on serializing the response.

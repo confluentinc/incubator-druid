@@ -705,6 +705,11 @@ public abstract class ResponseContext
     return (Long) get(Keys.CPU_CONSUMED_NANOS);
   }
 
+  public Long getQuerySegmentCount()
+  {
+    return (Long) get(Keys.QUERY_SEGMENT_COUNT);
+  }
+
   public Object remove(Key key)
   {
     return getDelegate().remove(key);
