@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -708,6 +709,12 @@ public abstract class ResponseContext
   public Long getQuerySegmentCount()
   {
     return (Long) get(Keys.QUERY_SEGMENT_COUNT);
+  }
+
+  public Long getValueOrDefaultZero(Function<ResponseContext, Long> getter)
+  {
+    Long value = getter.apply(this);
+    return Objects.nonNull(value) ? value : 0L;
   }
 
   public Object remove(Key key)
