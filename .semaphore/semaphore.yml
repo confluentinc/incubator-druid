@@ -136,8 +136,14 @@ blocks:
               value: extensions-core/kafka-indexing-service
           commands: *run_tests
 
+        - name: "Web Console"
+          env_vars:
+            - name: MAVEN_PROJECTS
+              value: web-console
+          commands: *run_tests
+
         - name: "Other Tests"
           env_vars:
             - name: MAVEN_PROJECTS
-              value: '!server,!processing,!indexing-service,!extensions-core/kafka-indexing-service,!extensions-contrib/confluent-extensions,!integration-tests-ex/cases'
+              value: '!server,!processing,!indexing-service,!extensions-core/kafka-indexing-service,!extensions-contrib/confluent-extensions,!integration-tests-ex/cases,!web-console'
           commands: *run_tests
