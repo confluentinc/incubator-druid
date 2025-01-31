@@ -1141,7 +1141,7 @@
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
-                <version>6.8.7</version>
+                <version>7.5.1</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
